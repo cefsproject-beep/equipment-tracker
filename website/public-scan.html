@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radio Information</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="scanner.css">
+    <style>
+        /* BACKGROUND IMAGE DARI FOLDER images/i8.jpg */
+        body {
+            background-image: url('images/portableRadio.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Tambah style untuk button Back */
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .popup-header h1 {
+            flex-grow: 1;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .back-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            display: none; /* MULA-MULA DISEMBUNYIKAN */
+        }
+        
+        .back-btn:hover {
+            background-color: #5a6268;
+        }
+        
+        .close-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+        
+        .close-btn:hover {
+            background-color: #c82333;
+        }
+
+        /* STYLE UNTUK FILE UPLOAD */
+        .file-upload-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            border: 2px dashed #007bff;
+        }
+
+        .file-upload-section h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .file-input-btn:hover {
+            background-color: #218838;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-preview {
+            margin-top: 15px;
+            display: none;
+        }
+
+        .file-preview.active {
+            display: block;
+        }
+
+        .preview-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            margin-top: 10px;
+        }
+
+        .file-name {
+            margin-top: 5px;
+            font-size: 14px;
+            color: #666;
+            word-break: break-all;
+        }
+
+        .remove-file-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .remove-file-btn:hover {
+            background-color: #c82333;
+        }
+
+        .upload-progress {
+            margin-top: 10px;
+            display: none;
+        }
+
+        .upload-progress.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #28a745;
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="info-popup">
+        <div class="popup-header">
+            <h1><i class="fas fa-walkie-talkie"></i> Radio Information</h1>
+            <div class="header-buttons">
+                <button class="back-btn" id="backBtn" onclick="returnToViewMode()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button class="close-btn" onclick="closePopup()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="loading-container" id="loadingMessage">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Loading radio information...</p>
+        </div>
+
+        <div class="error-container" id="errorMessage" style="display: none;">
+            <i class="fas fa-exclamation-triangle fa-2x"></i>
+            <p id="errorText"></p>
+            <button class="action-btn" onclick="retryLoading()"><i class="fas fa-redo"></i> Try Again</button>
+        </div>
+
+        <div id="radioInfoContent" style="display: none;">
+            <!-- BUANG PAPARAN "QR Code Scanned Successfully" -->
+
+            <!-- RADIO INFORMATION -->
+            <div class="radio-info-grid" id="readOnlyInfo">
+                <div class="info-item"><div class="info-label">User</div><div class="info-value" id="user">-</div></div>
+                <div class="info-item"><div class="info-label">Radio ID</div><div class="info-value" id="radioId">-</div></div>
+                <div class="info-item"><div class="info-label">Serial Number</div><div class="info-value" id="serialNumber">-</div></div>
+                <div class="info-item"><div class="info-label">Tagging</div><div class="info-value" id="tagging">-</div></div>
+                <div class="info-item"><div class="info-label">Manufacturer</div><div class="info-value" id="manufacturer">-</div></div>
+                <div class="info-item"><div class="info-label">Brand</div><div class="info-value" id="brand">-</div></div>
+                <div class="info-item"><div class="info-label">Location</div><div class="info-value" id="location">-</div></div>
+                <div class="info-item full-width"><div class="info-label">Remarks</div><div class="info-value" id="remarks">-</div></div>
+            </div>
+
+            <!-- EDIT MODE -->
+            <div class="radio-info-grid edit-mode" id="editInfo" style="display: none;">
+                <div class="info-item"><div class="info-label">User</div><input type="text" class="info-input" id="editUser" readonly></div>
+                <div class="info-item"><div class="info-label">Radio ID</div><input type="text" class="info-input" id="editRadioId"></div>
+                <div class="info-item"><div class="info-label">Serial Number</div><input type="text" class="info-input" id="editSerialNumber"></div>
+                <div class="info-item"><div class="info-label">Tagging</div><input type="text" class="info-input" id="editTagging"></div>
+                <div class="info-item"><div class="info-label">Manufacturer</div><input type="text" class="info-input" id="editManufacturer"></div>
+                <div class="info-item"><div class="info-label">Brand</div><input type="text" class="info-input" id="editBrand"></div>
+                <div class="info-item"><div class="info-label">Location</div><input type="text" class="info-input" id="editLocation"></div>
+                <div class="info-item full-width"><div class="info-label">Remarks</div><textarea class="info-textarea" id="editRemarks"></textarea></div>
+            </div>
+
+            <!-- INSPECTION BUTTON -->
+            <div class="inspection-section">
+                <button class="inspection-btn red" id="inspectionBtn" onclick="toggleInspectionMode()">
+                    <i class="fas fa-clipboard-check"></i> Inspection
+                </button>
+            </div>
+
+            <!-- CONDITION SECTION DENGAN INSERT IMAGES FIELD -->
+            <div class="condition-section" id="conditionSection" style="display: none;">
+                <h3><i class="fas fa-list-alt"></i> Condition</h3>
+                <textarea 
+                    class="condition-textarea" 
+                    id="conditionInput" 
+                    placeholder="Enter condition details here..."></textarea>
+
+            <!-- SAVE BUTTON -->
+            <div class="save-section" id="saveSection" style="display: none;">
+                <button class="save-btn" onclick="saveAllData()"><i class="fas fa-save"></i> SAVE ALL CHANGES</button>
+            </div>
+
+            <!-- Success Message -->
+            <div id="saveSuccessMessage" class="save-success" style="display: none;">
+                <i class="fas fa-check-circle"></i> Save Success!
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBf9xdF0qmVYaNWFUuEys-P5a1yuTpLdVY",
+            authDomain: "project123-82272.firebaseapp.com",
+            projectId: "project123-82272",
+            storageBucket: "project123-82272.firebasestorage.app",
+            messagingSenderId: "97561643123",
+            appId: "1:97561643123:web:92596bb20645124f68c206",
+            measurementId: "G-D5P85TT95P"
+        };
+
+        let db, storage;
+        let currentUserId = null;
+        let currentRadioData = null;
+        let isEditMode = false;
+        let currentFileUrl = null;
+        let currentFileName = null;
+        let selectedFile = null;
+
+        // Initialize Firebase
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeFirebase();
+            loadRadioDataFromURL();
+        });
+
+        function initializeFirebase() {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.firestore();
+                storage = firebase.storage();
+                console.log("✅ Firebase initialized");
+            } catch (error) {
+                showError('Failed to initialize database.');
+            }
+        }
+
+        function returnToViewMode() {
+            if (selectedFile && !confirm('You have unsaved image. Return without saving?')) {
+                return;
+            }
+            toggleInspectionMode();
+        }
+
+        function loadRadioDataFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let identifier = urlParams.get('user');
+            
+            if (!identifier) {
+                showError('No identifier provided in URL.');
+                return;
+            }
+
+            identifier = decodeURIComponent(identifier);
+            currentUserId = identifier;
+            fetchRadioDataByUserId(identifier);
+        }
+
+        function fetchRadioDataByUserId(userId) {
+            if (!db) {
+                showError('Database not initialized.');
+                return;
+            }
+
+            showLoading(true);
+            console.log("🔍 Mencari data untuk user:", userId);
+
+            db.collection('portableRadios')
+                .where('user', '==', userId)
+                .get()
+                .then((querySnapshot) => {
+                    showLoading(false);
+                    
+                    if (querySnapshot.empty) {
+                        return db.collection('portableRadios')
+                            .where('radioId', '==', userId)
+                            .get();
+                    }
+                    
+                    return querySnapshot;
+                })
+                .then((querySnapshot) => {
+                    if (!querySnapshot) return;
+                    
+                    if (querySnapshot.empty) {
+                        showError(`No radio data found for user/ID: ${userId}`);
+                        return;
+                    }
+
+                    const doc = querySnapshot.docs[0];
+                    const data = doc.data();
+                    currentRadioData = data;
+                    
+                    console.log("✅ Data ditemui:", data);
+                    populateRadioInfo(data);
+                })
+                .catch((error) => {
+                    showLoading(false);
+                    showError(`Database error: ${error.message}`);
+                    console.error("❌ Error fetching data:", error);
+                });
+        }
+
+        function populateRadioInfo(data) {
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('radioInfoContent').style.display = 'block';
+
+            // Populate read-only fields
+            document.getElementById('user').textContent = data.user || '-';
+            document.getElementById('radioId').textContent = data.radioId || '-';
+            document.getElementById('serialNumber').textContent = data.serialNumber || '-';
+            document.getElementById('tagging').textContent = data.tagging || '-';
+            document.getElementById('manufacturer').textContent = data.manufacturer || '-';
+            document.getElementById('brand').textContent = data.brand || '-';
+            document.getElementById('location').textContent = data.location || '-';
+            document.getElementById('remarks').textContent = data.remarks || '-';
+
+            // Populate edit fields
+            document.getElementById('editUser').value = data.user || '';
+            document.getElementById('editRadioId').value = data.radioId || '';
+            document.getElementById('editSerialNumber').value = data.serialNumber || '';
+            document.getElementById('editTagging').value = data.tagging || '';
+            document.getElementById('editManufacturer').value = data.manufacturer || '';
+            document.getElementById('editBrand').value = data.brand || '';
+            document.getElementById('editLocation').value = data.location || '';
+            document.getElementById('editRemarks').value = data.remarks || '';
+
+            // Load existing condition
+            if (data.condition) {
+                document.getElementById('conditionInput').value = data.condition;
+            }
+            
+            // Load existing image
+            if (data.file && data.fileType === 'image') {
+                currentFileUrl = data.file;
+                currentFileName = data.fileName || 'Uploaded Image';
+                loadFilePreview();
+            }
+        }
+
+        function toggleInspectionMode() {
+            isEditMode = !isEditMode;
+            const inspectionBtn = document.getElementById('inspectionBtn');
+            const backBtn = document.getElementById('backBtn');
+            const readOnlyInfo = document.getElementById('readOnlyInfo');
+            const editInfo = document.getElementById('editInfo');
+            const conditionSection = document.getElementById('conditionSection');
+            const saveSection = document.getElementById('saveSection');
+
+            if (isEditMode) {
+                inspectionBtn.style.display = 'none';
+                backBtn.style.display = 'flex';
+                readOnlyInfo.style.display = 'none';
+                editInfo.style.display = 'grid';
+                conditionSection.style.display = 'block';
+                saveSection.style.display = 'block';
+                
+                // Reset progress bar
+                document.getElementById('uploadProgress').classList.remove('active');
+                document.getElementById('progressFill').style.width = '0%';
+            } else {
+                inspectionBtn.style.display = 'block';
+                inspectionBtn.classList.remove('green');
+                inspectionBtn.classList.add('red');
+                inspectionBtn.innerHTML = '<i class="fas fa-clipboard-check"></i> Inspection';
+                
+                backBtn.style.display = 'none';
+                readOnlyInfo.style.display = 'grid';
+                editInfo.style.display = 'none';
+                conditionSection.style.display = 'none';
+                saveSection.style.display = 'none';
+            }
+        }
+
+        // FUNCTION UNTUK HANDLE FILE SELECTION
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file (JPEG, PNG, etc.)');
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image size should be less than 5MB');
+                return;
+            }
+
+            selectedFile = file;
+            
+            // Show preview
+            const preview = document.getElementById('previewImage');
+            const fileName = document.getElementById('fileName');
+            const filePreview = document.getElementById('filePreview');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                fileName.textContent = file.name;
+                filePreview.classList.add('active');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeSelectedFile() {
+            selectedFile = null;
+            
+            document.getElementById('fileInput').value = '';
+            document.getElementById('previewImage').src = '';
+            document.getElementById('fileName').textContent = '';
+            document.getElementById('filePreview').classList.remove('active');
+        }
+
+        function loadFilePreview() {
+            if (currentFileUrl) {
+                const filePreview = document.getElementById('filePreview');
+                const preview = document.getElementById('previewImage');
+                const fileName = document.getElementById('fileName');
+                
+                preview.src = currentFileUrl;
+                fileName.textContent = currentFileName;
+                filePreview.classList.add('active');
+            }
+        }
+
+        // FUNCTION UNTUK UPLOAD IMAGE KE STORAGE
+        async function uploadImageToStorage() {
+            if (!selectedFile) {
+                return {
+                    url: currentFileUrl,
+                    name: currentFileName
+                };
+            }
+
+            try {
+                // Show progress bar
+                document.getElementById('uploadProgress').classList.add('active');
+                
+                const storageRef = storage.ref();
+                const fileRef = storageRef.child(`portableRadios/${currentUserId}/${Date.now()}_${selectedFile.name}`);
+                
+                // Upload file dengan progress tracking
+                const uploadTask = fileRef.put(selectedFile);
+                
+                // Monitor upload progress
+                return new Promise((resolve, reject) => {
+                    uploadTask.on('state_changed',
+                        (snapshot) => {
+                            // Update progress bar
+                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                            document.getElementById('progressFill').style.width = progress + '%';
+                            console.log('Upload progress: ' + progress + '%');
+                        },
+                        (error) => {
+                            // Handle unsuccessful uploads
+                            console.error('Upload error:', error);
+                            reject(error);
+                        },
+                        async () => {
+                            // Handle successful upload
+                            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                            console.log('✅ Image uploaded:', downloadURL);
+                            
+                            // Hide progress bar
+                            document.getElementById('uploadProgress').classList.remove('active');
+                            
+                            resolve({
+                                url: downloadURL,
+                                name: selectedFile.name
+                            });
+                        }
+                    );
+                });
+                
+            } catch (error) {
+                console.error('Upload failed:', error);
+                throw error;
+            }
+        }
+
+        // SAVE DATA FUNCTION YANG DIPERBAIKI
+        async function saveAllData() {
+            if (!db || !currentUserId) {
+                alert('Database not initialized.');
+                return;
+            }
+
+            const saveBtn = document.querySelector('.save-btn');
+            const originalText = saveBtn.innerHTML;
+            
+            // Show loading state
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            saveBtn.disabled = true;
+
+            try {
+                // 1. Upload image dulu (jika ada)
+                let imageData = null;
+                if (selectedFile) {
+                    imageData = await uploadImageToStorage();
+                }
+
+                // 2. Prepare data untuk Firestore
+                const updatedData = {
+                    user: document.getElementById('editUser').value,
+                    radioId: document.getElementById('editRadioId').value || '',
+                    serialNumber: document.getElementById('editSerialNumber').value || '',
+                    tagging: document.getElementById('editTagging').value || '',
+                    manufacturer: document.getElementById('editManufacturer').value || '',
+                    brand: document.getElementById('editBrand').value || '',
+                    location: document.getElementById('editLocation').value || '',
+                    remarks: document.getElementById('editRemarks').value || '',
+                    condition: document.getElementById('conditionInput').value || '',
+                    file: imageData ? imageData.url : currentFileUrl,
+                    fileName: imageData ? imageData.name : currentFileName,
+                    fileType: (imageData || currentFileUrl) ? 'image' : '',
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                // 3. Save ke Firestore
+                const querySnapshot = await db.collection('portableRadios')
+                    .where('user', '==', currentUserId)
+                    .get();
+
+                if (querySnapshot.empty) {
+                    throw new Error('Radio data not found.');
+                }
+
+                const docRef = querySnapshot.docs[0].ref;
+                await docRef.update(updatedData);
+                
+                console.log('✅ All data saved successfully');
+                
+                // 4. Update local variables
+                currentRadioData = { ...currentRadioData, ...updatedData };
+                if (imageData) {
+                    currentFileUrl = imageData.url;
+                    currentFileName = imageData.name;
+                }
+                selectedFile = null;
+                
+                // 5. Update UI
+                populateRadioInfo(currentRadioData);
+                
+                // 6. Show success message
+                showSaveSuccess();
+                
+                // 7. Automatically return to view mode after save
+                setTimeout(() => {
+                    toggleInspectionMode();
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error saving:', error);
+                alert('Save failed: ' + error.message);
+            } finally {
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            }
+        }
+
+        function showSaveSuccess() {
+            const successMessage = document.getElementById('saveSuccessMessage');
+            successMessage.style.display = 'flex';
+            
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingMessage').style.display = show ? 'block' : 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            if (!show) document.getElementById('radioInfoContent').style.display = 'none';
+        }
+
+        function showError(message) {
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('errorText').textContent = message;
+        }
+
+        function retryLoading() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let identifier = urlParams.get('user');
+            
+            if (identifier) {
+                identifier = decodeURIComponent(identifier);
+                fetchRadioDataByUserId(identifier);
+            }
+        }
+
+        function closePopup() {
+            if (isEditMode) {
+                if (!confirm('You have unsaved changes. Close without saving?')) {
+                    return;
+                }
+            }
+            window.location.href = 'public-inspection.html';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closePopup();
+        });
+    </script>
+</body>
+</html>

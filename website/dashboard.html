@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #d9534f;
+            --secondary-color: #6a7c92;
+            --light-bg: #f8f9fa;
+            --dark-bg: #1a202c;
+            --dark-text: #2d3748;
+            --light-text: #718096;
+            --border-color: #e2e8f0;
+        }
+
+        [data-theme="dark"] {
+            --light-bg: #1a202c;
+            --dark-text: #e2e8f0;
+            --light-text: #a0aec0;
+            --border-color: #2d3748;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] .sidebar {
+            background-color: #2d3748;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Sidebar Collapsed State */
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        
+        .sidebar.collapsed .logo h1,
+        .sidebar.collapsed .sidebar-user-info,
+        .sidebar.collapsed .nav-item span {
+            display: none;
+        }
+        
+        .sidebar.collapsed .nav-item {
+            justify-content: center;
+            padding: 12px 0;
+            border-radius: 0;
+        }
+        
+        .sidebar.collapsed .nav-item i {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+        
+        .sidebar.collapsed .user-profile-sidebar {
+            justify-content: center;
+            padding: 15px 0;
+        }
+        
+        .logo {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .logo h1 {
+            color: var(--primary-color);
+            font-size: 24px;
+            transition: all 0.3s ease;
+        }
+        
+        /* User Profile in Sidebar */
+        .user-profile-sidebar {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), #e57373);;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-user-info h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+            color: var(--dark-text);
+        }
+        
+        .sidebar-user-info p {
+            font-size: 12px;
+            color: var(--light-text);
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-item {
+            padding: 12px 20px;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .nav-item.active {
+            background-color: rgba(74, 108, 247, 0.1);
+            border-left: 4px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .nav-item:hover:not(.active) {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] .nav-item:hover:not(.active) {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            margin-left: 250px;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] .main-content {
+            background-color: #1a202c;
+        }
+
+        /* Main Content when Sidebar is Collapsed */
+        .sidebar.collapsed + .main-content {
+            margin-left: 70px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .date {
+            color: var(--light-text);
+            font-size: 14px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .welcome-section {
+            margin-bottom: 30px;
+        }
+        
+        .welcome-section h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .welcome-section p {
+            color: var(--light-text);
+        }
+
+        /* Equipment Cards Styles */
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            border: 1px solid var(--border-color);
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-icon {
+            height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            background: #f8f9fa; /* Background plain kalau gambar tak load */
+        }
+
+        /* Gambar sahaja - full cover */
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Cover penuh tanpa crop berlebihan */
+            display: block;
+        }
+
+        .card-content {
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(5px);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .card h3 {
+            color: var(--dark-text);
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .card p {
+            color: var(--light-text);
+            line-height: 1.6;
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--dark-text);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            z-index: 3;
+        }
+
+        /* BUANG gradient colors - guna gambar sahaja */
+        .card:nth-child(1) .card-icon { background: #f8f9fa; }
+        .card:nth-child(2) .card-icon { background: #f8f9fa; }
+        .card:nth-child(3) .card-icon { background: #f8f9fa; }
+        .card:nth-child(4) .card-icon { background: #f8f9fa; }
+        .card:nth-child(5) .card-icon { background: #f8f9fa; }
+        .card:nth-child(6) .card-icon { background: #f8f9fa; }
+        .card:nth-child(7) .card-icon { background: #f8f9fa; }
+        
+        /* Responsive Design for Mobile */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .sidebar:not(.collapsed) {
+                width: 250px;
+            }
+            
+            .sidebar .logo h1,
+            .sidebar .sidebar-user-info,
+            .sidebar .nav-item span {
+                display: none;
+            }
+            
+            .sidebar:not(.collapsed) .logo h1,
+            .sidebar:not(.collapsed) .sidebar-user-info,
+            .sidebar:not(.collapsed) .nav-item span {
+                display: block;
+            }
+            
+            .sidebar .nav-item {
+                justify-content: center;
+                padding: 12px 0;
+                border-radius: 0;
+            }
+            
+            .sidebar:not(.collapsed) .nav-item {
+                justify-content: flex-start;
+                padding: 12px 20px;
+                border-radius: 0 8px 8px 0;
+            }
+            
+            .sidebar .nav-item i {
+                margin-right: 0;
+                font-size: 1.2rem;
+            }
+            
+            .sidebar:not(.collapsed) .nav-item i {
+                margin-right: 10px;
+                font-size: 1rem;
+            }
+            
+            .sidebar .user-profile-sidebar {
+                justify-content: center;
+                padding: 15px 0;
+            }
+            
+            .sidebar:not(.collapsed) .user-profile-sidebar {
+                justify-content: flex-start;
+                padding: 15px 20px;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+                padding: 20px;
+            }
+            
+            .sidebar:not(.collapsed) + .main-content {
+                margin-left: 250px;
+            }
+            
+            .cards-container {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 15px;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .user-info {
+                align-self: flex-end;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .cards-container {
+                grid-template-columns: 1fr;
+                justify-items: center;
+            }
+            
+            .card {
+                width: 100%;
+                max-width: 320px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar collapsed" id="sidebar">
+            <div class="logo">
+                <h1>Public Panel</h1>
+            </div>
+
+            <!-- User Profile in Sidebar -->
+            <div class="user-profile-sidebar">
+                <div class="sidebar-avatar">G</div>
+                <div class="sidebar-user-info">
+                    <h3>Guest User</h3>
+                    <p>Public Access</p>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item active" onclick="toggleSidebar()">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </li>
+
+                <li class="nav-item" onclick="navigateTo('public-inspection.html')">
+                    <i class="fas fa-qrcode"></i>
+                    <span>Inspection</span>
+                </li>
+
+                <li class="nav-item" onclick="navigateTo('public-contact.html')">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </li>
+
+
+                <li class="nav-item" onclick="navigateTo('index.html')">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div class="date" id="currentDate">Monday, 02 March 2020</div>
+                <div class="user-info">
+                    <div class="user-avatar">G</div>
+                    <div>
+                        <div>Guest</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="welcome-section">
+                <h1>Public Dashboard</h1>
+                <p>View all available equipment and their current status</p>
+            </div>
+            
+            <!-- Equipment Cards -->
+            <div class="cards-container">
+                <!-- Portable Radio Card -->
+                <div class="card" onclick="viewEquipmentDetails('portable-radio')">
+                    <div class="card-icon">
+                        <img src="images/portableRadio.jpg" alt="Portable Radio" class="card-image">
+                    </div>
+                    <div class="card-content">
+                        <h3>Portable Radio</h3>
+                    </div>
+                    <div class="card-badge">Communication</div>
+                </div>
+                
+                <!-- Fire PPE Card -->
+                <div class="card" onclick="viewEquipmentDetails('fire-ppe')">
+                    <div class="card-icon">
+                        <img src="images/firePPE.jpg" alt="Fire PPE" class="card-image">
+                    </div>
+                    <div class="card-content">
+                        <h3>Fire PPE</h3>
+                    </div>
+                    <div class="card-badge">Protection</div>
+                </div>
+                
+                <!-- Vehicle Card -->
+                <div class="card" onclick="viewEquipmentDetails('vehicle')">
+                    <div class="card-icon">
+                       <img src="images/vehicle.jpg" alt="Vehicle" class="card-image">
+                    </div>
+                    <div class="card-content">
+                        <h3>Vehicle</h3>
+                    </div>
+                    <div class="card-badge">Transport</div>
+                </div>
+                
+                <!-- Rescue Equipment Card -->
+                <div class="card" onclick="viewEquipmentDetails('rescue-equipment')">
+                    <div class="card-icon">
+                       <img src="images/rescue.jpg" alt="Rescue Equipment" class="card-image">
+                    </div>
+                    <div class="card-content">
+                        <h3>Rescue Equipment</h3>
+                    </div>
+                    <div class="card-badge">Safety</div>
+                </div>
+                
+                <!-- Hazmat Equipment Card -->
+                <div class="card" onclick="viewEquipmentDetails('hazmat-equipment')">
+                    <div class="card-icon">
+                        <img src="images/hazmat.jpg" alt="Hazmat Equipment" class="card-image">
+                    </div>
+                    <div class="card-content">
+                        <h3>Hazmat Equipment</h3>
+                    </div>
+                    <div class="card-badge">Hazard</div>
+                </div>
+                
+                <!-- Hose Card -->
+                <div class="card" onclick="viewEquipmentDetails('hose')">
+                    <div class="card-icon">
+                        <img src="images/hose.jpg" alt="Hose" class="card-image">
+                    </div>
+                    <div class="card-content">
+                        <h3>Hose</h3>
+                    </div>
+                    <div class="card-badge">Water Supply</div>
+                </div>
+                
+                <!-- SCBA Card -->
+                <div class="card" onclick="viewEquipmentDetails('scba')">
+                    <div class="card-icon">
+                        <img src="images/scba.jpg" alt="SCBA" class="card-image">
+                    </div>
+                    <div class="card-content">
+                        <h3>SCBA</h3>
+                    </div>
+                    <div class="card-badge">Respiratory</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        function viewEquipmentDetails(equipmentType) {
+            const pageMap = {
+                'portable-radio': 'public-portableradio.html',
+                'fire-ppe': 'public-fireppe.html',
+                'vehicle': 'public-vehicle.html',
+                'rescue-equipment': 'public-rescue.html',
+                'hazmat-equipment': 'public-hazmat.html',
+                'hose': 'public-hose.html',
+                'scba': 'public-scba.html'
+            };
+            
+            console.log('Equipment clicked:', equipmentType);
+            console.log('Redirecting to:', pageMap[equipmentType]);
+            
+            if (pageMap[equipmentType]) {
+                window.location.href = pageMap[equipmentType];
+            } else {
+                alert(`Viewing details for: ${equipmentType.replace('-', ' ').toUpperCase()}\n\nThis is the public view - read only access.`);
+            }
+        }
+
+        // Update current date
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // Load theme when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('globalTheme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+            updateCurrentDate();
+            
+            // Auto collapse sidebar on mobile
+            handleResize();
+            window.addEventListener('resize', handleResize);
+        });
+
+        // Auto resize sidebar based on screen size
+        function handleResize() {
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth <= 768) {
+                sidebar.classList.add('collapsed');
+            } else {
+                sidebar.classList.add('collapsed'); // Default collapsed on desktop
+            }
+        }
+    </script>
+</body>
+</html>

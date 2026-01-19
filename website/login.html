@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      overflow: hidden;
+    }
+
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .main-container {
+      display: flex;
+      width: 90%;
+      max-width: 800px;
+      height: 450px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+      position: relative;
+      z-index: 10;
+    }
+
+    .image-section {
+      flex: 0.6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .login-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      transition: transform 0.3s ease;
+    }
+
+    .login-image:hover {
+      transform: scale(1.02);
+    }
+
+    .image-placeholder {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(255, 126, 95, 0.2), rgba(254, 180, 123, 0.2));
+      border-radius: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      border: 2px dashed rgba(255, 255, 255, 0.3);
+    }
+
+    .image-placeholder i {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      opacity: 0.7;
+    }
+
+    .login-section {
+      flex: 1;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .logo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    .circle-logo {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff7e5f, #feb47b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .circle-logo i {
+      font-size: 1.5rem;
+      color: white;
+    }
+
+    h2 {
+      color: white;
+      margin-bottom: 25px;
+      font-size: 1.8rem;
+      font-weight: 700;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 15px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 20px 12px 45px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50px;
+      font-size: 14px;
+      color: #333;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    input::placeholder {
+      color: rgba(0, 0, 0, 0.5);
+    }
+
+    input:focus {
+      background: rgba(255, 255, 255, 1);
+      border-color: #ff7e5f;
+      box-shadow: 0 0 0 3px rgba(255, 126, 95, 0.3);
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+      z-index: 2;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #ff7e5f, #feb47b);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 10px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      position: relative;
+      z-index: 2;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      background: linear-gradient(135deg, #ff6b4a, #fea366);
+    }
+
+    p {
+      margin-top: 15px;
+      color: rgba(255, 255, 255, 0.8);
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    a {
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    a:hover {
+      color: #ff7e5f;
+      text-decoration: underline;
+    }
+
+    #loading {
+      display: none;
+      margin-top: 10px;
+      color: rgba(255, 255, 255, 0.9);
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .floating-elements {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .floating-element {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      animation: float 15s infinite linear;
+      pointer-events: none;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-1000px) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .main-container {
+        flex-direction: column;
+        height: auto;
+        width: 95%;
+        max-width: 400px;
+      }
+      
+      .image-section {
+        padding: 15px;
+        flex: none;
+        height: 150px;
+      }
+      
+      .login-image, .image-placeholder {
+        height: 120px;
+        max-width: 250px;
+      }
+      
+      .login-section {
+        padding: 25px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="floating-elements">
+    <div class="floating-element" style="width: 60px; height: 60px; top: 10%; left: 10%; animation-delay: 0s;"></div>
+    <div class="floating-element" style="width: 80px; height: 80px; top: 70%; left: 80%; animation-delay: -5s;"></div>
+    <div class="floating-element" style="width: 50px; height: 50px; top: 20%; left: 85%; animation-delay: -10s;"></div>
+    <div class="floating-element" style="width: 70px; height: 70px; top: 80%; left: 15%; animation-delay: -7s;"></div>
+  </div>
+
+  <div class="main-container">
+    <!-- Gambar di sebelah kiri -->
+    <div class="image-section">
+      <img src="images/i4.jpg" alt="Admin Equipment" class="login-image" onerror="this.style.display='none'; document.getElementById('placeholder').style.display='flex';">
+      <div id="placeholder" class="image-placeholder" style="display: none;">
+        <i class="fas fa-user-shield"></i>
+        <span>Admin Portal</span>
+      </div>
+    </div>
+    
+    <!-- Form login di sebelah kanan -->
+    <div class="login-section">
+      <div class="logo-container">
+        <div class="circle-logo">
+          <i class="fas fa-user-shield"></i>
+        </div>
+        <h2>Admin Login</h2>
+      </div>
+
+      <div class="input-group">
+        <i class="fas fa-envelope input-icon"></i>
+        <input type="email" id="email" placeholder="Admin Email" required>
+      </div>
+
+      <div class="input-group">
+        <i class="fas fa-lock input-icon"></i>
+        <input type="password" id="password" placeholder="Password" required>
+        <!-- Password toggle telah dibuang -->
+      </div>
+
+      <button id="loginBtn">Login</button>
+      <p id="loading">Logging in, please wait...</p>
+      <p><a href="index.html">← Back to Start</a></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBf9xdF0qmVYaNWFUuEys-P5a1yuTpLdVY",
+      authDomain: "project123-82272.firebaseapp.com",
+      projectId: "project123-82272",
+      storageBucket: "project123-82272.firebasestorage.app",
+      messagingSenderId: "97561643123",
+      appId: "1:97561643123:web:92596bb20645124f68c206",
+      measurementId: "G-D5P85TT95P"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const loadingText = document.getElementById("loading");
+
+      if (!email || !password) {
+        alert("Please enter both email and password.");
+        return;
+      }
+
+      loadingText.style.display = "block";
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          loadingText.textContent = "Login successful! Redirecting...";
+          setTimeout(() => {
+            window.location.href = "admin-dashboard.html";
+          }, 1200);
+        })
+        .catch((error) => {
+          loadingText.style.display = "none";
+          if (error.code === "auth/user-not-found") {
+            alert("No account found with this email.");
+          } else if (error.code === "auth/wrong-password") {
+            alert("Incorrect password. Please try again.");
+          } else if (error.code === "auth/invalid-email") {
+            alert("Invalid email format.");
+          } else {
+            alert("Login failed: " + error.message);
+          }
+        });
+    });
+
+    // Allow login dengan Enter key
+    document.addEventListener('keypress', function(event) {
+      if (event.key === 'Enter') {
+        document.getElementById('loginBtn').click();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire PPE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="pubppe.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>Admin Panel</h1>
+            </div>
+
+            <div class="user-profile-sidebar">
+                <div class="sidebar-avatar">G</div>
+                <div class="sidebar-user-info">
+                    <h3>Admin User</h3>
+                    <p>Administrator</p>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item" onclick="navigateTo('admin-dashboard.html')">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" onclick="navigateTo('admin-info.html')">
+                    <i class="fas fa-qrcode"></i>
+                    <span>Inspection Data</span>
+                </li>
+                <li class="nav-item active">
+                    <i class="fas fa-hard-hat"></i>
+                    <span>Fire PPE</span>
+                </li>
+                <li class="nav-item" onclick="navigateTo('admin-contact.html')">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </li>
+
+                <li class="nav-item" onclick="navigateTo('index.html')">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Logout</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div class="date" id="currentDate">Monday, 02 March 2020</div>
+                <div class="user-info">
+                    <div class="user-avatar">A</div>
+                    <div>
+                        <div>Admin</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="welcome-section">
+                <h1>Fire PPE Inventory</h1>
+                <p>View-only access to Fire Protective Equipment</p>
+            </div>
+
+            <!-- VIEW TABS -->
+            <div class="view-tabs">
+                <div class="view-tab active" onclick="switchViewTab('inventoryCardsView')">PPE Inventory</div>
+                <div class="view-tab" onclick="switchViewTab('stockCardsView')">PPE Stock</div>
+            </div>
+
+            <!-- INVENTORY CARDS SECTION -->
+            <div class="view-content active" id="inventoryCardsView">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>PPE Inventory</h3>
+                        <button class="refresh-btn" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <p style="color: var(--light-text); margin-top: 5px;">Click on any card to view detailed issuance information</p>
+                    
+                    <div class="loading" id="loadingCardsMessage">
+                        <i class="fas fa-spinner fa-spin"></i> Loading PPE inventory data...
+                    </div>
+                    
+                    <div id="cardsContainer" style="display: none;">
+                        <div class="cards-grid" id="ppeCardsGrid">
+                            <!-- Cards will be dynamically added here -->
+                        </div>
+                    </div>
+                    
+                    <div class="no-data" id="noCardsDataMessage" style="display: none;">
+                        <i class="fas fa-inbox"></i> No PPE inventory data available
+                    </div>
+                </div>
+            </div>
+
+            <!-- STOCK CARDS SECTION -->
+            <div class="view-content" id="stockCardsView">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>PPE Stock</h3>
+                        <p style="color: var(--light-text); margin-top: 5px;">Current stock status for each type of PPE</p>
+                    </div>
+                    
+                    <div class="loading" id="loadingStockCardsMessage">
+                        <i class="fas fa-spinner fa-spin"></i> Loading PPE stock data...
+                    </div>
+                    
+                    <div id="stockCardsContainer" style="display: none;">
+                        <div class="cards-grid" id="ppeStockCardsGrid">
+                            <!-- Stock cards will be dynamically added here -->
+                        </div>
+                    </div>
+                    
+                    <div class="no-data" id="noStockCardsDataMessage" style="display: none;">
+                        <i class="fas fa-inbox"></i> No PPE stock data available
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for PPE Inventory Details -->
+    <div class="modal-overlay" id="ppeDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalPPETitle">PPE Issuance Details</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Modal header with search and sort controls -->
+                <div class="modal-controls" id="modalControls" style="display: none;">
+                    <div class="table-controls" style="margin-bottom: 20px;">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="modalSearch" placeholder="Search within this PPE..." onkeyup="searchModalData()">
+                        </div>
+                        <div class="sort-controls">
+                            <select id="modalSort" onchange="sortModalData()" class="sort-select">
+                                <option value="">Sort by...</option>
+                                <option value="name-asc">Name (A-Z)</option>
+                                <option value="name-desc">Name (Z-A)</option>
+                                <option value="date-asc">Date (Oldest)</option>
+                                <option value="date-desc">Date (Newest)</option>
+                            </select>
+                        </div>
+                        <button class="refresh-btn" onclick="refreshModalData()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div id="modalBodyContent">
+                    <!-- Modal content will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for User Details -->
+    <div class="modal-overlay" id="userDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalUserTitle">User Issuance Details</h3>
+                <button class="modal-close" onclick="closeUserModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalUserBody">
+                <!-- User details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for PPE Stock Details -->
+    <div class="modal-overlay" id="ppeStockDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalStockTitle">PPE Stock Details</h3>
+                <button class="modal-close" onclick="closeStockModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalStockBody">
+                <!-- Modal content will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase App -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <!-- Firebase Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <script>
+        // Navigation function
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // Function to switch between view tabs
+        function switchViewTab(tabId) {
+            // Hide all view contents
+            const viewContents = document.querySelectorAll('.view-content');
+            viewContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Show selected view content
+            document.getElementById(tabId).classList.add('active');
+            
+            // Update tab active state
+            const tabs = document.querySelectorAll('.view-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Activate the clicked tab
+            event.target.classList.add('active');
+            
+            // Load data if switching to different view
+            if (tabId === 'inventoryCardsView') {
+                loadInventoryCards();
+            } else if (tabId === 'stockCardsView') {
+                loadStockCards();
+            }
+        }
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBf9xdF0qmVYaNWFUuEys-P5a1yuTpLdVY",
+            authDomain: "project123-82272.firebaseapp.com",
+            projectId: "project123-82272",
+            storageBucket: "project123-82272.firebasestorage.app",
+            messagingSenderId: "97561643123",
+            appId: "1:97561643123:web:92596bb20645124f68c206",
+            measurementId: "G-D5P85TT95P"
+        };
+
+        // Initialize Firebase
+        let app, db;
+
+        // Variables for modal data
+        let currentModalData = [];
+        let currentModalPPEType = '';
+        let currentModalSort = '';
+        let currentModalSearch = '';
+
+        window.addEventListener('load', function() {
+            console.log("🚀 Loading public fire PPE page...");
+            initializeFirebase();
+            updateCurrentDate();
+            
+            // Add custom CSS for modal controls
+            addCustomCSS();
+        });
+
+        function addCustomCSS() {
+            const style = document.createElement('style');
+            style.textContent = `
+                .modal-controls {
+                    border-bottom: 1px solid var(--border-color);
+                    padding-bottom: 15px;
+                    margin-bottom: 20px;
+                }
+                
+                .sort-controls {
+                    display: flex;
+                    align-items: center;
+                }
+                
+                .sort-select {
+                    padding: 8px 12px;
+                    border: 1px solid var(--border-color);
+                    border-radius: 5px;
+                    background-color: var(--light-bg);
+                    color: var(--dark-text);
+                    font-size: 14px;
+                    min-width: 150px;
+                }
+                
+                .user-name-link {
+                    color: var(--primary-color);
+                    cursor: pointer;
+                    text-decoration: underline;
+                    transition: color 0.3s ease;
+                }
+                
+                .user-name-link:hover {
+                    color: #c9302c;
+                }
+                
+                .user-detail-item {
+                    display: flex;
+                    margin-bottom: 15px;
+                    padding-bottom: 15px;
+                    border-bottom: 1px solid var(--border-color);
+                }
+                
+                .user-detail-label {
+                    font-weight: 600;
+                    min-width: 120px;
+                    color: var(--light-text);
+                }
+                
+                .user-detail-value {
+                    flex: 1;
+                    color: var(--dark-text);
+                }
+                
+                .user-issuance-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 20px;
+                }
+                
+                .user-issuance-table th {
+                    background-color: rgba(74, 108, 247, 0.05);
+                    padding: 10px;
+                    text-align: left;
+                    font-weight: 600;
+                    color: var(--dark-text);
+                }
+                
+                .user-issuance-table td {
+                    padding: 10px;
+                    border-bottom: 1px solid var(--border-color);
+                }
+                
+                .modal-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 10px;
+                }
+                
+                .modal-table th {
+                    background-color: rgba(74, 108, 247, 0.05);
+                    padding: 12px 15px;
+                    text-align: left;
+                    font-weight: 600;
+                    color: var(--dark-text);
+                    border-bottom: 2px solid var(--border-color);
+                }
+                
+                .modal-table td {
+                    padding: 12px 15px;
+                    border-bottom: 1px solid var(--border-color);
+                    color: var(--dark-text);
+                }
+                
+                .modal-table tr:hover {
+                    background-color: rgba(0, 0, 0, 0.02);
+                }
+                
+                [data-theme="dark"] .modal-table tr:hover {
+                    background-color: rgba(255, 255, 255, 0.05);
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        function initializeFirebase() {
+            try {
+                if (typeof firebase === 'undefined') {
+                    console.error("❌ Firebase library not loaded");
+                    alert("Firebase library failed to load. Please check your internet connection.");
+                    return;
+                }
+                
+                if (!firebase.apps.length) {
+                    app = firebase.initializeApp(firebaseConfig);
+                } else {
+                    app = firebase.app();
+                }
+                
+                db = firebase.firestore();
+                
+                console.log("✅ Firebase initialized successfully for public page");
+                loadInventoryCards();
+                
+            } catch (error) {
+                console.error("❌ Firebase initialization error:", error);
+                console.log("⚠️ Firebase failed but navigation should still work");
+            }
+        }
+
+        // Predefined PPE items for cards
+        const ppeItems = [
+            'Firefighting Helmet (HPS7000)',
+            'Head Hood',
+            'Bunker Gear',
+            'Firefighting Gloves',
+            'Firefighting Boots'
+        ];
+
+        // Store all issuance data globally
+        let allIssuanceData = [];
+
+        function loadInventoryCards() {
+            const loadingMessage = document.getElementById('loadingCardsMessage');
+            const noDataMessage = document.getElementById('noCardsDataMessage');
+            const cardsContainer = document.getElementById('cardsContainer');
+            const cardsGrid = document.getElementById('ppeCardsGrid');
+
+            if (!db) {
+                console.error("❌ Firestore not initialized");
+                if (loadingMessage) {
+                    loadingMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Firebase not initialized';
+                }
+                return;
+            }
+
+            console.log("📡 Loading PPE inventory cards data...");
+
+            // Real-time listener untuk issuance data
+            db.collection('firePPEIssuance')
+                .onSnapshot((snapshot) => {
+                    console.log("📊 Issuance data loaded for cards:", snapshot.size, "documents");
+                    if (loadingMessage) loadingMessage.style.display = 'none';
+                    
+                    // Store all data globally
+                    allIssuanceData = [];
+                    snapshot.forEach((doc) => {
+                        allIssuanceData.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+
+                    if (snapshot.empty) {
+                        console.log("ℹ️ No data found in firePPEIssuance collection");
+                        if (noDataMessage) noDataMessage.style.display = 'block';
+                        if (cardsContainer) cardsContainer.style.display = 'none';
+                        // Create empty cards if no data
+                        createEmptyCards(cardsGrid);
+                        return;
+                    }
+
+                    if (noDataMessage) noDataMessage.style.display = 'none';
+                    if (cardsContainer) cardsContainer.style.display = 'block';
+                    
+                    // Count issuances by PPE type
+                    const issuanceCounts = {};
+                    ppeItems.forEach(item => {
+                        issuanceCounts[item] = 0;
+                    });
+                    
+                    allIssuanceData.forEach(data => {
+                        const ppeType = data.typesOfPPE;
+                        if (ppeType && issuanceCounts.hasOwnProperty(ppeType)) {
+                            issuanceCounts[ppeType]++;
+                        }
+                    });
+                    
+                    // Generate cards
+                    createCards(cardsGrid, issuanceCounts);
+                    console.log("✅ PPE inventory cards generated successfully");
+                    
+                }, (error) => {
+                    console.error('❌ Error loading cards data:', error);
+                    if (loadingMessage) loadingMessage.style.display = 'none';
+                    if (noDataMessage) {
+                        noDataMessage.style.display = 'block';
+                        noDataMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error loading inventory data. Please try refreshing.';
+                    }
+                    // Create empty cards on error
+                    createEmptyCards(cardsGrid);
+                });
+        }
+
+        function createCards(cardsGrid, issuanceCounts) {
+            let html = '';
+            
+            ppeItems.forEach(ppeType => {
+                const count = issuanceCounts[ppeType] || 0;
+                
+                html += `
+                    <div class="ppe-inventory-card" onclick="showPPEDetails('${ppeType.replace(/'/g, "\\'")}')">
+                        <h3 class="ppe-card-title">${ppeType}</h3>
+                        <div class="ppe-card-count">${count}</div>
+                        <div class="ppe-card-count-label">Issuance${count !== 1 ? 's' : ''}</div>
+                    </div>
+                `;
+            });
+            
+            if (cardsGrid) {
+                cardsGrid.innerHTML = html;
+            }
+        }
+
+        function createEmptyCards(cardsGrid) {
+            let html = '';
+            
+            ppeItems.forEach(ppeType => {
+                html += `
+                    <div class="ppe-inventory-card" onclick="showPPEDetails('${ppeType.replace(/'/g, "\\'")}')">
+                        <h3 class="ppe-card-title">${ppeType}</h3>
+                        <div class="ppe-card-count">0</div>
+                        <div class="ppe-card-count-label">Issuances</div>
+                    </div>
+                `;
+            });
+            
+            if (cardsGrid) {
+                cardsGrid.innerHTML = html;
+            }
+        }
+
+        function loadStockCards() {
+            const loadingMessage = document.getElementById('loadingStockCardsMessage');
+            const noDataMessage = document.getElementById('noStockCardsDataMessage');
+            const cardsContainer = document.getElementById('stockCardsContainer');
+            const cardsGrid = document.getElementById('ppeStockCardsGrid');
+
+            if (!db) {
+                console.error("❌ Firestore not initialized");
+                if (loadingMessage) {
+                    loadingMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Firebase not initialized';
+                }
+                return;
+            }
+
+            console.log("📡 Loading PPE stock cards data...");
+
+            // Real-time listener untuk stock data
+            db.collection('firePPEStock')
+                .onSnapshot((snapshot) => {
+                    console.log("📊 Stock data loaded for cards:", snapshot.size, "documents");
+                    if (loadingMessage) loadingMessage.style.display = 'none';
+                    
+                    if (snapshot.empty) {
+                        console.log("ℹ️ No data found in firePPEStock collection");
+                        if (noDataMessage) noDataMessage.style.display = 'block';
+                        if (cardsContainer) cardsContainer.style.display = 'none';
+                        return;
+                    }
+
+                    if (noDataMessage) noDataMessage.style.display = 'none';
+                    if (cardsContainer) cardsContainer.style.display = 'block';
+                    
+                    let html = '';
+                    const stockData = [];
+                    
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        stockData.push(data);
+                    });
+                    
+                    // Sort stock data by PPE type
+                    stockData.sort((a, b) => {
+                        const nameA = a.typesOfPPE || '';
+                        const nameB = b.typesOfPPE || '';
+                        return nameA.localeCompare(nameB);
+                    });
+                    
+                    stockData.forEach((data) => {
+                        const isLowStock = data.currentQty < data.minQty;
+                        const statusClass = isLowStock ? 'low' : 'adequate';
+                        const statusText = isLowStock ? 'Low Stock' : 'Adequate';
+                        const statusColor = isLowStock ? '#e53e3e' : '#38a169';
+                        
+                        // Calculate progress percentage (minimum 5% for visibility)
+                        const progressPercentage = data.minQty > 0 ? 
+                            Math.max(5, Math.min(100, (data.currentQty / data.minQty) * 100)) : 5;
+                        
+                        html += `
+                            <div class="stock-card" onclick="showStockDetails('${data.typesOfPPE || ''}')">
+                                <div class="stock-card-header">
+                                    <h3>${data.typesOfPPE || 'Unknown PPE'}</h3>
+                                </div>
+                                <div class="stock-info">
+                                    <div>
+                                        <div class="stock-item">
+                                            <span class="label">Min Quantity:</span>
+                                            <span class="value">${data.minQty || 0}</span>
+                                        </div>
+                                        <div class="stock-item">
+                                            <span class="label">Current:</span>
+                                            <span class="value" style="color: ${statusColor}">${data.currentQty || 0}</span>
+                                        </div>
+                                        <div class="stock-progress-bar">
+                                            <div class="stock-progress-fill ${statusClass}" style="width: ${progressPercentage}%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="stock-qty ${statusClass}">
+                                            ${data.currentQty || 0}
+                                        </div>
+                                        <div class="stock-status ${isLowStock ? 'stock-status-low' : 'stock-status-adequate'}">
+                                            ${statusText}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    if (cardsGrid) {
+                        cardsGrid.innerHTML = html;
+                    }
+                    console.log("✅ PPE stock cards generated successfully");
+                    
+                }, (error) => {
+                    console.error('❌ Error loading stock cards data:', error);
+                    if (loadingMessage) loadingMessage.style.display = 'none';
+                    if (noDataMessage) {
+                        noDataMessage.style.display = 'block';
+                        noDataMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error loading stock data. Please try refreshing.';
+                    }
+                });
+        }
+
+        // Function to show PPE inventory details in modal
+        window.showPPEDetails = function(ppeType) {
+            const modal = document.getElementById('ppeDetailsModal');
+            const modalTitle = document.getElementById('modalPPETitle');
+            const modalControls = document.getElementById('modalControls');
+            const modalBodyContent = document.getElementById('modalBodyContent');
+            
+            modalTitle.textContent = `${ppeType} - Issuance Details`;
+            currentModalPPEType = ppeType;
+            
+            // Show modal controls
+            modalControls.style.display = 'block';
+            
+            // Reset search and sort
+            document.getElementById('modalSearch').value = '';
+            document.getElementById('modalSort').value = '';
+            currentModalSort = '';
+            currentModalSearch = '';
+            
+            // Load modal data
+            loadModalData(ppeType);
+            
+            modal.style.display = 'flex';
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+        }
+
+        function loadModalData(ppeType) {
+            const modalBodyContent = document.getElementById('modalBodyContent');
+            
+            // Filter data based on ppeType from our global data
+            const filteredData = allIssuanceData.filter(item => 
+                item.typesOfPPE === ppeType
+            );
+            
+            // Store current modal data
+            currentModalData = filteredData;
+            
+            if (filteredData.length === 0) {
+                modalBodyContent.innerHTML = `
+                    <div class="no-issuance-data">
+                        <i class="fas fa-inbox fa-2x" style="margin-bottom: 15px;"></i>
+                        <p>No issuance data available for ${ppeType}</p>
+                        <p style="font-size: 14px; margin-top: 10px;">Data will appear here when users issue this PPE</p>
+                    </div>
+                `;
+            } else {
+                // Apply sorting if exists
+                if (currentModalSort) {
+                    sortModalData();
+                } else {
+                    // Default sort by date (newest first)
+                    filteredData.sort((a, b) => {
+                        const dateA = a.issuanceDate ? new Date(a.issuanceDate) : new Date(0);
+                        const dateB = b.issuanceDate ? new Date(b.issuanceDate) : new Date(0);
+                        return dateB - dateA;
+                    });
+                }
+                
+                renderModalTable();
+            }
+        }
+
+        function renderModalTable() {
+            const modalBodyContent = document.getElementById('modalBodyContent');
+            
+            // Filter data based on search
+            let displayData = currentModalData;
+            if (currentModalSearch) {
+                const searchTerm = currentModalSearch.toLowerCase();
+                displayData = displayData.filter(data => {
+                    const userName = data.latestIssuance ? 
+                        data.latestIssuance.split(' ')[0] || data.latestIssuance : 
+                        'Unknown User';
+                    return userName.toLowerCase().includes(searchTerm) ||
+                           (data.sizes && data.sizes.toLowerCase().includes(searchTerm)) ||
+                           (data.remarks && data.remarks.toLowerCase().includes(searchTerm));
+                });
+            }
+            
+            let html = `
+                <div style="margin-bottom: 15px; font-size: 14px; color: var(--light-text);">
+                    Total: ${displayData.length} issuance${displayData.length !== 1 ? 's' : ''}
+                </div>
+                <table class="modal-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Size</th>
+                            <th>Date</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            displayData.forEach((data) => {
+                // Format date
+                let issuanceDate = 'N/A';
+                if (data.issuanceDate) {
+                    try {
+                        issuanceDate = new Date(data.issuanceDate).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        });
+                    } catch (e) {
+                        issuanceDate = data.issuanceDate; // Use raw value if parsing fails
+                    }
+                }
+                
+                // Parse the latest issuance to get user name
+                let userName = 'Unknown User';
+                if (data.latestIssuance) {
+                    // Extract name from latest issuance field
+                    userName = data.latestIssuance.split(' ')[0] || data.latestIssuance;
+                }
+                
+                // Get sizes
+                const sizes = data.sizes || 'N/A';
+                
+                html += `
+                    <tr>
+                        <td>
+                            <span class="user-name-link" onclick="showUserDetails('${userName.replace(/'/g, "\\'")}', '${currentModalPPEType.replace(/'/g, "\\'")}')">
+                                ${userName}
+                            </span>
+                        </td>
+                        <td>${sizes}</td>
+                        <td>${issuanceDate}</td>
+                        <td>${data.remarks || 'No remarks'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            modalBodyContent.innerHTML = html;
+        }
+
+        // Search function for modal
+        window.searchModalData = function() {
+            currentModalSearch = document.getElementById('modalSearch').value.toLowerCase();
+            renderModalTable();
+        }
+
+        // Sort function for modal
+        window.sortModalData = function() {
+            const sortSelect = document.getElementById('modalSort');
+            currentModalSort = sortSelect.value;
+            
+            if (!currentModalSort) return;
+            
+            const [field, direction] = currentModalSort.split('-');
+            
+            currentModalData.sort((a, b) => {
+                if (field === 'name') {
+                    // Get user names
+                    const nameA = a.latestIssuance ? 
+                        a.latestIssuance.split(' ')[0] || a.latestIssuance : 
+                        'Unknown User';
+                    const nameB = b.latestIssuance ? 
+                        b.latestIssuance.split(' ')[0] || b.latestIssuance : 
+                        'Unknown User';
+                    
+                    return direction === 'asc' ? 
+                        nameA.localeCompare(nameB) : 
+                        nameB.localeCompare(nameA);
+                } else if (field === 'date') {
+                    const dateA = a.issuanceDate ? new Date(a.issuanceDate) : new Date(0);
+                    const dateB = b.issuanceDate ? new Date(b.issuanceDate) : new Date(0);
+                    
+                    return direction === 'asc' ? 
+                        dateA - dateB : 
+                        dateB - dateA;
+                }
+                return 0;
+            });
+            
+            renderModalTable();
+        }
+
+        // Refresh modal data
+        window.refreshModalData = function() {
+            loadModalData(currentModalPPEType);
+        }
+
+        // Function to show user details in modal
+        window.showUserDetails = function(userName, ppeType) {
+            const modal = document.getElementById('userDetailsModal');
+            const modalTitle = document.getElementById('modalUserTitle');
+            const modalBody = document.getElementById('modalUserBody');
+            
+            modalTitle.textContent = `${userName} - ${ppeType} Details`;
+            
+            // Filter data based on user name and PPE type
+            const userData = allIssuanceData.filter(item => {
+                if (item.typesOfPPE !== ppeType) return false;
+                
+                if (item.latestIssuance) {
+                    // Check if latest issuance contains the user name
+                    return item.latestIssuance.includes(userName) || 
+                           item.latestIssuance.split(' ')[0] === userName;
+                }
+                return false;
+            });
+            
+            if (userData.length === 0) {
+                modalBody.innerHTML = `
+                    <div class="no-issuance-data">
+                        <i class="fas fa-user fa-2x" style="margin-bottom: 15px;"></i>
+                        <p>No detailed information available for ${userName}</p>
+                    </div>
+                `;
+            } else {
+                // Get the most recent issuance for this user
+                const latestIssuance = userData.sort((a, b) => {
+                    const dateA = a.issuanceDate ? new Date(a.issuanceDate) : new Date(0);
+                    const dateB = b.issuanceDate ? new Date(b.issuanceDate) : new Date(0);
+                    return dateB - dateA;
+                })[0];
+                
+                let html = `
+                    <div class="user-detail-item">
+                        <div class="user-detail-label">User Name:</div>
+                        <div class="user-detail-value">${userName}</div>
+                    </div>
+                    <div class="user-detail-item">
+                        <div class="user-detail-label">PPE Type:</div>
+                        <div class="user-detail-value">${ppeType}</div>
+                    </div>
+                    <div class="user-detail-item">
+                        <div class="user-detail-label">Issuance Date:</div>
+                        <div class="user-detail-value">${latestIssuance.issuanceDate ? new Date(latestIssuance.issuanceDate).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        }) : 'N/A'}</div>
+                    </div>
+                    <div class="user-detail-item">
+                        <div class="user-detail-label">Size & Quantity:</div>
+                        <div class="user-detail-value">${latestIssuance.sizes || 'N/A'}</div>
+                    </div>
+                    <div class="user-detail-item">
+                        <div class="user-detail-label">Remarks:</div>
+                        <div class="user-detail-value">${latestIssuance.remarks || 'No remarks'}</div>
+                    </div>
+                `;
+                
+                // Show all issuances by this user for this PPE type
+                if (userData.length > 1) {
+                    html += `
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                            <h4 style="margin-bottom: 10px; color: var(--dark-text);">All Issuances by ${userName}</h4>
+                            <table class="user-issuance-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Size & Quantity</th>
+                                        <th>Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    userData.forEach(data => {
+                        const issuanceDate = data.issuanceDate ? 
+                            new Date(data.issuanceDate).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                            }) : 'N/A';
+                        
+                        html += `
+                            <tr>
+                                <td>${issuanceDate}</td>
+                                <td>${data.sizes || 'N/A'}</td>
+                                <td>${data.remarks || 'No remarks'}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                </tbody>
+                            </table>
+                            <div style="margin-top: 10px; font-size: 14px; color: var(--light-text);">
+                                Total: ${userData.length} issuance${userData.length !== 1 ? 's' : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                modalBody.innerHTML = html;
+            }
+            
+            modal.style.display = 'flex';
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeUserModal();
+                }
+            });
+            
+            // Prevent event propagation
+            event.stopPropagation();
+        }
+
+        // Function to show PPE stock details in modal
+        window.showStockDetails = function(ppeType) {
+            if (!db) {
+                console.error("❌ Firestore not initialized");
+                alert("Error: Database not initialized");
+                return;
+            }
+
+            // Fetch stock data for this PPE type
+            db.collection('firePPEStock')
+                .where('typesOfPPE', '==', ppeType)
+                .get()
+                .then((snapshot) => {
+                    if (snapshot.empty) {
+                        showStockModalWithData(ppeType, null);
+                        return;
+                    }
+
+                    let stockData = null;
+                    snapshot.forEach((doc) => {
+                        stockData = {
+                            id: doc.id,
+                            ...doc.data()
+                        };
+                    });
+                    
+                    showStockModalWithData(ppeType, stockData);
+                })
+                .catch((error) => {
+                    console.error('❌ Error fetching stock details:', error);
+                    showStockModalWithData(ppeType, null);
+                });
+        }
+
+        function showStockModalWithData(ppeType, stockData) {
+            const modal = document.getElementById('ppeStockDetailsModal');
+            const modalTitle = document.getElementById('modalStockTitle');
+            const modalBody = document.getElementById('modalStockBody');
+            
+            modalTitle.textContent = `${ppeType} - Stock Details`;
+            
+            if (!stockData) {
+                modalBody.innerHTML = `
+                    <div class="no-issuance-data">
+                        <i class="fas fa-inbox fa-2x" style="margin-bottom: 15px;"></i>
+                        <p>No stock data available for ${ppeType}</p>
+                    </div>
+                `;
+            } else {
+                const isLowStock = stockData.currentQty < stockData.minQty;
+                const statusText = isLowStock ? 'Low Stock' : 'Adequate';
+                const statusColor = isLowStock ? '#e53e3e' : '#38a169';
+                
+                html = `
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 14px; color: var(--light-text); margin-bottom: 8px;">Current Stock Level</div>
+                        <div style="font-size: 48px; font-weight: 700; color: ${statusColor}; text-align: center; margin: 20px 0;">
+                            ${stockData.currentQty || 0}
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
+                        <div style="background: ${isLowStock ? 'rgba(229, 62, 62, 0.1)' : 'rgba(56, 161, 105, 0.1)'}; padding: 20px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 12px; color: var(--light-text); margin-bottom: 8px;">MINIMUM REQUIRED</div>
+                            <div style="font-size: 24px; font-weight: 700; color: ${statusColor}">${stockData.minQty || 0}</div>
+                        </div>
+                        <div style="background: ${isLowStock ? 'rgba(229, 62, 62, 0.1)' : 'rgba(56, 161, 105, 0.1)'}; padding: 20px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 12px; color: var(--light-text); margin-bottom: 8px;">STATUS</div>
+                            <div style="font-size: 18px; font-weight: 700; color: ${statusColor}">${statusText}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 30px;">
+                        <div style="font-size: 14px; color: var(--light-text); margin-bottom: 10px;">Stock Progress</div>
+                        <div style="background: #e2e8f0; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 10px;">
+                            <div style="background: ${statusColor}; width: ${stockData.minQty > 0 ? Math.min(100, (stockData.currentQty / stockData.minQty) * 100) : 0}%; height: 100%;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--light-text);">
+                            <span>0</span>
+                            <span>${stockData.minQty} (Min)</span>
+                            <span>${stockData.minQty > 0 ? Math.round((stockData.currentQty / stockData.minQty) * 100) : 0}%</span>
+                        </div>
+                    </div>
+                    
+                    ${isLowStock ? `
+                        <div style="margin-top: 25px; padding: 15px; background: rgba(229, 62, 62, 0.1); border-radius: 8px; border-left: 4px solid #e53e3e;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <i class="fas fa-exclamation-triangle" style="color: #e53e3e;"></i>
+                                <div>
+                                    <div style="font-weight: 600; color: #e53e3e; margin-bottom: 5px;">Low Stock Alert</div>
+                                    <div style="font-size: 14px; color: var(--light-text);">
+                                        Current stock is below minimum required level. Please restock soon.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+                
+                modalBody.innerHTML = html;
+            }
+            
+            modal.style.display = 'flex';
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeStockModal();
+                }
+            });
+        }
+
+        window.closeModal = function() {
+            const modal = document.getElementById('ppeDetailsModal');
+            modal.style.display = 'none';
+        }
+
+        window.closeUserModal = function() {
+            const modal = document.getElementById('userDetailsModal');
+            modal.style.display = 'none';
+        }
+
+        window.closeStockModal = function() {
+            const modal = document.getElementById('ppeStockDetailsModal');
+            modal.style.display = 'none';
+        }
+
+        window.refreshData = function() {
+            console.log("🔄 Manually refreshing data...");
+            const loadingCardsMessage = document.getElementById('loadingCardsMessage');
+            const noCardsDataMessage = document.getElementById('noCardsDataMessage');
+            const cardsContainer = document.getElementById('cardsContainer');
+            
+            const loadingStockCardsMessage = document.getElementById('loadingStockCardsMessage');
+            const noStockCardsDataMessage = document.getElementById('noStockCardsDataMessage');
+            const stockCardsContainer = document.getElementById('stockCardsContainer');
+            
+            // Check which tab is active and refresh accordingly
+            const activeTab = document.querySelector('.view-tab.active').textContent;
+            
+            if (activeTab.includes('Inventory')) {
+                if (loadingCardsMessage) loadingCardsMessage.style.display = 'block';
+                if (noCardsDataMessage) noCardsDataMessage.style.display = 'none';
+                if (cardsContainer) cardsContainer.style.display = 'none';
+                
+                setTimeout(() => {
+                    loadInventoryCards();
+                }, 500);
+            } else {
+                if (loadingStockCardsMessage) loadingStockCardsMessage.style.display = 'block';
+                if (noStockCardsDataMessage) noStockCardsDataMessage.style.display = 'none';
+                if (stockCardsContainer) stockCardsContainer.style.display = 'none';
+                
+                setTimeout(() => {
+                    loadStockCards();
+                }, 500);
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portable Radio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Link to external CSS file -->
+    <link rel="stylesheet" href="adminradio.css">
+    <!-- QR Code Library - FIXED VERSION -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>Admin Panel</h1>
+            </div>
+
+            <div class="user-profile-sidebar">
+                <div class="sidebar-avatar">A</div>
+                <div class="sidebar-user-info">
+                    <h3>Admin User</h3>
+                    <p>Administrator</p>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item" onclick="navigateTo('admin-dashboard.html')">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item active">
+                    <i class="fas fa-walkie-talkie"></i>
+                    <span>Portable Radio</span>
+                </li>
+                <li class="nav-item" onclick="navigateTo('admin-contact.html')">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </li>
+               <li class="nav-item" onclick="logout()" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+               <i class="fas fa-sign-out-alt"></i>
+               <span>Logout</span>
+               </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div class="date" id="currentDate">Monday, 02 March 2020</div>
+                <div class="user-info">
+                    <div class="user-avatar">A</div>
+                    <div>
+                        <div>Admin</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="welcome-section">
+                <h1>Portable Radio Management</h1>
+                <p>Add, edit, and manage portable radio equipment</p>
+            </div>
+
+            <!-- FORM TABS -->
+            <div class="form-tabs">
+                <div class="form-tab active" onclick="switchFormTab('form1', this)">Portable Radio Form</div>
+                <div class="form-tab" onclick="switchFormTab('form2', this)">Rental Radio Form</div>
+            </div>
+
+            <!-- FORM 1: Portable Radio -->
+            <div class="form-container form-content active" id="form1">
+                <div class="form-header">
+                    <h3 id="portableFormTitle">Add Portable Radio</h3>
+                </div>
+                <form id="portableRadioForm">
+                    <!-- First Row: user, radioId, serialNumber -->
+                    <div class="form-row">
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="user">User *</label>
+                                <input type="text" id="user" name="user" required>
+                            </div>
+                        </div>
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="radioId">Radio ID *</label>
+                                <input type="text" id="radioId" name="radioId" required>
+                            </div>
+                        </div>
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="serialNumber">Serial Number *</label>
+                                <input type="text" id="serialNumber" name="serialNumber" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Second Row: tagging, manufacturer, brand -->
+                    <div class="form-row">
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="tagging">Tagging</label>
+                                <input type="text" id="tagging" name="tagging">
+                            </div>
+                        </div>
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="manufacturer">Manufacturer *</label>
+                                <input type="text" id="manufacturer" name="manufacturer" required>
+                            </div>
+                        </div>
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="brand">Brand *</label>
+                                <input type="text" id="brand" name="brand" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Third Row: location, remarks -->
+                    <div class="form-row">
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="location">Location *</label>
+                                <select id="location" name="location">
+                                    <option value="">Select Location</option>
+                                    <option value="Main Station">Main Station</option>
+                                    <option value="Station A">Station A</option>
+                                    <option value="Station B">Station B</option>
+                                    <option value="Fire Training Ground">Fire Training Ground (FTG)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-column" style="flex: 2;">
+                            <div class="form-group">
+                                <label for="remarks">Remarks</label>
+                                <textarea id="remarks" name="remarks" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Radio
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="clearForm('portableRadioForm')">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                        <button type="button" class="btn btn-danger" id="cancelEditPortable" style="display: none;" onclick="cancelEdit()">
+                            <i class="fas fa-times"></i> Cancel Edit
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- FORM 2: Rental Radio -->
+            <div class="form-container form-content" id="form2">
+                <div class="form-header">
+                    <h3 id="rentalFormTitle">Add Rental Radio</h3>
+                </div>
+                <form id="rentalRadioForm">
+                    <!-- First Row: poNumber, dateStartRental, dateEndRental -->
+                    <div class="form-row">
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="poNumber">PO Number *</label>
+                                <input type="text" id="poNumber" name="poNumber" required>
+                            </div>
+                        </div>
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="dateStartRental">Start Rental Date *</label>
+                                <input type="date" id="dateStartRental" name="dateStartRental" required onchange="calculateRentalPeriod()">
+                            </div>
+                        </div>
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="dateEndRental">End Rental Date *</label>
+                                <input type="date" id="dateEndRental" name="dateEndRental" required onchange="calculateRentalPeriod()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Second Row: rentalPeriod, serialNumber, tagging -->
+                    <div class="form-row">
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="rentalPeriod">Rental Period (Days) *</label>
+                                <input type="number" id="rentalPeriod" name="rentalPeriod" class="auto-calculated" readonly required>
+                                <small style="color: var(--light-text); font-size: 12px; margin-top: 5px; display: block;">
+                                    <i class="fas fa-info-circle"></i> Auto-calculated based on start and end dates
+                                </small>
+                            </div>
+                        </div>
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="rentalSerialNumber">Serial Number *</label>
+                                <input type="text" id="rentalSerialNumber" name="serialNumber" required>
+                            </div>
+                        </div>
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="rentalTagging">Tagging</label>
+                                <input type="text" id="rentalTagging" name="tagging">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Third Row: batterySerialNumber, personInCharge, location -->
+                    <div class="form-row">
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="batterySerialNumber">Battery Serial Number</label>
+                                <input type="text" id="batterySerialNumber" name="batterySerialNumber">
+                            </div>
+                        </div>
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="personInCharge">Person In Charge *</label>
+                                <input type="text" id="personInCharge" name="personInCharge" required>
+                            </div>
+                        </div>
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="rentalLocation">Location *</label>
+                                <select id="rentalLocation" name="location">
+                                    <option value="">Select Location</option>
+                                    <option value="Main Station">Main Station</option>
+                                    <option value="Station A">Station A</option>
+                                    <option value="Station B">Station B</option>
+                                    <option value="Fire Training Ground">Fire Training Ground (FTG)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fourth Row: remarks -->
+                    <div class="form-row">
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="rentalRemarks">Remarks</label>
+                                <textarea id="rentalRemarks" name="remarks" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Rental Radio
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="clearForm('rentalRadioForm')">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                        <button type="button" class="btn btn-danger" id="cancelEditRental" style="display: none;" onclick="cancelEdit()">
+                            <i class="fas fa-times"></i> Cancel Edit
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- TABLE 1: Portable Radio -->
+            <div class="table-container" id="portableTable">
+                <div class="table-header">
+                    <h3>Portable Radio Records</h3>
+                    <div class="table-controls">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchPortable" placeholder="Search records..." onkeyup="searchTable('portable')">
+                        </div>
+                        <button class="refresh-btn" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div class="loading" id="loadingPortableMessage">
+                    <i class="fas fa-spinner fa-spin"></i> Loading portable radio data from Firebase...
+                </div>
+
+                <div class="no-data" id="noPortableDataMessage" style="display: none;">
+                    <i class="fas fa-inbox"></i> No portable radio data available
+                </div>
+
+                <div id="portableTableContent" style="display: none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('portable', 'user')">User <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('portable', 'radioId')">Radio ID <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('portable', 'serialNumber')">Serial Number <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('portable', 'tagging')">Tagging <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('portable', 'manufacturer')">Manufacturer <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('portable', 'brand')">Brand <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('portable', 'location')">Location <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('portable', 'timestamp')">Date Added <i class="fas fa-sort"></i></th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portableRadioTableBody">
+                            <!-- Data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TABLE 2: Rental Radio -->
+            <div class="table-container" id="rentalTable" style="display: none;">
+                <div class="table-header">
+                    <h3>Rental Radio Records</h3>
+                    <div class="table-controls">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchRental" placeholder="Search rental records..." onkeyup="searchTable('rental')">
+                        </div>
+                        <button class="refresh-btn" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div class="loading" id="loadingRentalMessage">
+                    <i class="fas fa-spinner fa-spin"></i> Loading rental radio data from Firebase...
+                </div>
+
+                <div class="no-data" id="noRentalDataMessage" style="display: none;">
+                    <i class="fas fa-inbox"></i> No rental radio data available
+                </div>
+
+                <div id="rentalTableContent" style="display: none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('rental', 'poNumber')">PO Number <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('rental', 'dateStartRental')">Start Date <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('rental', 'dateEndRental')">End Date <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('rental', 'rentalPeriod')">Period (Days) <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('rental', 'serialNumber')">Serial Number <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('rental', 'tagging')">Tagging <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('rental', 'batterySerialNumber')">Battery S/N <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('rental', 'personInCharge')">Person In Charge <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('rental', 'location')">Location <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('rental', 'timestamp')">Date Added <i class="fas fa-sort"></i></th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rentalRadioTableBody">
+                            <!-- Data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Popup -->
+    <div class="qr-popup-overlay" id="qrPopup">
+        <div class="qr-popup">
+            <div class="qr-popup-header">
+                <h3 class="qr-popup-title" id="qrPopupTitle">QR Code</h3>
+                <button class="qr-popup-close" onclick="closeQRPopup()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="qr-code-container" id="qrCodeContainer">
+                <div id="qrCodePlaceholder" style="text-align: center; color: var(--light-text);">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p>Generating QR Code...</p>
+                </div>
+                <div id="qrCodeWrapper" style="position: relative; display: none;">
+                    <!-- FIXED: Changed from canvas to div for QR Code -->
+                    <div id="qrCodeCanvas" style="width: 280px; height: 280px;"></div>
+                </div>
+            </div>
+            <div class="qr-popup-actions">
+                <button class="btn btn-primary" onclick="downloadQRCode()">
+                    <i class="fas fa-download"></i> Save As PNG
+                </button>
+                <button class="btn btn-secondary" onclick="closeQRPopup()">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase App -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <!-- Firebase Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBf9xdF0qmVYaNWFUuEys-P5a1yuTpLdVY",
+            authDomain: "project123-82272.firebaseapp.com",
+            projectId: "project123-82272",
+            storageBucket: "project123-82272.firebasestorage.app",
+            messagingSenderId: "97561643123",
+            appId: "1:97561643123:web:92596bb20645124f68c206",
+            measurementId: "G-D5P85TT95P"
+        };
+
+        // Initialize Firebase
+        let app, db;
+        let editingId = null;
+        let editingType = null; // 'portable' or 'rental'
+
+        // Sorting state
+        let sortState = {
+            portable: { field: null, direction: 'asc' },
+            rental: { field: null, direction: 'asc' }
+        };
+
+        // QR Code variables
+        let currentQRCodeData = '';
+        let currentUserId = '';
+        let currentQRCodeElement = null;
+
+        window.addEventListener('load', function() {
+            console.log("🚀 Loading admin portable radio page...");
+            initializeFirebase();
+            updateCurrentDate();
+            setupFormListeners();
+            
+            // Set initial table visibility - show portable table first
+            document.getElementById('portableTable').style.display = 'block';
+            document.getElementById('rentalTable').style.display = 'none';
+        });
+
+        function initializeFirebase() {
+            try {
+                if (typeof firebase === 'undefined') {
+                    console.error("❌ Firebase library not loaded");
+                    alert("Firebase library failed to load. Please check your internet connection.");
+                    return;
+                }
+                
+                if (!firebase.apps.length) {
+                    app = firebase.initializeApp(firebaseConfig);
+                } else {
+                    app = firebase.app();
+                }
+                
+                db = firebase.firestore();
+                
+                console.log("✅ Firebase initialized successfully for portable radio page");
+                loadRadioData();
+                
+            } catch (error) {
+                console.error("❌ Firebase initialization error:", error);
+                console.log("⚠️ Firebase failed but navigation should still work");
+            }
+        }
+
+        function setupFormListeners() {
+            const portableForm = document.getElementById('portableRadioForm');
+            const rentalForm = document.getElementById('rentalRadioForm');
+            
+            if (portableForm) {
+                portableForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    saveRadioData('portable');
+                });
+            }
+            
+            if (rentalForm) {
+                rentalForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    saveRadioData('rental');
+                });
+            }
+        }
+
+        // Auto calculate rental period based on dates
+        function calculateRentalPeriod() {
+            const startDateInput = document.getElementById('dateStartRental');
+            const endDateInput = document.getElementById('dateEndRental');
+            const rentalPeriodInput = document.getElementById('rentalPeriod');
+            
+            const startDate = new Date(startDateInput.value);
+            const endDate = new Date(endDateInput.value);
+            
+            // Check if both dates are valid
+            if (startDateInput.value && endDateInput.value && startDate <= endDate) {
+                // Calculate difference in days
+                const timeDifference = endDate.getTime() - startDate.getTime();
+                const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24)) + 1; // +1 to include both start and end days
+                
+                rentalPeriodInput.value = daysDifference;
+                console.log(`📅 Calculated rental period: ${daysDifference} days`);
+            } else if (startDate > endDate) {
+                // If end date is before start date, show error and clear rental period
+                rentalPeriodInput.value = '';
+                alert("End date cannot be before start date!");
+                endDateInput.value = '';
+            } else {
+                // If dates are not complete, clear rental period
+                rentalPeriodInput.value = '';
+            }
+        }
+
+        // Function to switch between form tabs - FIXED VERSION
+        function switchFormTab(tabId, clickedTab) {
+            // Hide all form contents
+            const formContents = document.querySelectorAll('.form-content');
+            formContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Show selected form content
+            document.getElementById(tabId).classList.add('active');
+            
+            // Update tab active state
+            const tabs = document.querySelectorAll('.form-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Activate the clicked tab
+            clickedTab.classList.add('active');
+            
+            // Show/hide tables based on active tab
+            if (tabId === 'form1') {
+                // Show portable table, hide rental table
+                document.getElementById('portableTable').style.display = 'block';
+                document.getElementById('rentalTable').style.display = 'none';
+            } else if (tabId === 'form2') {
+                // Show rental table, hide portable table
+                document.getElementById('portableTable').style.display = 'none';
+                document.getElementById('rentalTable').style.display = 'block';
+            }
+        }
+
+        function saveRadioData(type) {
+            if (!db) {
+                alert("Firebase not initialized. Please refresh the page.");
+                return;
+            }
+
+            let formData = {};
+            let collectionName = '';
+
+            if (type === 'portable') {
+                formData = {
+                    user: document.getElementById('user').value,
+                    radioId: document.getElementById('radioId').value,
+                    serialNumber: document.getElementById('serialNumber').value,
+                    tagging: document.getElementById('tagging').value,
+                    manufacturer: document.getElementById('manufacturer').value,
+                    brand: document.getElementById('brand').value,
+                    location: document.getElementById('location').value,
+                    remarks: document.getElementById('remarks').value,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                collectionName = 'portableRadios';
+            } else if (type === 'rental') {
+                formData = {
+                    poNumber: document.getElementById('poNumber').value,
+                    dateStartRental: document.getElementById('dateStartRental').value,
+                    dateEndRental: document.getElementById('dateEndRental').value,
+                    rentalPeriod: parseInt(document.getElementById('rentalPeriod').value),
+                    serialNumber: document.getElementById('rentalSerialNumber').value,
+                    tagging: document.getElementById('rentalTagging').value,
+                    batterySerialNumber: document.getElementById('batterySerialNumber').value,
+                    personInCharge: document.getElementById('personInCharge').value,
+                    location: document.getElementById('rentalLocation').value,
+                    remarks: document.getElementById('rentalRemarks').value,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                collectionName = 'rentalRadios';
+            }
+
+            console.log("Data to save:", formData);
+
+            // Validation
+            if (type === 'portable') {
+                if (!formData.user || !formData.radioId || !formData.serialNumber || !formData.manufacturer || !formData.brand) {
+                    alert("Please fill in all required fields (User, Radio ID, Serial Number, Manufacturer, Brand)");
+                    return;
+                }
+            } else if (type === 'rental') {
+                if (!formData.poNumber || !formData.dateStartRental || !formData.dateEndRental || !formData.rentalPeriod || !formData.serialNumber || !formData.personInCharge) {
+                    alert("Please fill in all required fields");
+                    return;
+                }
+                
+                // Additional validation for rental period
+                if (formData.rentalPeriod <= 0) {
+                    alert("Rental period must be at least 1 day");
+                    return;
+                }
+            }
+
+            if (editingId && editingType === type) {
+                // Update existing record - jangan update timestamp ketika edit
+                delete formData.timestamp;
+                
+                db.collection(collectionName).doc(editingId).update(formData)
+                    .then(() => {
+                        console.log(`✅ Radio ${type} updated successfully`);
+                        alert(`Radio ${type} updated successfully!`);
+                        clearForm(type === 'portable' ? 'portableRadioForm' : 'rentalRadioForm');
+                        loadRadioData();
+                    })
+                    .catch(error => {
+                        console.error(`❌ Error updating radio ${type}:`, error);
+                        alert(`Error updating radio ${type}: ` + error.message);
+                    });
+            } else {
+                // Add new record
+                db.collection(collectionName).add(formData)
+                    .then(() => {
+                        console.log(`✅ Radio ${type} added successfully`);
+                        alert(`Radio ${type} added successfully!`);
+                        clearForm(type === 'portable' ? 'portableRadioForm' : 'rentalRadioForm');
+                        loadRadioData();
+                    })
+                    .catch(error => {
+                        console.error(`❌ Error adding radio ${type}:`, error);
+                        alert(`Error adding radio ${type}: ` + error.message);
+                    });
+            }
+        }
+
+        function loadRadioData() {
+            // Load both data initially, but tables will be shown/hidden based on active tab
+            loadPortableData();
+            loadRentalData();
+        }
+
+        function loadPortableData() {
+            const loadingMessage = document.getElementById('loadingPortableMessage');
+            const noDataMessage = document.getElementById('noPortableDataMessage');
+            const tableContent = document.getElementById('portableTableContent');
+
+            if (!db) {
+                console.error("❌ Firestore not initialized");
+                if (loadingMessage) {
+                    loadingMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Firebase not initialized';
+                }
+                return;
+            }
+
+            console.log("📡 Loading portable radio data...");
+
+            db.collection('portableRadios')
+                .orderBy('timestamp', 'desc')
+                .get()
+                .then((snapshot) => {
+                    console.log("📊 Portable data loaded:", snapshot.size, "documents");
+                    if (loadingMessage) loadingMessage.style.display = 'none';
+                    
+                    if (snapshot.empty) {
+                        console.log("ℹ️ No data found in portableRadios collection");
+                        if (noDataMessage) noDataMessage.style.display = 'block';
+                        if (tableContent) tableContent.style.display = 'none';
+                        return;
+                    }
+
+                    if (noDataMessage) noDataMessage.style.display = 'none';
+                    if (tableContent) tableContent.style.display = 'block';
+                    
+                    let html = '';
+                    
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const id = doc.id;
+                        
+                        // Format timestamp untuk Malaysia
+                        let timestampDisplay = 'N/A';
+                        if (data.timestamp) {
+                            const timestamp = data.timestamp.toDate ? data.timestamp.toDate() : new Date(data.timestamp);
+                            const day = timestamp.getDate().toString().padStart(2, '0');
+                            const month = (timestamp.getMonth() + 1).toString().padStart(2, '0');
+                            const year = timestamp.getFullYear();
+                            const hours = timestamp.getHours();
+                            const minutes = timestamp.getMinutes().toString().padStart(2, '0');
+                            const ampm = hours >= 12 ? 'pm' : 'am';
+                            const hours12 = hours % 12 || 12;
+                            
+                            timestampDisplay = `
+                                <div class="timestamp">
+                                    <div class="timestamp-date">${day}/${month}/${year}</div>
+                                    <div class="timestamp-time">${hours12}:${minutes} ${ampm}</div>
+                                </div>
+                            `;
+                        }
+                        
+                        // Use user ID as the identifier for QR code
+                        const qrIdentifier = data.user || 'Unknown';
+                        
+                        html += `
+                            <tr>
+                                <td>${data.user || 'N/A'}</td>
+                                <td>${data.radioId || 'N/A'}</td>
+                                <td>${data.serialNumber || 'N/A'}</td>
+                                <td>${data.tagging || 'N/A'}</td>
+                                <td>${data.manufacturer || 'N/A'}</td>
+                                <td>${data.brand || 'N/A'}</td>
+                                <td>${data.location || 'N/A'}</td>
+                                <td>${timestampDisplay}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-sm btn-edit" onclick="editRadio('${id}', 'portable')">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+
+                                        <button class="btn-sm btn-delete" onclick="deleteRadio('${id}', 'portable')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+
+                                        <button class="btn-sm btn-qr" onclick="generateQRCode('${qrIdentifier}')">
+                                            <i class="fas fa-qrcode"></i> QR
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    if (document.getElementById('portableRadioTableBody')) {
+                        document.getElementById('portableRadioTableBody').innerHTML = html;
+                    }
+                    console.log("✅ Portable table data displayed successfully");
+                    
+                })
+                .catch((error) => {
+                    console.error('❌ Error loading portable data:', error);
+                    if (loadingMessage) loadingMessage.style.display = 'none';
+                    if (noDataMessage) {
+                        noDataMessage.style.display = 'block';
+                        noDataMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error loading data from Firebase. Please try refreshing.';
+                    }
+                });
+        }
+
+        function loadRentalData() {
+            const loadingMessage = document.getElementById('loadingRentalMessage');
+            const noDataMessage = document.getElementById('noRentalDataMessage');
+            const tableContent = document.getElementById('rentalTableContent');
+
+            if (!db) {
+                console.error("❌ Firestore not initialized");
+                if (loadingMessage) {
+                    loadingMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Firebase not initialized';
+                }
+                return;
+            }
+
+            console.log("📡 Loading rental radio data...");
+
+            db.collection('rentalRadios')
+                .orderBy('timestamp', 'desc')
+                .get()
+                .then((snapshot) => {
+                    console.log("📊 Rental data loaded:", snapshot.size, "documents");
+                    if (loadingMessage) loadingMessage.style.display = 'none';
+                    
+                    if (snapshot.empty) {
+                        console.log("ℹ️ No data found in rentalRadios collection");
+                        if (noDataMessage) noDataMessage.style.display = 'block';
+                        if (tableContent) tableContent.style.display = 'none';
+                        return;
+                    }
+
+                    if (noDataMessage) noDataMessage.style.display = 'none';
+                    if (tableContent) tableContent.style.display = 'block';
+                    
+                    let html = '';
+                    
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const id = doc.id;
+                        
+                        // Format dates
+                        const startDate = data.dateStartRental ? 
+                            new Date(data.dateStartRental).toLocaleDateString() : 'N/A';
+                        const endDate = data.dateEndRental ? 
+                            new Date(data.dateEndRental).toLocaleDateString() : 'N/A';
+                        
+                        // Format timestamp untuk Malaysia
+                        let timestampDisplay = 'N/A';
+                        if (data.timestamp) {
+                            const timestamp = data.timestamp.toDate ? data.timestamp.toDate() : new Date(data.timestamp);
+                            const day = timestamp.getDate().toString().padStart(2, '0');
+                            const month = (timestamp.getMonth() + 1).toString().padStart(2, '0');
+                            const year = timestamp.getFullYear();
+                            const hours = timestamp.getHours();
+                            const minutes = timestamp.getMinutes().toString().padStart(2, '0');
+                            const ampm = hours >= 12 ? 'pm' : 'am';
+                            const hours12 = hours % 12 || 12;
+                            
+                            timestampDisplay = `
+                                <div class="timestamp">
+                                    <div class="timestamp-date">${day}/${month}/${year}</div>
+                                    <div class="timestamp-time">${hours12}:${minutes} ${ampm}</div>
+                                </div>
+                            `;
+                        }
+                        
+                        // Use poNumber as the identifier for QR code
+                        const qrIdentifier = data.poNumber || data.serialNumber || 'Unknown';
+                        
+                        html += `
+                            <tr>
+                                <td>${data.poNumber || 'N/A'}</td>
+                                <td>${startDate}</td>
+                                <td>${endDate}</td>
+                                <td>${data.rentalPeriod || 'N/A'}</td>
+                                <td>${data.serialNumber || 'N/A'}</td>
+                                <td>${data.tagging || 'N/A'}</td>
+                                <td>${data.batterySerialNumber || 'N/A'}</td>
+                                <td>${data.personInCharge || 'N/A'}</td>
+                                <td>${data.location || 'N/A'}</td>
+                                <td>${timestampDisplay}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-sm btn-edit" onclick="editRadio('${id}', 'rental')">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+
+                                        <button class="btn-sm btn-delete" onclick="deleteRadio('${id}', 'rental')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                        
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    if (document.getElementById('rentalRadioTableBody')) {
+                        document.getElementById('rentalRadioTableBody').innerHTML = html;
+                    }
+                    console.log("✅ Rental table data displayed successfully");
+                    
+                })
+                .catch((error) => {
+                    console.error('❌ Error loading rental data:', error);
+                    if (loadingMessage) loadingMessage.style.display = 'none';
+                    if (noDataMessage) {
+                        noDataMessage.style.display = 'block';
+                        noDataMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error loading data from Firebase. Please try refreshing.';
+                    }
+                });
+        }
+
+        function editRadio(id, type) {
+            if (!db) {
+                alert("Firebase not initialized. Please refresh the page.");
+                return;
+            }
+
+            const collectionName = type === 'portable' ? 'portableRadios' : 'rentalRadios';
+
+            db.collection(collectionName).doc(id).get()
+                .then((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        
+                        if (type === 'portable') {
+                            // Switch to portable form tab
+                            switchFormTab('form1', document.querySelector('.form-tab[onclick*="form1"]'));
+                            
+                            // Fill form with existing data
+                            document.getElementById('user').value = data.user || '';
+                            document.getElementById('radioId').value = data.radioId || '';
+                            document.getElementById('serialNumber').value = data.serialNumber || '';
+                            document.getElementById('tagging').value = data.tagging || '';
+                            document.getElementById('manufacturer').value = data.manufacturer || '';
+                            document.getElementById('brand').value = data.brand || '';
+                            document.getElementById('location').value = data.location || '';
+                            document.getElementById('remarks').value = data.remarks || '';
+                            
+                            // Change form to edit mode
+                            document.querySelector('#portableRadioForm button[type="submit"]').innerHTML = '<i class="fas fa-save"></i> Update Radio';
+                            document.getElementById('portableFormTitle').textContent = 'Edit Portable Radio';
+                            document.getElementById('cancelEditPortable').style.display = 'inline-flex';
+                        } else if (type === 'rental') {
+                            // Switch to rental form tab
+                            switchFormTab('form2', document.querySelector('.form-tab[onclick*="form2"]'));
+                            
+                            // Fill form with existing data
+                            document.getElementById('poNumber').value = data.poNumber || '';
+                            document.getElementById('dateStartRental').value = data.dateStartRental || '';
+                            document.getElementById('dateEndRental').value = data.dateEndRental || '';
+                            document.getElementById('rentalPeriod').value = data.rentalPeriod || '';
+                            document.getElementById('rentalSerialNumber').value = data.serialNumber || '';
+                            document.getElementById('rentalTagging').value = data.tagging || '';
+                            document.getElementById('batterySerialNumber').value = data.batterySerialNumber || '';
+                            document.getElementById('personInCharge').value = data.personInCharge || '';
+                            document.getElementById('rentalLocation').value = data.location || '';
+                            document.getElementById('rentalRemarks').value = data.remarks || '';
+                            
+                            // Change form to edit mode
+                            document.querySelector('#rentalRadioForm button[type="submit"]').innerHTML = '<i class="fas fa-save"></i> Update Rental Radio';
+                            document.getElementById('rentalFormTitle').textContent = 'Edit Rental Radio';
+                            document.getElementById('cancelEditRental').style.display = 'inline-flex';
+                        }
+                        
+                        // Set editing state
+                        editingId = id;
+                        editingType = type;
+                        
+                        // Scroll to form
+                        document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
+                        
+                        console.log(`✅ Editing radio ${type}:`, id);
+                    }
+                })
+                .catch((error) => {
+                    console.error(`❌ Error loading radio ${type} for edit:`, error);
+                    alert(`Error loading radio ${type} data: ` + error.message);
+                });
+        }
+
+        function deleteRadio(id, type) {
+            if (!confirm(`Are you sure you want to delete this ${type} radio record?`)) {
+                return;
+            }
+
+            if (!db) {
+                alert("Firebase not initialized. Please refresh the page.");
+                return;
+            }
+
+            const collectionName = type === 'portable' ? 'portableRadios' : 'rentalRadios';
+
+            db.collection(collectionName).doc(id).delete()
+                .then(() => {
+                    console.log(`✅ Radio ${type} deleted successfully`);
+                    alert(`Radio ${type} deleted successfully!`);
+                    loadRadioData();
+                })
+                .catch((error) => {
+                    console.error(`❌ Error deleting radio ${type}:`, error);
+                    alert(`Error deleting radio ${type}: ` + error.message);
+                });
+        }
+
+        function clearForm(formId) {
+            document.getElementById(formId).reset();
+            cancelEdit();
+        }
+
+        function cancelEdit() {
+            editingId = null;
+            editingType = null;
+            
+            // Reset portable form
+            document.querySelector('#portableRadioForm button[type="submit"]').innerHTML = '<i class="fas fa-plus"></i> Add Radio';
+            document.getElementById('portableFormTitle').textContent = 'Add Portable Radio';
+            document.getElementById('cancelEditPortable').style.display = 'none';
+            
+            // Reset rental form
+            document.querySelector('#rentalRadioForm button[type="submit"]').innerHTML = '<i class="fas fa-plus"></i> Add Rental Radio';
+            document.getElementById('rentalFormTitle').textContent = 'Add Rental Radio';
+            document.getElementById('cancelEditRental').style.display = 'none';
+        }
+
+        // Search function
+        function searchTable(type) {
+            const searchTerm = document.getElementById(`search${type.charAt(0).toUpperCase() + type.slice(1)}`).value.toLowerCase();
+            const tableBody = document.getElementById(`${type}RadioTableBody`);
+            const rows = tableBody.getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName('td');
+                let found = false;
+                
+                for (let j = 0; j < cells.length - 1; j++) { // -1 to exclude actions column
+                    if (cells[j].textContent.toLowerCase().includes(searchTerm)) {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                rows[i].style.display = found ? '' : 'none';
+            }
+        }
+
+        // Sort function
+        function sortTable(type, field) {
+            const tableBody = document.getElementById(`${type}RadioTableBody`);
+            const rows = Array.from(tableBody.getElementsByTagName('tr'));
+            
+            // Update sort state
+            if (sortState[type].field === field) {
+                sortState[type].direction = sortState[type].direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortState[type].field = field;
+                sortState[type].direction = 'asc';
+            }
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                const aValue = a.cells[getColumnIndex(type, field)].textContent;
+                const bValue = b.cells[getColumnIndex(type, field)].textContent;
+                
+                // Handle numeric values
+                if (field === 'rentalPeriod') {
+                    const aNum = parseFloat(aValue) || 0;
+                    const bNum = parseFloat(bValue) || 0;
+                    return sortState[type].direction === 'asc' ? aNum - bNum : bNum - aNum;
+                }
+                
+                // Handle date values
+                if (field === 'dateStartRental' || field === 'dateEndRental' || field === 'timestamp') {
+                    const aDate = new Date(aValue);
+                    const bDate = new Date(bValue);
+                    return sortState[type].direction === 'asc' ? aDate - bDate : bDate - aDate;
+                }
+                
+                // Handle text values
+                return sortState[type].direction === 'asc' 
+                    ? aValue.localeCompare(bValue) 
+                    : bValue.localeCompare(aValue);
+            });
+            
+            // Update table
+            rows.forEach(row => tableBody.appendChild(row));
+            
+            // Update sort indicators
+            updateSortIndicators(type, field);
+        }
+
+        function getColumnIndex(type, field) {
+            const fieldMap = {
+                portable: {
+                    'user': 0,
+                    'radioId': 1,
+                    'serialNumber': 2,
+                    'tagging': 3,
+                    'manufacturer': 4,
+                    'brand': 5,
+                    'location': 6,
+                    'timestamp': 7
+                },
+                rental: {
+                    'poNumber': 0,
+                    'dateStartRental': 1,
+                    'dateEndRental': 2,
+                    'rentalPeriod': 3,
+                    'serialNumber': 4,
+                    'tagging': 5,
+                    'batterySerialNumber': 6,
+                    'personInCharge': 7,
+                    'location': 8,
+                    'timestamp': 9
+                }
+            };
+            
+            return fieldMap[type][field];
+        }
+
+        function updateSortIndicators(type, field) {
+            // Reset all sort indicators
+            const headers = document.querySelectorAll(`#${type}TableContent th`);
+            headers.forEach(header => {
+                header.classList.remove('sort-asc', 'sort-desc');
+                const icon = header.querySelector('i');
+                if (icon) {
+                    icon.className = 'fas fa-sort';
+                }
+            });
+            
+            // Set active sort indicator
+            const activeHeader = document.querySelector(`#${type}TableContent th:nth-child(${getColumnIndex(type, field) + 1})`);
+            if (activeHeader) {
+                activeHeader.classList.add(`sort-${sortState[type].direction}`);
+                const icon = activeHeader.querySelector('i');
+                if (icon) {
+                    icon.className = sortState[type].direction === 'asc' 
+                        ? 'fas fa-sort-up' 
+                        : 'fas fa-sort-down';
+                }
+            }
+        }
+
+        // Qr Auto Generation
+        function generateQRCode(userId) {
+            console.log("Generating REAL QR Code for:", userId);
+            
+            if (!userId || userId === 'N/A' || userId === 'Unknown') {
+                alert("Invalid user ID for QR generation");
+                return;
+            }
+            
+            // Store the current user ID
+            currentUserId = userId;
+            
+            // Create CORRECT URL format: public-scan.html?user=USER_ID
+            // Exp: public-scan.html?user=FF1, this will encoded into the QR code
+            const qrUrl = `public-scan-radio.html?user=${userId}`;
+            currentQRCodeData = qrUrl;
+            
+            console.log("QR URL yang dijana:", qrUrl);
+            console.log("Ini akan menghasilkan link: " + window.location.origin + "/" + qrUrl);
+            
+            // Show loading state
+            document.getElementById('qrPopupTitle').textContent = 'Generating QR Code...';
+            document.getElementById('qrCodePlaceholder').style.display = 'block';
+            document.getElementById('qrCodeWrapper').style.display = 'none';
+            document.getElementById('qrPopup').classList.add('active');
+            
+            // Generate QR code using QRCode.js library
+            setTimeout(() => {
+                generateRealQRCode(qrUrl, userId);
+            }, 300);
+        }
+
+        function generateRealQRCode(qrUrl, userId) {
+            try {
+                const qrContainer = document.getElementById('qrCodeCanvas');
+                
+                // Clear previous QR code
+                qrContainer.innerHTML = '';
+                
+                // Generate QR code using QRCode.js
+                const qrcode = new QRCode(qrContainer, {
+                    text: qrUrl, // URL to encode into QR
+                    width: 280, // QR code width in pixels
+                    height: 280, // QR code height in pixels
+                    colorDark: "#000000", 
+                    colorLight: "#FFFFFF",
+                    correctLevel: QRCode.CorrectLevel.H // High error correction
+                });
+                
+                // Success log for debugging
+                console.log("REAL QR Code generated successfully");
+                
+                // Show the QR code
+                setTimeout(() => {
+                    document.getElementById('qrCodePlaceholder').style.display = 'none';
+                    document.getElementById('qrCodeWrapper').style.display = 'block';
+                    document.getElementById('qrPopupTitle').textContent = `QR Code - ${userId}`;
+                    
+                    // Store the QR code element for download
+                    currentQRCodeElement = qrContainer.querySelector('img');
+                    
+                    // Verify the QR code contains correct URL
+                    if (currentQRCodeElement) {
+                        console.log("QR Code image generated successfully");
+                        console.log("QR Code URL:", qrUrl);
+                    }
+                }, 500);
+                
+            } catch (error) {
+                console.error("❌ QR Code generation error:", error);
+                document.getElementById('qrPopupTitle').textContent = 'Error Generating QR';
+                document.getElementById('qrCodePlaceholder').innerHTML = '<i class="fas fa-exclamation-triangle fa-2x"></i><p>Failed to generate QR Code</p>';
+                alert("Failed to generate QR Code: " + error.message);
+            }
+        }
+
+        function closeQRPopup() {
+            console.log("Closing QR popup");
+            document.getElementById('qrPopup').classList.remove('active');
+        }
+
+        function downloadQRCode() {
+            if (!currentQRCodeElement) {
+                alert("No QR Code available to download. Please generate a QR code first.");
+                return;
+            }
+            
+            try {
+                // Create a temporary canvas
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                // Set canvas size
+                tempCanvas.width = 280;
+                tempCanvas.height = 280;
+                
+                // Fill with white background
+                tempCtx.fillStyle = '#FFFFFF';
+                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                
+                // Draw the QR code
+                const qrImage = currentQRCodeElement;
+                tempCtx.drawImage(qrImage, 0, 0, 280, 280);
+                
+                // Create download link
+                const link = document.createElement('a');
+                const fileName = `radio_qr_${currentUserId}.png`;
+                link.download = fileName;
+                link.href = tempCanvas.toDataURL('image/png');
+                
+                // Trigger download
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                console.log("✅ QR Code downloaded successfully:", fileName);
+            } catch (error) {
+                console.error("❌ Error downloading QR code:", error);
+                alert("Error downloading QR code: " + error.message);
+            }
+        }
+
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('adminToken');
+                window.location.href = 'login.html';
+            }
+        }
+
+        window.refreshData = function() {
+            console.log("🔄 Manually refreshing data...");
+            const loadingPortableMessage = document.getElementById('loadingPortableMessage');
+            const noPortableDataMessage = document.getElementById('noPortableDataMessage');
+            const portableTableContent = document.getElementById('portableTableContent');
+            
+            const loadingRentalMessage = document.getElementById('loadingRentalMessage');
+            const noRentalDataMessage = document.getElementById('noRentalDataMessage');
+            const rentalTableContent = document.getElementById('rentalTableContent');
+            
+            if (loadingPortableMessage) loadingPortableMessage.style.display = 'block';
+            if (noPortableDataMessage) noPortableDataMessage.style.display = 'none';
+            if (portableTableContent) portableTableContent.style.display = 'none';
+            
+            if (loadingRentalMessage) loadingRentalMessage.style.display = 'block';
+            if (noRentalDataMessage) noRentalDataMessage.style.display = 'none';
+            if (rentalTableContent) rentalTableContent.style.display = 'none';
+            
+            setTimeout(() => {
+                loadRadioData();
+            }, 500);
+        };
+    </script>
+</body>
+</html>

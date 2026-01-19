@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portable Radio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* SAME STYLES AS PUBLIC HOSE - JANGAN UBAH */
+        :root {
+            --primary-color: #d9534f;
+            --secondary-color: #6a7c92;
+            --light-bg: #f8f9fa;
+            --dark-bg: #1a202c;
+            --dark-text: #2d3748;
+            --light-text: #718096;
+            --border-color: #e2e8f0;
+        }
+
+        [data-theme="dark"] {
+            --light-bg: #1a202c;
+            --dark-text: #e2e8f0;
+            --light-text: #a0aec0;
+            --border-color: #2d3748;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] .sidebar {
+            background-color: #2d3748;
+        }
+        
+        .logo {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+        
+        .logo h1 {
+            color: var(--primary-color);
+            font-size: 24px;
+        }
+        
+        .user-profile-sidebar {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .sidebar-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), #d9534f);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-item {
+            padding: 12px 20px;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .nav-item.active {
+            background-color: rgba(74, 108, 247, 0.1);
+            border-left: 4px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .nav-item:hover:not(.active) {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] .nav-item:hover:not(.active) {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            margin-left: 250px;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] .main-content {
+            background-color: #1a202c;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .date {
+            color: var(--light-text);
+            font-size: 14px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .welcome-section {
+            margin-bottom: 30px;
+        }
+        
+        .welcome-section h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .welcome-section p {
+            color: var(--light-text);
+        }
+
+        /* NEW: CARDS GRID STYLES (SAME AS HOSE) */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .radio-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        [data-theme="dark"] .radio-card {
+            background: #2d3748;
+        }
+
+        .radio-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border-color: var(--primary-color);
+        }
+
+        .radio-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .radio-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin: 0;
+        }
+
+        .radio-card-count {
+            background: var(--primary-color);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* Stations List Styles (SAME AS HOSE) */
+        .stations-list {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .station-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: var(--light-bg);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] .station-item {
+            background: #1a202c;
+        }
+
+        .station-item:hover {
+            background: rgba(217, 83, 79, 0.1);
+            transform: translateX(5px);
+        }
+
+        .station-name {
+            font-weight: 500;
+            color: var(--dark-text);
+        }
+
+        .station-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .station-adequate {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .station-low {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* TABLE CONTAINER STYLES (SAME AS HOSE) */
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        [data-theme="dark"] .table-container {
+            background: #2d3748;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .table-header h3 {
+            color: var(--dark-text);
+            margin: 0;
+        }
+
+        .table-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .refresh-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #d9534f;
+        }
+
+        /* MODAL STYLES (SAME AS HOSE) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        [data-theme="dark"] .modal-content {
+            background: #2d3748;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .modal-header h3 {
+            color: var(--dark-text);
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--light-text);
+            transition: color 0.3s ease;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--primary-color);
+        }
+
+        .modal-body {
+            color: var(--dark-text);
+        }
+
+        .detail-item {
+            display: flex;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detail-label {
+            font-weight: 600;
+            min-width: 120px;
+            color: var(--light-text);
+        }
+
+        .detail-value {
+            flex: 1;
+            color: var(--dark-text);
+        }
+
+        /* NEW: Radio Details Grid */
+        .radio-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .detail-box {
+            padding: 15px;
+            border-radius: 8px;
+            background: var(--light-bg);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .detail-box-label {
+            font-size: 12px;
+            color: var(--light-text);
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .detail-box-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--dark-text);
+        }
+
+        .detail-box .status-active {
+            color: #38a169;
+        }
+
+        .detail-box .status-inactive {
+            color: #e53e3e;
+        }
+
+        .detail-box .status-maintenance {
+            color: #ed8936;
+        }
+
+        /* Radio List in Modal */
+        .radio-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .radio-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: var(--light-bg);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .radio-item:hover {
+            background: rgba(217, 83, 79, 0.1);
+        }
+
+        .radio-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .radio-item-name {
+            font-weight: 600;
+            color: var(--dark-text);
+        }
+
+        .radio-item-id {
+            font-size: 12px;
+            color: var(--light-text);
+            background: rgba(0, 0, 0, 0.05);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .radio-item-details {
+            font-size: 13px;
+            color: var(--light-text);
+        }
+
+        .radio-item-details span {
+            margin-right: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--light-text);
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: var(--light-text);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .sidebar .logo h1, 
+            .sidebar .nav-item span,
+            .sidebar-user-info {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+            
+            .user-profile-sidebar {
+                justify-content: center;
+                padding: 15px 10px;
+            }
+
+            .table-container {
+                padding: 15px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .radio-details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-controls {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>Public Panel</h1>
+            </div>
+
+            <div class="user-profile-sidebar">
+                <div class="sidebar-avatar">G</div>
+                <div class="sidebar-user-info">
+                    <h3>Guest User</h3>
+                    <p>Public Access</p>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item" onclick="navigateTo('dashboard.html')">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" onclick="navigateTo('public-inspection.html')">
+                    <i class="fas fa-qrcode"></i>
+                    <span>Inspection</span>
+                </li>
+                <li class="nav-item active">
+                    <i class="fas fa-walkie-talkie"></i>
+                    <span>Portable Radio</span>
+                </li>
+                <li class="nav-item" onclick="navigateTo('public-rental.html')">
+                    <i class="fas fa-handshake"></i>
+                    <span>Rental Radio</span>
+                </li>
+                <li class="nav-item" onclick="navigateTo('public-contact.html')">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </li>
+                <li class="nav-item" onclick="navigateTo('index.html')">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div class="date" id="currentDate">Monday, 02 March 2020</div>
+                <div class="user-info">
+                    <div class="user-avatar">G</div>
+                    <div>
+                        <div>Guest</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="welcome-section">
+                <h1>Portable Radio Inventory</h1>
+                <p>View-only access to portable radio equipment</p>
+            </div>
+
+            <!-- CARDS SECTION (SAME LAYOUT AS HOSE) -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Portable Radio by Station</h3>
+                    <div class="table-controls">
+                        <button class="refresh-btn" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div class="loading" id="loadingMessage">
+                    <i class="fas fa-spinner fa-spin"></i> Loading portable radio data...
+                </div>
+
+                <div class="no-data" id="noDataMessage" style="display: none;">
+                    <i class="fas fa-inbox"></i> No portable radio data available
+                </div>
+
+                <div id="cardsContainer" style="display: none;">
+                    <p style="color: var(--light-text); margin-bottom: 20px;">
+                    </p>
+                    <div class="cards-grid" id="radioCardsGrid">
+                        <!-- Radio station cards will be dynamically added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Station Details Modal -->
+    <div class="modal-overlay" id="stationDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalStationTitle">Station Details</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalStationBody">
+                <!-- Station details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase App -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <!-- Firebase Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBf9xdF0qmVYaNWFUuEys-P5a1yuTpLdVY",
+            authDomain: "project123-82272.firebaseapp.com",
+            projectId: "project123-82272",
+            storageBucket: "project123-82272.firebasestorage.app",
+            messagingSenderId: "97561643123",
+            appId: "1:97561643123:web:92596bb20645124f68c206",
+            measurementId: "G-D5P85TT95P"
+        };
+
+        // Initialize Firebase
+        let app, db;
+
+        // Store all data globally
+        let allRadioData = [];
+
+        window.addEventListener('load', function() {
+            console.log("🚀 Loading public portable radio page...");
+            initializeFirebase();
+            updateCurrentDate();
+        });
+
+        function initializeFirebase() {
+            try {
+                if (typeof firebase === 'undefined') {
+                    console.error("❌ Firebase library not loaded");
+                    alert("Firebase library failed to load. Please check your internet connection.");
+                    return;
+                }
+                
+                app = firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                
+                console.log("✅ Firebase initialized successfully for public portable radio page");
+                loadRadioCards();
+                
+            } catch (error) {
+                console.error("❌ Firebase initialization error:", error);
+                alert("Firebase initialization failed: " + error.message);
+            }
+        }
+
+        function loadRadioCards() {
+            const loadingMessage = document.getElementById('loadingMessage');
+            const noDataMessage = document.getElementById('noDataMessage');
+            const cardsContainer = document.getElementById('cardsContainer');
+
+            if (!db) {
+                console.error("❌ Firestore not initialized");
+                loadingMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Firebase not initialized';
+                return;
+            }
+
+            console.log("📡 Loading portable radio data for cards...");
+
+            // Real-time listener - data akan auto update bila admin buat changes
+            db.collection('portableRadios')
+                .orderBy('timestamp', 'desc')
+                .onSnapshot((snapshot) => {
+                    console.log("📊 Portable radio data snapshot received:", snapshot.size, "documents");
+                    loadingMessage.style.display = 'none';
+                    
+                    // Store all data globally
+                    allRadioData = [];
+                    snapshot.forEach((doc) => {
+                        allRadioData.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+
+                    if (snapshot.empty) {
+                        console.log("ℹ️ No data found in portableRadios collection");
+                        noDataMessage.style.display = 'block';
+                        cardsContainer.style.display = 'none';
+                        return;
+                    }
+
+                    noDataMessage.style.display = 'none';
+                    cardsContainer.style.display = 'block';
+                    
+                    // Get unique stations from actual Firebase data
+                    const uniqueStations = [];
+                    allRadioData.forEach(data => {
+                        if (data.location && !uniqueStations.includes(data.location)) {
+                            uniqueStations.push(data.location);
+                        }
+                    });
+                    
+                    // Create cards with REAL data from Firebase
+                    createRadioCards(uniqueStations);
+                    console.log("✅ Portable radio cards generated successfully from Firebase data");
+                    
+                }, (error) => {
+                    console.error('❌ Error loading portable radio data:', error);
+                    loadingMessage.style.display = 'none';
+                    noDataMessage.style.display = 'block';
+                    noDataMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error loading data from Firebase. Please try refreshing.';
+                });
+        }
+
+        function createRadioCards(stations) {
+    const cardsGrid = document.getElementById('radioCardsGrid');
+    let html = '';
+    
+    stations.forEach(station => {
+        const radiosInStation = allRadioData.filter(data => data.location === station);
+        const count = radiosInStation.length;
+        
+        html += `
+            <div class="radio-card" onclick="showStationDetails('${station.replace(/'/g, "\\'")}')">
+                <div class="radio-card-header">
+                    <h3 class="radio-card-title">${station}</h3>
+                    <div class="radio-card-count">${count}</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    if (cardsGrid) {
+        cardsGrid.innerHTML = html;
+    }
+}
+
+        // Function to show station details in modal 
+window.showStationDetails = function(station) {
+    const modal = document.getElementById('stationDetailsModal');
+    const modalTitle = document.getElementById('modalStationTitle');
+    const modalBody = document.getElementById('modalStationBody');
+    
+    modalTitle.textContent = `${station} - Portable Radios`;
+    
+    // Find all radios for this station
+    const stationRadios = allRadioData.filter(data => 
+        data.location === station
+    );
+    
+    if (!stationRadios.length) {
+        modalBody.innerHTML = `
+            <div style="text-align: center; padding: 30px;">
+                <i class="fas fa-exclamation-circle fa-3x" style="color: var(--light-text); margin-bottom: 20px;"></i>
+                <h4 style="color: var(--light-text); margin-bottom: 10px;">No Radios Available</h4>
+                <p style="color: var(--light-text);">No portable radios found at ${station}</p>
+            </div>
+        `;
+    } else {
+        // BUANG: Active/inactive counts dan status section
+        // TAMBAH: Search and sort controls
+        let html = `
+            <div class="detail-item">
+                <div class="detail-label">Station:</div>
+                <div class="detail-value">${station}</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-label">Total Radios:</div>
+                <div class="detail-value">${stationRadios.length}</div>
+            </div>
+            
+            <!-- TAMBAHAN: Search and Sort Controls -->
+            <div class="detail-item" style="border-bottom: none; margin-bottom: 20px; padding-bottom: 0;">
+                <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <input type="text" id="radioSearchInput" placeholder="Search by User ID or Name..." 
+                               style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--light-bg); color: var(--dark-text);">
+                    </div>
+                    <div style="min-width: 180px;">
+                        <select id="radioSortSelect" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--light-bg); color: var(--dark-text);">
+                            <option value="user-asc">Sort by User (A-Z)</option>
+                            <option value="user-desc">Sort by User (Z-A)</option>
+                            <option value="id-asc">Sort by Radio ID (A-Z)</option>
+                            <option value="id-desc">Sort by Radio ID (Z-A)</option>
+                            <option value="brand-asc">Sort by Brand (A-Z)</option>
+                            <option value="brand-desc">Sort by Brand (Z-A)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="detail-item" style="border-bottom: none; margin-bottom: 10px;">
+                <div class="detail-label">All Radios:</div>
+            </div>
+            
+            <div class="radio-list" id="radioListContainer">
+        `;
+        
+        // Function to render radio list
+        const renderRadioList = (radios) => {
+            let listHtml = '';
+            radios.forEach((radio, index) => {
+                //=Status class dan status display
+                listHtml += `
+                    <div class="radio-item" onclick="showRadioDetail('${radio.id}')">
+                        <div class="radio-item-header">
+                            <span class="radio-item-name">${radio.user || 'Unknown User'}</span>
+                            <span class="radio-item-id">${radio.radioId || 'No ID'}</span>
+                        </div>
+                        <div class="radio-item-details">
+                            <span>${radio.brand || 'Unknown Brand'}</span>
+                            <span>${radio.manufacturer || 'Unknown Manufacturer'}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            return listHtml;
+        };
+        
+        // Initial render
+        html += renderRadioList(stationRadios);
+        
+        html += `
+            </div>
+            <div style="text-align: center; margin-top: 15px; font-size: 12px; color: var(--light-text);">
+                <i class="fas fa-info-circle"></i> Click on any radio to view detailed information
+            </div>
+        `;
+        
+        modalBody.innerHTML = html;
+        
+        //  Setup search and sort event listeners
+        setTimeout(() => {
+            const searchInput = document.getElementById('radioSearchInput');
+            const sortSelect = document.getElementById('radioSortSelect');
+            
+            // Store original station radios for this modal instance
+            let currentStationRadios = [...stationRadios];
+            
+            const updateRadioList = () => {
+                let filteredRadios = [...currentStationRadios];
+                
+                // Apply search filter
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                if (searchTerm) {
+                    filteredRadios = filteredRadios.filter(radio => 
+                        (radio.user && radio.user.toLowerCase().includes(searchTerm)) ||
+                        (radio.radioId && radio.radioId.toLowerCase().includes(searchTerm)) ||
+                        (radio.brand && radio.brand.toLowerCase().includes(searchTerm)) ||
+                        (radio.manufacturer && radio.manufacturer.toLowerCase().includes(searchTerm))
+                    );
+                }
+                
+                // Apply sorting
+                const sortValue = sortSelect.value;
+                filteredRadios.sort((a, b) => {
+                    switch(sortValue) {
+                        case 'user-asc':
+                            return (a.user || '').localeCompare(b.user || '');
+                        case 'user-desc':
+                            return (b.user || '').localeCompare(a.user || '');
+                        case 'id-asc':
+                            return (a.radioId || '').localeCompare(b.radioId || '');
+                        case 'id-desc':
+                            return (b.radioId || '').localeCompare(a.radioId || '');
+                        case 'brand-asc':
+                            return (a.brand || '').localeCompare(b.brand || '');
+                        case 'brand-desc':
+                            return (b.brand || '').localeCompare(a.brand || '');
+                        default:
+                            return 0;
+                    }
+                });
+                
+                // Update the list
+                document.getElementById('radioListContainer').innerHTML = renderRadioList(filteredRadios);
+            };
+            
+            searchInput.addEventListener('input', updateRadioList);
+            sortSelect.addEventListener('change', updateRadioList);
+        }, 100);
+    }
+    
+    modal.classList.add('active');
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+}
+
+        // Function to show radio detail - KEEPCARD SAMA DAN TIDAK BOLD
+window.showRadioDetail = function(radioId) {
+    const radioData = allRadioData.find(data => data.id === radioId);
+    
+    if (!radioData) {
+        alert("Radio data not found!");
+        return;
+    }
+    
+    const modal = document.getElementById('stationDetailsModal');
+    const modalTitle = document.getElementById('modalStationTitle');
+    const modalBody = document.getElementById('modalStationBody');
+    
+    modalTitle.textContent = `${radioData.user || 'Unknown User'} - Radio Details`;
+    
+    let html = `
+        <div class="detail-item">
+            <div class="detail-label">User:</div>
+            <div class="detail-value">${radioData.user || 'N/A'}</div>
+        </div>
+        
+        <div class="radio-details-grid">
+            <div class="detail-box">
+                <div class="detail-box-label">RADIO ID</div>
+                <div class="detail-box-value" style="font-weight: normal;">${radioData.radioId || 'N/A'}</div>
+            </div>
+            
+            <div class="detail-box">
+                <div class="detail-box-label">SERIAL NUMBER</div>
+                <div class="detail-box-value" style="font-weight: normal;">${radioData.serialNumber || 'N/A'}</div>
+            </div>
+            
+            <div class="detail-box">
+                <div class="detail-box-label">BRAND</div>
+                <div class="detail-box-value" style="font-weight: normal;">${radioData.brand || 'N/A'}</div>
+            </div>
+            
+            <div class="detail-box">
+                <div class="detail-box-label">MANUFACTURER</div>
+                <div class="detail-box-value" style="font-weight: normal;">${radioData.manufacturer || 'N/A'}</div>
+            </div>
+            
+            <div class="detail-box">
+                <div class="detail-box-label">LOCATION</div>
+                <div class="detail-box-value" style="font-weight: normal;">${radioData.location || 'N/A'}</div>
+            </div>
+            
+            <!-- TAGGING CARD -->
+            <div class="detail-box" style="grid-column: span 2;">
+                <div class="detail-box-label">TAGGING</div>
+                <div class="detail-box-value" style="font-weight: normal;">${radioData.tagging || 'N/A'}</div>
+            </div>
+            
+            <!-- REMARKS CARD -->
+            <div class="detail-box" style="grid-column: span 2;">
+                <div class="detail-box-label">REMARKS</div>
+                <div class="detail-box-value" style="font-weight: normal; white-space: pre-wrap;">${radioData.remarks || 'N/A'}</div>
+            </div>
+        </div>
+    `;
+    
+    // Add back button
+    html += `
+        <div style="margin-top: 25px; text-align: center;">
+            <button onclick="showStationDetails('${radioData.location.replace(/'/g, "\\'")}')" 
+                    style="background: var(--primary-color); color: white; border: none; 
+                           padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px;">
+                <i class="fas fa-arrow-left"></i> Back to Station
+            </button>
+        </div>
+    `;
+    
+    modalBody.innerHTML = html;
+}
+        
+
+        // Function to close modal
+        window.closeModal = function() {
+            const modal = document.getElementById('stationDetailsModal');
+            modal.classList.remove('active');
+        }
+
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        window.refreshData = function() {
+            console.log("🔄 Manually refreshing portable radio data...");
+            const loadingMessage = document.getElementById('loadingMessage');
+            const noDataMessage = document.getElementById('noDataMessage');
+            const cardsContainer = document.getElementById('cardsContainer');
+            
+            loadingMessage.style.display = 'block';
+            noDataMessage.style.display = 'none';
+            cardsContainer.style.display = 'none';
+            
+            // Small delay to show loading state
+            setTimeout(() => {
+                loadRadioCards();
+            }, 500);
+        };
+    </script>
+</body>
+</html>

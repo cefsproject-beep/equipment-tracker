@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hose Information</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="scanner.css">
+    <style>
+        /* BACKGROUND IMAGE DARI FOLDER images/i8.jpg */
+        body {
+            background-image: url('images/hose.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* STYLE SAMA SEPERTI RADIO - JANGAN UBAH */
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .popup-header h1 {
+            flex-grow: 1;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .back-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            display: none; /* MULA-MULA DISEMBUNYIKAN */
+        }
+        
+        .back-btn:hover {
+            background-color: #5a6268;
+        }
+        
+        .close-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+        
+        .close-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="info-popup">
+        <div class="popup-header">
+            <h1><i class="fas fa-fire-extinguisher"></i> Hose Information</h1>
+            <div class="header-buttons">
+                <button class="back-btn" id="backBtn" onclick="returnToViewMode()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button class="close-btn" onclick="closePopup()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="loading-container" id="loadingMessage">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Loading hose information...</p>
+        </div>
+
+        <div class="error-container" id="errorMessage" style="display: none;">
+            <i class="fas fa-exclamation-triangle fa-2x"></i>
+            <p id="errorText"></p>
+            <button class="action-btn" onclick="retryLoading()"><i class="fas fa-redo"></i> Try Again</button>
+        </div>
+
+        <div id="hoseInfoContent" style="display: none;">
+            <!-- BUANG PAPARAN "QR Code Scanned Successfully" -->
+            <!-- <div class="qr-badge">
+                <i class="fas fa-qrcode"></i> QR Code Scanned Successfully
+            </div> -->
+
+            <!-- HOSE INFORMATION (LAYOUT SAMA SEPERTI RADIO) -->
+            <div class="radio-info-grid" id="readOnlyInfo">
+                <div class="info-item"><div class="info-label">Item</div><div class="info-value" id="item">-</div></div>
+                <div class="info-item"><div class="info-label">Current Quantity</div><div class="info-value" id="currentQuantity">-</div></div>
+                <div class="info-item"><div class="info-label">Minimum Quantity</div><div class="info-value" id="minimumQuantity">-</div></div>
+                <div class="info-item"><div class="info-label">Last Condition</div><div class="info-value" id="condition">-</div></div>
+                <div class="info-item"><div class="info-label">Last Inspection Date</div><div class="info-value" id="inspectionDate">-</div></div>
+                <div class="info-item"><div class="info-label">Next Inspection Date</div><div class="info-value" id="nextInspectionDate">-</div></div>
+                <div class="info-item full-width"><div class="info-label">Location</div><div class="info-value" id="location">-</div></div>
+                <div class="info-item full-width"><div class="info-label">Remarks</div><div class="info-value" id="remarks">-</div></div>
+            </div>
+
+            <!-- EDIT MODE (LAYOUT SAMA SEPERTI RADIO) -->
+            <div class="radio-info-grid edit-mode" id="editInfo" style="display: none;">
+                <div class="info-item"><div class="info-label">Item</div><input type="text" class="info-input" id="editItem" readonly></div>
+                <div class="info-item"><div class="info-label">Current Quantity</div><input type="number" class="info-input" id="editCurrentQuantity" min="0"></div>
+                <div class="info-item"><div class="info-label">Minimum Quantity</div><input type="number" class="info-input" id="editMinimumQuantity" min="0"></div>
+                <div class="info-item"><div class="info-label">Last Condition</div><input type="text" class="info-input" id="editCondition"></div>
+                <div class="info-item"><div class="info-label">Last Inspection Date</div><input type="date" class="info-input" id="editInspectionDate"></div>
+                <div class="info-item"><div class="info-label">Next Inspection Date</div><input type="date" class="info-input" id="editNextInspectionDate"></div>
+                <div class="info-item full-width"><div class="info-label">Location</div><input type="text" class="info-input" id="editLocation"></div>
+                <div class="info-item full-width"><div class="info-label">Remarks</div><textarea class="info-textarea" id="editRemarks"></textarea></div>
+            </div>
+
+            <!-- INSPECTION BUTTON (SAMA SEPERTI RADIO) -->
+            <div class="inspection-section">
+                <button class="inspection-btn red" id="inspectionBtn" onclick="toggleInspectionMode()">
+                    <i class="fas fa-clipboard-check"></i> Inspection
+                </button>
+            </div>
+
+            <!-- CONDITION SECTION (SAMA SEPERTI RADIO) -->
+            <div class="condition-section" id="conditionSection" style="display: none;">
+                <h3><i class="fas fa-list-alt"></i> Condition</h3>
+                <textarea 
+                    class="condition-textarea" 
+                    id="conditionInput" 
+                    placeholder="Enter hose condition details here..."></textarea>
+            </div>
+
+            <!-- SAVE BUTTON (SAMA SEPERTI RADIO) -->
+            <div class="save-section" id="saveSection" style="display: none;">
+                <button class="save-btn" onclick="saveAllData()"><i class="fas fa-save"></i> SAVE ALL CHANGES</button>
+            </div>
+
+            <!-- Success Message (SAMA SEPERTI RADIO) -->
+            <div id="saveSuccessMessage" class="save-success" style="display: none;">
+                <i class="fas fa-check-circle"></i> Save Success!
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBf9xdF0qmVYaNWFUuEys-P5a1yuTpLdVY",
+            authDomain: "project123-82272.firebaseapp.com",
+            projectId: "project123-82272",
+            storageBucket: "project123-82272.firebasestorage.app",
+            messagingSenderId: "97561643123",
+            appId: "1:97561643123:web:92596bb20645124f68c206",
+            measurementId: "G-D5P85TT95P"
+        };
+
+        let db, storage;
+        let currentHoseId = null;
+        let currentHoseData = null;
+        let isEditMode = false;
+        let currentDocumentId = null;
+
+        // Initialize Firebase
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeFirebase();
+            loadHoseDataFromURL();
+        });
+
+        function initializeFirebase() {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.firestore();
+                storage = firebase.storage();
+                console.log("✅ Firebase initialized for Hose Inspection");
+            } catch (error) {
+                showError('Failed to initialize database.');
+            }
+        }
+
+        // FUNCTION UNTUK BACK BUTTON - KEMBALI KE VIEW MODE
+        function returnToViewMode() {
+            toggleInspectionMode();
+        }
+
+        function loadHoseDataFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let identifier = urlParams.get('hose');
+            
+            console.log("🔍 Parameters dari URL:", window.location.search);
+            console.log("🔍 Hose ID dari URL:", identifier);
+            
+            if (!identifier) {
+                showError('No hose identifier provided.');
+                return;
+            }
+
+            // Decode URI component
+            identifier = decodeURIComponent(identifier);
+            
+            currentHoseId = identifier;
+            console.log("🔍 Mencari data untuk:", identifier);
+            fetchHoseDataById(identifier);
+        }
+
+        // FUNCTION UNTUK FETCH HOSE DATA - PATTERN SAMA SEPERTI RADIO
+        function fetchHoseDataById(itemName) {
+            if (!db) {
+                showError('Database not initialized.');
+                return;
+            }
+
+            showLoading(true);
+            console.log("🔍 Mencari data hose untuk:", itemName);
+
+            // TANPA .orderBy() - TAK PERLU INDEX!
+            db.collection('hoses')
+                .where('item', '==', itemName)
+                .get()
+                .then((querySnapshot) => {
+                    showLoading(false);
+                    
+                    console.log("📊 Data ditemui:", querySnapshot.size, "rekod");
+                    
+                    if (querySnapshot.empty) {
+                        // Jika tiada data, create new document dengan default values
+                        console.log("📝 No existing data, creating new hose entry");
+                        createNewHoseDocument(itemName);
+                        return;
+                    }
+
+                    // Ambil dokumen pertama
+                    const doc = querySnapshot.docs[0];
+                    const data = doc.data();
+                    currentHoseData = data;
+                    currentDocumentId = doc.id;
+                    
+                    console.log("✅ Data hose ditemui:", data);
+                    console.log("📝 Document ID:", currentDocumentId);
+                    populateHoseInfo(data);
+                })
+                .catch((error) => {
+                    showLoading(false);
+                    showError(`Database error: ${error.message}`);
+                    console.error("❌ Error fetching hose data:", error);
+                });
+        }
+
+        function populateHoseInfo(data) {
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('hoseInfoContent').style.display = 'block';
+
+            // Format dates untuk display
+            const formatDate = (dateString) => {
+                if (!dateString) return '-';
+                try {
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('en-MY', { 
+                        day: '2-digit', 
+                        month: '2-digit', 
+                        year: 'numeric' 
+                    });
+                } catch (e) {
+                    return dateString;
+                }
+            };
+
+            // Populate read-only fields
+            document.getElementById('item').textContent = data.item || '-';
+            document.getElementById('currentQuantity').textContent = data.currentQuantity || '0';
+            document.getElementById('minimumQuantity').textContent = data.minimumQuantity || '0';
+            document.getElementById('location').textContent = data.location || '-';
+            document.getElementById('inspectionDate').textContent = formatDate(data.inspectionDate);
+            document.getElementById('nextInspectionDate').textContent = formatDate(data.nextInspectionDate);
+            document.getElementById('condition').textContent = data.condition || '-';
+            document.getElementById('remarks').textContent = data.remarks || '-';
+
+            // Populate edit fields
+            document.getElementById('editItem').value = data.item || '';
+            document.getElementById('editCurrentQuantity').value = data.currentQuantity || '';
+            document.getElementById('editMinimumQuantity').value = data.minimumQuantity || '';
+            document.getElementById('editLocation').value = data.location || '';
+            document.getElementById('editCondition').value = data.condition || '';
+            document.getElementById('editRemarks').value = data.remarks || '';
+
+            // Populate inspection fields
+            const today = new Date().toISOString().split('T')[0];
+            
+            document.getElementById('conditionInput').value = data.condition || '';
+            document.getElementById('editInspectionDate').value = data.inspectionDate || today;
+            
+            // Set next inspection date
+            if (data.nextInspectionDate) {
+                document.getElementById('editNextInspectionDate').value = data.nextInspectionDate;
+            } else {
+                const nextMonth = new Date();
+                nextMonth.setMonth(nextMonth.getMonth() + 6); // 6 bulan dari sekarang
+                const nextMonthStr = nextMonth.toISOString().split('T')[0];
+                document.getElementById('editNextInspectionDate').value = nextMonthStr;
+            }
+        }
+
+        function toggleInspectionMode() {
+            isEditMode = !isEditMode;
+            const inspectionBtn = document.getElementById('inspectionBtn');
+            const backBtn = document.getElementById('backBtn');
+            const readOnlyInfo = document.getElementById('readOnlyInfo');
+            const editInfo = document.getElementById('editInfo');
+            const conditionSection = document.getElementById('conditionSection');
+            const saveSection = document.getElementById('saveSection');
+
+            if (isEditMode) {
+                // SEMBUNYIKAN BUTTON INSPECTION
+                inspectionBtn.style.display = 'none';
+                
+                // TUNJUKKAN BUTTON BACK
+                backBtn.style.display = 'flex';
+                
+                // TUNJUKKAN EDIT MODE DAN CONDITION
+                readOnlyInfo.style.display = 'none';
+                editInfo.style.display = 'grid';
+                conditionSection.style.display = 'block';
+                saveSection.style.display = 'block';
+            } else {
+                // KEMBALI KE VIEW MODE
+                inspectionBtn.style.display = 'block';
+                inspectionBtn.classList.remove('green');
+                inspectionBtn.classList.add('red');
+                inspectionBtn.innerHTML = '<i class="fas fa-clipboard-check"></i> Inspection';
+                
+                // SEMBUNYIKAN BUTTON BACK
+                backBtn.style.display = 'none';
+                
+                // TUNJUKKAN VIEW MODE
+                readOnlyInfo.style.display = 'grid';
+                editInfo.style.display = 'none';
+                conditionSection.style.display = 'none';
+                saveSection.style.display = 'none';
+            }
+        }
+
+        // SAVE DATA FUNCTION - SAMA SEPERTI RADIO
+        function saveAllData() {
+            if (!db || !currentDocumentId) {
+                alert('Database not initialized or no document selected.');
+                return;
+            }
+
+            // Validation
+            const currentQty = parseInt(document.getElementById('editCurrentQuantity').value) || 0;
+            const minQty = parseInt(document.getElementById('editMinimumQuantity').value) || 0;
+            
+            if (isNaN(currentQty) || currentQty < 0) {
+                alert('Please enter a valid current quantity (0 or greater).');
+                return;
+            }
+            
+            if (isNaN(minQty) || minQty < 0) {
+                alert('Please enter a valid minimum quantity (0 or greater).');
+                return;
+            }
+
+            const updatedData = {
+                currentQuantity: currentQty,
+                minimumQuantity: minQty,
+                location: document.getElementById('editLocation').value || '',
+                remarks: document.getElementById('editRemarks').value || '',
+                condition: document.getElementById('conditionInput').value || '',
+                inspectionDate: document.getElementById('editInspectionDate').value || new Date().toISOString().split('T')[0],
+                nextInspectionDate: document.getElementById('editNextInspectionDate').value || '',
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            const saveBtn = document.querySelector('.save-btn');
+            const originalText = saveBtn.innerHTML;
+            
+            // Show loading state
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            saveBtn.disabled = true;
+
+            // Update existing document
+            db.collection('hoses')
+                .doc(currentDocumentId)
+                .update(updatedData)
+                .then(() => {
+                    console.log('✅ Hose data updated successfully');
+                    
+                    // Update local data
+                    currentHoseData = { ...currentHoseData, ...updatedData };
+                    
+                    // Update view mode dengan data baru
+                    populateHoseInfo(currentHoseData);
+                    
+                    // Show success message
+                    showSaveSuccess();
+                    
+                    // Automatically return to view mode after save
+                    setTimeout(() => {
+                        toggleInspectionMode();
+                    }, 2000);
+                })
+                .catch((error) => {
+                    console.error('Error saving hose data:', error);
+                    alert('Save failed: ' + error.message);
+                })
+                .finally(() => {
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.disabled = false;
+                });
+        }
+
+        // Function untuk create new document jika tidak wujud
+        function createNewHoseDocument(itemName) {
+            // Tambah item name dari currentHoseId
+            const data = {
+                item: itemName,
+                currentQuantity: 0,
+                minimumQuantity: 0,
+                location: '',
+                condition: '',
+                inspectionDate: new Date().toISOString().split('T')[0],
+                nextInspectionDate: '',
+                remarks: '',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            db.collection('hoses')
+                .add(data)
+                .then((docRef) => {
+                    console.log('✅ New hose document created with ID:', docRef.id);
+                    currentDocumentId = docRef.id;
+                    currentHoseData = data;
+                    
+                    // Update view
+                    populateHoseInfo(data);
+                })
+                .catch((error) => {
+                    console.error('Error creating new hose:', error);
+                    showError('Failed to create hose entry: ' + error.message);
+                });
+        }
+
+        // FUNCTION TO SHOW SUCCESS MESSAGE (SAMA SEPERTI RADIO)
+        function showSaveSuccess() {
+            const successMessage = document.getElementById('saveSuccessMessage');
+            successMessage.style.display = 'flex';
+            
+            // Hide message after 3 seconds
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingMessage').style.display = show ? 'block' : 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            if (!show) document.getElementById('hoseInfoContent').style.display = 'none';
+        }
+
+        function showError(message) {
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('errorText').textContent = message;
+        }
+
+        function retryLoading() {
+            // Cuba load semula data berdasarkan hoseId yang ada
+            const urlParams = new URLSearchParams(window.location.search);
+            let hoseId = urlParams.get('hose');
+            
+            if (hoseId) {
+                hoseId = decodeURIComponent(hoseId);
+                fetchHoseDataById(hoseId);
+            }
+        }
+
+        function closePopup() {
+            if (isEditMode && confirm('You have unsaved changes. Close without saving?')) {
+                return;
+            }
+            window.location.href = 'public-inspection.html';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closePopup();
+        });
+    </script>
+</body>
+</html>

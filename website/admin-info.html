@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspection Data</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #d9534f;
+            --light-bg: #f8f9fa;
+            --dark-text: #2d3748;
+            --border-color: #e2e8f0;
+        }
+
+        [data-theme="dark"] {
+            --light-bg: #1a202c;
+            --dark-text: #e2e8f0;
+            --border-color: #2d3748;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        [data-theme="dark"] .sidebar {
+            background-color: #2d3748;
+        }
+        
+        .logo {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+        
+        .logo h1 {
+            color: var(--primary-color);
+            font-size: 24px;
+        }
+        
+        .user-profile-sidebar {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .sidebar-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), #e57373);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-item {
+            padding: 12px 20px;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .nav-item.active {
+            background-color: rgba(217, 83, 79, 0.1);
+            border-left: 4px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .nav-item:hover:not(.active) {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] .nav-item:hover:not(.active) {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            margin-left: 250px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .welcome-section h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        /* SIMPLE CIRCLE CARDS */
+        .circle-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .circle-item {
+            text-align: center;
+            width: 150px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .circle-item:hover {
+            transform: scale(1.1);
+        }
+
+        .circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), #c9302c);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            box-shadow: 0 5px 15px rgba(217, 83, 79, 0.3);
+        }
+
+        .circle:hover {
+            box-shadow: 0 8px 25px rgba(217, 83, 79, 0.4);
+        }
+
+        .circle i {
+            font-size: 40px;
+            color: white;
+        }
+
+        .circle-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark-text);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .sidebar .logo h1, 
+            .sidebar .nav-item span,
+            .sidebar-user-info {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+                padding: 20px;
+            }
+
+            .circle-grid {
+                gap: 30px;
+            }
+
+            .circle {
+                width: 100px;
+                height: 100px;
+            }
+
+            .circle i {
+                font-size: 32px;
+            }
+
+            .welcome-section h1 {
+                font-size: 28px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .circle-grid {
+                gap: 20px;
+            }
+
+            .circle {
+                width: 80px;
+                height: 80px;
+            }
+
+            .circle i {
+                font-size: 28px;
+            }
+
+            .circle-label {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation (UPDATED) -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>Admin Panel</h1>
+            </div>
+
+            <div class="user-profile-sidebar">
+                <div class="sidebar-avatar">A</div>
+                <div class="sidebar-user-info">
+                    <h3>Admin User</h3>
+                    <p>Administrator</p>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item" onclick="navigateTo('admin-dashboard.html')">
+                    <i class="fas fa-qrcode"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item active">
+                    <i class="fas fa-th-large"></i>
+                    <span>Inspection Data</span>
+                </li>
+                <li class="nav-item" onclick="navigateTo('admin-contact.html')">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </li>
+                <li class="nav-item" onclick="navigateTo('public-contact.html')" style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <i class="fas fa-eye"></i>
+                    <span>Public View</span>
+                </li>
+                <li class="nav-item" onclick="navigateTo('index.html')">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div class="user-info">
+                    <div class="user-avatar">A</div>
+                    <div>
+                        <div>Administrator</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="welcome-section">
+                <h1>Equipment Categories</h1>
+                <p>Select a category to view details</p>
+            </div>
+
+            <!-- Simple Circle Cards -->
+            <div class="circle-grid">
+                <!-- Portable Radio -->
+                <div class="circle-item" onclick="navigateToCategory('info-radio.html')">
+                    <div class="circle">
+                        <i class="fas fa-walkie-talkie"></i>
+                    </div>
+                    <div class="circle-label">Portable Radio</div>
+                </div>
+
+                <!-- Fire PPE -->
+                <div class="circle-item" onclick="navigateToCategory('info-ppe.html')">
+                    <div class="circle">
+                        <i class="fas fa-helmet-safety"></i>
+                    </div>
+                    <div class="circle-label">Fire PPE</div>
+                </div>
+
+                <!-- Vehicle -->
+                <div class="circle-item" onclick="navigateToCategory('info-vehicle.html')">
+                    <div class="circle">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div class="circle-label">Vehicle</div>
+                </div>
+
+                <!-- Rescue Equipment -->
+                <div class="circle-item" onclick="navigateToCategory('info-rescue.html')">
+                    <div class="circle">
+                        <i class="fas fa-life-ring"></i>
+                    </div>
+                    <div class="circle-label">Rescue Equipment</div>
+                </div>
+
+                <!-- Hazmat Equipment -->
+                <div class="circle-item" onclick="navigateToCategory('info-hazmat.html')">
+                    <div class="circle">
+                        <i class="fas fa-radiation-alt"></i>
+                    </div>
+                    <div class="circle-label">Hazmat Equipment</div>
+                </div>
+
+                <!-- Hose -->
+                <div class="circle-item" onclick="navigateToCategory('info-hose.html')">
+                    <div class="circle">
+                        <i class="fas fa-faucet"></i>
+                    </div>
+                    <div class="circle-label">Hose</div>
+                </div>
+
+                <!-- SCBA -->
+                <div class="circle-item" onclick="navigateToCategory('info-scba.html')">
+                    <div class="circle">
+                        <i class="fas fa-lungs"></i>
+                    </div>
+                    <div class="circle-label">SCBA</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function navigateToCategory(page) {
+            window.location.href = page;
+        }
+
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCBA Information</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="scanner.css">
+    <style>
+        /* BACKGROUND IMAGE DARI FOLDER images/i8.jpg */
+        body {
+            background-image: url('images/scba.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* STYLE SAMA SEPERTI RADIO & HOSE - JANGAN UBAH */
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .popup-header h1 {
+            flex-grow: 1;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .back-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            display: none; /* MULA-MULA DISEMBUNYIKAN */
+        }
+        
+        .back-btn:hover {
+            background-color: #5a6268;
+        }
+        
+        .close-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+        
+        .close-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="info-popup">
+        <div class="popup-header">
+            <h1><i class="fas fa-lungs"></i> SCBA Information</h1>
+            <div class="header-buttons">
+                <button class="back-btn" id="backBtn" onclick="returnToViewMode()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button class="close-btn" onclick="closePopup()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="loading-container" id="loadingMessage">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Loading SCBA information...</p>
+        </div>
+
+        <div class="error-container" id="errorMessage" style="display: none;">
+            <i class="fas fa-exclamation-triangle fa-2x"></i>
+            <p id="errorText"></p>
+            <button class="action-btn" onclick="retryLoading()"><i class="fas fa-redo"></i> Try Again</button>
+        </div>
+
+        <div id="scbaInfoContent" style="display: none;">
+            <!-- BUANG PAPARAN "QR Code Scanned Successfully" -->
+
+            <!-- SCBA INFORMATION - SEMUA FIELDS -->
+            <div class="radio-info-grid" id="readOnlyInfo">
+                <div class="info-item"><div class="info-label">Item</div><div class="info-value" id="item">-</div></div>
+                <div class="info-item"><div class="info-label">Current Quantity</div><div class="info-value" id="currentQuantity">-</div></div>
+                <div class="info-item"><div class="info-label">Minimum Quantity</div><div class="info-value" id="minimumQuantity">-</div></div>
+                <div class="info-item"><div class="info-label">Condition</div><div class="info-value" id="condition">-</div></div>
+                <div class="info-item"><div class="info-label">Last Inspection Date</div><div class="info-value" id="inspectionDate">-</div></div>
+                <div class="info-item"><div class="info-label">Next Inspection Date</div><div class="info-value" id="nextInspectionDate">-</div></div>
+                <div class="info-item full-width"><div class="info-label">Location</div><div class="info-value" id="location">-</div></div>
+                <div class="info-item full-width"><div class="info-label">Remarks</div><div class="info-value" id="remarks">-</div></div>
+            </div>
+
+            <!-- EDIT MODE - SEMUA FIELDS -->
+            <div class="radio-info-grid edit-mode" id="editInfo" style="display: none;">
+                <div class="info-item"><div class="info-label">Item</div><input type="text" class="info-input" id="editItem" readonly></div>
+                <div class="info-item"><div class="info-label">Current Quantity</div><input type="number" class="info-input" id="editCurrentQuantity" min="0"></div>
+                <div class="info-item"><div class="info-label">Minimum Quantity</div><input type="number" class="info-input" id="editMinimumQuantity" min="0"></div>
+                <div class="info-item"><div class="info-label">Condition</div><input type="text" class="info-input" id="editCondition"></div>
+                <div class="info-item"><div class="info-label">Last Inspection Date</div><input type="date" class="info-input" id="editInspectionDate"></div>
+                <div class="info-item"><div class="info-label">Next Inspection Date</div><input type="date" class="info-input" id="editNextInspectionDate"></div>
+                <div class="info-item full-width"><div class="info-label">Location</div><input type="text" class="info-input" id="editLocation"></div>
+                <div class="info-item full-width"><div class="info-label">Remarks</div><textarea class="info-textarea" id="editRemarks"></textarea></div>
+            </div>
+
+            <!-- INSPECTION BUTTON -->
+            <div class="inspection-section">
+                <button class="inspection-btn red" id="inspectionBtn" onclick="toggleInspectionMode()">
+                    <i class="fas fa-clipboard-check"></i> Inspection
+                </button>
+            </div>
+
+            <!-- CONDITION SECTION -->
+            <div class="condition-section" id="conditionSection" style="display: none;">
+                <h3><i class="fas fa-list-alt"></i> Condition Details</h3>
+                <textarea 
+                    class="condition-textarea" 
+                    id="conditionInput" 
+                    placeholder="Enter detailed SCBA condition here..."></textarea>
+            </div>
+
+            <!-- SAVE BUTTON -->
+            <div class="save-section" id="saveSection" style="display: none;">
+                <button class="save-btn" onclick="saveAllData()"><i class="fas fa-save"></i> SAVE ALL CHANGES</button>
+            </div>
+
+            <!-- Success Message -->
+            <div id="saveSuccessMessage" class="save-success" style="display: none;">
+                <i class="fas fa-check-circle"></i> Save Success!
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBf9xdF0qmVYaNWFUuEys-P5a1yuTpLdVY",
+            authDomain: "project123-82272.firebaseapp.com",
+            projectId: "project123-82272",
+            storageBucket: "project123-82272.firebasestorage.app",
+            messagingSenderId: "97561643123",
+            appId: "1:97561643123:web:92596bb20645124f68c206",
+            measurementId: "G-D5P85TT95P"
+        };
+
+        let db;
+        let currentScbaId = null;
+        let currentScbaData = null;
+        let isEditMode = false;
+        let currentDocumentId = null;
+
+        // Initialize Firebase
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeFirebase();
+            loadScbaDataFromURL();
+        });
+
+        function initializeFirebase() {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.firestore();
+                console.log("✅ Firebase initialized for SCBA Inspection");
+            } catch (error) {
+                showError('Failed to initialize database: ' + error.message);
+            }
+        }
+
+        function returnToViewMode() {
+            toggleInspectionMode();
+        }
+
+        function loadScbaDataFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let identifier = urlParams.get('scba');
+            
+            console.log("🔍 URL Parameters:", window.location.search);
+            console.log("🔍 SCBA Identifier from URL:", identifier);
+            
+            if (!identifier) {
+                showError('No SCBA identifier provided in URL.');
+                return;
+            }
+
+            identifier = decodeURIComponent(identifier);
+            currentScbaId = identifier;
+            
+            console.log("🔍 Searching for SCBA with item name:", identifier);
+            fetchScbaDataById(identifier);
+        }
+
+        function fetchScbaDataById(itemName) {
+            if (!db) {
+                showError('Database not initialized.');
+                return;
+            }
+
+            showLoading(true);
+            
+            // CARI DENGAN COLLECTION 'scbas' DAN FIELD 'item'
+            db.collection('scbas')
+                .where('item', '==', itemName)
+                .get()
+                .then((querySnapshot) => {
+                    showLoading(false);
+                    
+                    console.log("📊 Documents found:", querySnapshot.size);
+                    
+                    if (querySnapshot.empty) {
+                        console.log("📝 No existing SCBA data found for item:", itemName);
+                        // TUNJUKKAN DEFAULT DATA JIKA TIADA DALAM FIRESTORE
+                        showDefaultData(itemName);
+                        return;
+                    }
+
+                    // Ambil dokumen pertama
+                    const doc = querySnapshot.docs[0];
+                    const data = doc.data();
+                    currentDocumentId = doc.id;
+                    currentScbaData = data;
+                    
+                    console.log("✅ SCBA Data found:", data);
+                    console.log("📝 Document ID:", currentDocumentId);
+                    
+                    // Debug: Log semua fields yang ada
+                    console.log("🔍 All fields in Firestore document:");
+                    Object.keys(data).forEach(key => {
+                        console.log(`  ${key}: ${data[key]}`);
+                    });
+                    
+                    populateScbaInfo(data);
+                })
+                .catch((error) => {
+                    showLoading(false);
+                    showError(`Database error: ${error.message}`);
+                    console.error("❌ Error fetching SCBA data:", error);
+                });
+        }
+
+        function showDefaultData(itemName) {
+            // Jika tiada data dalam Firestore, show default values
+            const defaultData = {
+                item: itemName,
+                currentQuantity: 0,
+                minimumQuantity: 0,
+                condition: '',
+                inspectionDate: '',
+                nextInspectionDate: '',
+                location: '',
+                remarks: ''
+            };
+            
+            currentScbaData = defaultData;
+            currentDocumentId = null; // Belum ada document dalam Firestore
+            
+            console.log("📝 Showing default data for:", itemName);
+            populateScbaInfo(defaultData);
+        }
+
+        function populateScbaInfo(data) {
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('scbaInfoContent').style.display = 'block';
+
+            // Format dates untuk display
+            const formatDate = (dateString) => {
+                if (!dateString || dateString === '') return '-';
+                try {
+                    // Jika dateString adalah timestamp Firestore
+                    if (dateString.toDate) {
+                        const date = dateString.toDate();
+                        return date.toLocaleDateString('en-MY', { 
+                            day: '2-digit', 
+                            month: '2-digit', 
+                            year: 'numeric' 
+                        });
+                    }
+                    
+                    // Jika dateString adalah string biasa
+                    const date = new Date(dateString);
+                    if (isNaN(date.getTime())) {
+                        return dateString; // Return as-is jika invalid date
+                    }
+                    return date.toLocaleDateString('en-MY', { 
+                        day: '2-digit', 
+                        month: '2-digit', 
+                        year: 'numeric' 
+                    });
+                } catch (e) {
+                    console.error("Date formatting error:", e);
+                    return dateString || '-';
+                }
+            };
+
+            // Debug log untuk SEMUA FIELDS termasuk remarks dan location
+            console.log("📊 Populating ALL fields from Firestore:", {
+                item: data.item || 'N/A',
+                currentQuantity: data.currentQuantity !== undefined ? data.currentQuantity : 'N/A',
+                minimumQuantity: data.minimumQuantity !== undefined ? data.minimumQuantity : 'N/A',
+                condition: data.condition || 'N/A',
+                inspectionDate: data.inspectionDate || 'N/A',
+                nextInspectionDate: data.nextInspectionDate || 'N/A',
+                location: data.location || 'N/A',
+                remarks: data.remarks || 'N/A',
+                timestamp: data.timestamp || 'N/A'
+            });
+
+            // Populate read-only fields - SEMUA FIELDS
+            document.getElementById('item').textContent = data.item || currentScbaId || '-';
+            document.getElementById('currentQuantity').textContent = data.currentQuantity !== undefined ? data.currentQuantity : '0';
+            document.getElementById('minimumQuantity').textContent = data.minimumQuantity !== undefined ? data.minimumQuantity : '0';
+            document.getElementById('condition').textContent = data.condition || '-';
+            document.getElementById('inspectionDate').textContent = formatDate(data.inspectionDate);
+            document.getElementById('nextInspectionDate').textContent = formatDate(data.nextInspectionDate);
+            document.getElementById('location').textContent = data.location || '-';  // LOCATION
+            document.getElementById('remarks').textContent = data.remarks || '-';    // REMARKS
+
+            // Populate edit fields - SEMUA FIELDS
+            document.getElementById('editItem').value = data.item || currentScbaId || '';
+            document.getElementById('editCurrentQuantity').value = data.currentQuantity !== undefined ? data.currentQuantity : '';
+            document.getElementById('editMinimumQuantity').value = data.minimumQuantity !== undefined ? data.minimumQuantity : '';
+            document.getElementById('editCondition').value = data.condition || '';
+            document.getElementById('editLocation').value = data.location || '';      // LOCATION
+            document.getElementById('editRemarks').value = data.remarks || '';        // REMARKS
+
+            // Populate inspection fields
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Condition input untuk inspection mode
+            document.getElementById('conditionInput').value = data.condition || '';
+            
+            // Inspection dates
+            document.getElementById('editInspectionDate').value = data.inspectionDate || today;
+            
+            // Set next inspection date - default 6 bulan dari sekarang
+            if (data.nextInspectionDate) {
+                document.getElementById('editNextInspectionDate').value = data.nextInspectionDate;
+            } else {
+                const nextMonth = new Date();
+                nextMonth.setMonth(nextMonth.getMonth() + 6);
+                const nextMonthStr = nextMonth.toISOString().split('T')[0];
+                document.getElementById('editNextInspectionDate').value = nextMonthStr;
+            }
+
+            // Debug: Check jika location dan remarks ada dalam data
+            console.log("✅ Location from Firestore:", data.location);
+            console.log("✅ Remarks from Firestore:", data.remarks);
+            console.log("✅ Condition from Firestore:", data.condition);
+        }
+
+        function toggleInspectionMode() {
+            isEditMode = !isEditMode;
+            const inspectionBtn = document.getElementById('inspectionBtn');
+            const backBtn = document.getElementById('backBtn');
+            const readOnlyInfo = document.getElementById('readOnlyInfo');
+            const editInfo = document.getElementById('editInfo');
+            const conditionSection = document.getElementById('conditionSection');
+            const saveSection = document.getElementById('saveSection');
+
+            if (isEditMode) {
+                // SEMBUNYIKAN BUTTON INSPECTION
+                inspectionBtn.style.display = 'none';
+                
+                // TUNJUKKAN BUTTON BACK
+                backBtn.style.display = 'flex';
+                
+                // TUNJUKKAN EDIT MODE DAN CONDITION
+                readOnlyInfo.style.display = 'none';
+                editInfo.style.display = 'grid';
+                conditionSection.style.display = 'block';
+                saveSection.style.display = 'block';
+            } else {
+                // KEMBALI KE VIEW MODE
+                inspectionBtn.style.display = 'block';
+                inspectionBtn.classList.remove('green');
+                inspectionBtn.classList.add('red');
+                inspectionBtn.innerHTML = '<i class="fas fa-clipboard-check"></i> Inspection';
+                
+                // SEMBUNYIKAN BUTTON BACK
+                backBtn.style.display = 'none';
+                
+                // TUNJUKKAN VIEW MODE
+                readOnlyInfo.style.display = 'grid';
+                editInfo.style.display = 'none';
+                conditionSection.style.display = 'none';
+                saveSection.style.display = 'none';
+            }
+        }
+
+        async function saveAllData() {
+            if (!db) {
+                alert('Database not initialized.');
+                return;
+            }
+
+            // Validation untuk quantity fields
+            const currentQty = parseInt(document.getElementById('editCurrentQuantity').value) || 0;
+            const minQty = parseInt(document.getElementById('editMinimumQuantity').value) || 0;
+            
+            if (isNaN(currentQty) || currentQty < 0) {
+                alert('Please enter a valid current quantity (0 or greater).');
+                return;
+            }
+            
+            if (isNaN(minQty) || minQty < 0) {
+                alert('Please enter a valid minimum quantity (0 or greater).');
+                return;
+            }
+
+            // Prepare data dengan SEMUA FIELDS termasuk location dan remarks
+            const updatedData = {
+                item: document.getElementById('editItem').value || currentScbaId,
+                currentQuantity: currentQty,
+                minimumQuantity: minQty,
+                location: document.getElementById('editLocation').value || '',        // LOCATION
+                remarks: document.getElementById('editRemarks').value || '',         // REMARKS
+                condition: document.getElementById('conditionInput').value || '',    // Condition dari inspection
+                inspectionDate: document.getElementById('editInspectionDate').value || new Date().toISOString().split('T')[0],
+                nextInspectionDate: document.getElementById('editNextInspectionDate').value || '',
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            console.log("💾 Saving ALL data to Firestore:", updatedData);
+
+            const saveBtn = document.querySelector('.save-btn');
+            const originalText = saveBtn.innerHTML;
+            
+            // Show loading state
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            saveBtn.disabled = true;
+
+            try {
+                if (currentDocumentId) {
+                    // Update existing document
+                    await db.collection('scbas')
+                        .doc(currentDocumentId)
+                        .update(updatedData);
+                    
+                    console.log('✅ SCBA data updated successfully in Firestore');
+                } else {
+                    // Create new document
+                    const docRef = await db.collection('scbas')
+                        .add(updatedData);
+                    
+                    currentDocumentId = docRef.id;
+                    console.log('✅ New SCBA document created with ID:', currentDocumentId);
+                }
+                
+                // Update local data
+                currentScbaData = { ...currentScbaData, ...updatedData };
+                
+                // Update view mode dengan data baru
+                populateScbaInfo(currentScbaData);
+                
+                // Show success message
+                showSaveSuccess();
+                
+                // Automatically return to view mode after save
+                setTimeout(() => {
+                    toggleInspectionMode();
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error saving SCBA data:', error);
+                alert('Save failed: ' + error.message);
+            } finally {
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            }
+        }
+
+        function showSaveSuccess() {
+            const successMessage = document.getElementById('saveSuccessMessage');
+            successMessage.style.display = 'flex';
+            
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingMessage').style.display = show ? 'block' : 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            if (!show) document.getElementById('scbaInfoContent').style.display = 'none';
+        }
+
+        function showError(message) {
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('errorText').textContent = message;
+        }
+
+        function retryLoading() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let scbaId = urlParams.get('scba');
+            
+            if (scbaId) {
+                scbaId = decodeURIComponent(scbaId);
+                fetchScbaDataById(scbaId);
+            }
+        }
+
+        function closePopup() {
+            if (isEditMode) {
+                if (!confirm('You have unsaved changes. Close without saving?')) {
+                    return;
+                }
+            }
+            window.location.href = 'public-inspection.html';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closePopup();
+        });
+    </script>
+</body>
+</html>

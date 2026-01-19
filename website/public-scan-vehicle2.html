@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambulance Inspection</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="scanner.css">
+    <link rel="stylesheet" href="vehiclescan.css">
+    <link rel="stylesheet" href="scan2.css"> <!-- NEW CSS FILE -->
+    <!-- jsPDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <!-- Inspection Details Modal -->
+    <div id="inspectionDetailsModal" class="inspection-modal-overlay" style="display: none;">
+        <div class="inspection-modal-content">
+            <div class="inspection-modal-header">
+                <h2><i class="fas fa-clipboard-check"></i> Inspection Details</h2>
+                <p id="modalInstructionText">Please fill in inspection details</p>
+            </div>
+            
+            <div class="info-header-container">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">DAY</div>
+                        <div class="info-value" id="modalDayDisplay">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">DATE</div>
+                        <div class="info-value" id="modalDateDisplay">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">CURRENT SHIFT</div>
+                        <div class="info-value" id="modalCurrentShift">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">CURRENT TIME</div>
+                        <div class="info-value" id="modalCurrentTime">-</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- FIXED: Hanya show shift yang aktif berdasarkan masa sekarang -->
+            <div class="form-group">
+                <label>Inspection Time:</label>
+                <div id="timeSelector">
+                    <!-- Hanya satu shift akan ditunjukkan berdasarkan current time -->
+                    <div class="time-option active" id="activeTimeOption">
+                        <!-- Akan diisi oleh JavaScript -->
+                    </div>
+                </div>
+                <input type="hidden" id="modalTime" value="">
+            </div>
+            
+            <div class="form-group">
+                <label>Inspect By:</label>
+                <input type="text" id="modalInspectBy" class="modal-input" placeholder="Enter inspector name">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Medic:</label>
+                    <input type="text" id="modalMedic" class="modal-input" placeholder="Enter Medic name">
+                </div>
+                <div class="form-group">
+                    <label>SWC / WC:</label>
+                    <input type="text" id="modalSWCWC" class="modal-input" placeholder="Enter SWC/WC name">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Remarks:</label>
+                <textarea id="modalRemarks" class="modal-input remarks-textarea" placeholder="Enter optional remarks (if any)"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Shift:</label>
+                <select id="modalShift" class="modal-input">
+                    <option value="">Select Shift</option>
+                    <option value="A">Shift A</option>
+                    <option value="B">Shift B</option>
+                    <option value="C">Shift C</option>
+                    <option value="D">Shift D</option>
+                </select>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeInspectionModal()">Cancel</button>
+                <button class="modal-btn modal-btn-primary" onclick="saveInspectionDetails()">Continue to Inspect</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main popup content -->
+    <div class="info-popup">
+        <div class="popup-header">
+            <h1><i class="fas fa-ambulance"></i> Ambulance Inspection</h1>
+            <div class="header-buttons">
+                <button class="pdf-btn" onclick="saveAsPDF()" id="pdfButton">
+                    <i class="fas fa-file-pdf"></i> Save as PDF
+                </button>
+                <button class="close-btn" onclick="closePopup()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="loading-container" id="loadingMessage">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Loading ambulance inspection...</p>
+        </div>
+
+        <div class="error-container" id="errorMessage" style="display: none;">
+            <i class="fas fa-exclamation-triangle fa-2x"></i>
+            <p id="errorText"></p>
+            <button class="action-btn" onclick="retryLoading()"><i class="fas fa-redo"></i> Try Again</button>
+        </div>
+
+        <div id="vehicleInfoContent" style="display: none;">
+            <!-- Info header dengan layout teratur -->
+            <div class="info-header-container" id="dailyInfoBanner">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">DAY</div>
+                        <div class="info-value" id="currentDayDisplay">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">DATE</div>
+                        <div class="info-value" id="currentDateDisplay">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">CURRENT SHIFT</div>
+                        <div class="info-value" id="currentShiftDisplay">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">CURRENT TIME</div>
+                        <div class="info-value" id="currentTimeDisplay">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VEHICLE INFO -->
+            <div class="radio-info-grid" id="basicInfo">
+                <div class="radio-info-item">
+                    <div class="radio-info-label">Vehicle Number</div>
+                    <div class="radio-info-value" id="vehicleNumber">-</div>
+                </div>
+                <div class="radio-info-item">
+                    <div class="radio-info-label">Vehicle Type</div>
+                    <div class="radio-info-value" id="vehicleType">-</div>
+                </div>
+                <div class="radio-info-item">
+                    <div class="radio-info-label">Ambulance Type</div>
+                    <div class="radio-info-value" id="ambulanceType">-</div>
+                </div>
+            </div>
+
+            <!-- MAIN ACTION BUTTONS -->
+            <div class="main-actions" id="mainActions">
+                <button class="main-action-btn inspection" onclick="showInspectionSection()" id="vehicleInspectionBtn" disabled>
+                    <i class="fas fa-clipboard-check"></i> Vehicle Inspection
+                </button>
+                <button class="main-action-btn medical" onclick="showMedicalInspectionSection()" id="medicalInspectionBtn" disabled>
+                    <i class="fas fa-clipboard-check"></i> Medical Response Inspection
+                </button>
+            </div>
+
+            <!-- VEHICLE INSPECTION SECTION -->
+            <div class="inspection-section" id="vehicleInspectionSection">
+                <button class="section-back-btn" onclick="backToMainActions()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                
+                <h3><i class="fas fa-clipboard-check"></i> Vehicle Inspection Checklist 
+                    <span id="currentTimeIndicator" class="time-selector-indicator"></span>
+                </h3>
+                
+                <div class="equipment-table-container">
+                    <table class="equipment-table">
+                        <thead>
+                            <tr>
+                                <th>INSPECTION ITEM</th>
+                                <th>CHECKBOX / TEXTFIELD</th>
+                                <th>REMARKS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vehicleInspectionTableBody">
+                            <!-- Vehicle inspection items akan dipopulate oleh JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- MEDICAL RESPONSE INSPECTION SECTION -->
+            <div class="inspection-section" id="medicalInspectionSection">
+                <button class="section-back-btn" onclick="backToMainActions()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                
+                <h3><i class="fas fa-clipboard-check"></i> Inspection Checklist for Medical Response
+                    <span id="medicalTimeIndicator" class="time-selector-indicator"></span>
+                </h3>
+                
+                <div class="equipment-table-container">
+                    <table class="equipment-table">
+                        <thead>
+                            <tr>
+                                <th>INSPECTION ITEM</th>
+                                <th>CHECKBOX / TEXTFIELD</th>
+                                <th>REMARKS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="medicalInspectionTableBody">
+                            <!-- Medical inspection items akan dipopulate oleh JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SAVE BUTTON -->
+            <div class="save-section" id="saveSection" style="display: none;">
+                <button class="save-btn" onclick="saveAllData()"><i class="fas fa-save"></i> SAVE INSPECTION DATA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        // ================ GLOBAL VARIABLES ================ //
+        const firebaseConfig = {
+            apiKey: "AIzaSyBf9xdF0qmVYaNWFUuEys-P5a1yuTpLdVY",
+            authDomain: "project123-82272.firebasestorage.app",
+            projectId: "project123-82272",
+            storageBucket: "project123-82272.firebasestorage.app",
+            messagingSenderId: "97561643123",
+            appId: "1:97561643123:web:92596bb20645124f68c206",
+            measurementId: "G-D5P85TT95P"
+        };
+
+        let db;
+        let currentVehicleId = null;
+        let currentVehicleData = null;
+        let currentDocumentId = null;
+        let ambulanceType = null;
+        
+        let vehicleInspectionData = [];
+        let medicalInspectionData = [];
+
+        // FIXED: Simpan data untuk kedua-dua shift
+        let inspectionDetails0800 = {
+            inspectBy: '',
+            medic: '',
+            swcwc: '',
+            shift: '',
+            remarks: '',
+            time: '0800-2000',
+            completed: false,
+            timestamp: null,
+            vehicleInspectionData: [],
+            medicalInspectionData: []
+        };
+        
+        let inspectionDetails2000 = {
+            inspectBy: '',
+            medic: '',
+            swcwc: '',
+            shift: '',
+            remarks: '',
+            time: '2000-0800',
+            completed: false,
+            timestamp: null,
+            vehicleInspectionData: [],
+            medicalInspectionData: []
+        };
+        
+        // FIXED: Determine active shift based on current time
+        let currentInspectionTime = '';
+        let currentActiveShift = '';
+        let currentDate = new Date().toISOString().split('T')[0];
+
+        // VEHICLE INSPECTION ITEMS
+        const vehicleInspectionItems = [
+            { name: "FUEL LEVEL", type: "textfield" },
+            { name: "RADIATOR WATER LEVEL", type: "checkbox" },
+            { name: "ENGINE OIL", type: "checkbox" },
+            { name: "POWER STEERING OIL", type: "checkbox" },
+            { name: "BRAKE OIL", type: "checkbox" },
+            { name: "WIPER WATER", type: "checkbox" },
+            { name: "BATTERY WATER LEVEL", type: "checkbox" },
+            { name: "CONDITION / TYRE PRESSURE", type: "checkbox" },
+            { name: "WIPER", type: "checkbox" },
+            { name: "BEACON LIGHT", type: "checkbox" },
+            { name: "MOBILE RADIO SET TEST", type: "checkbox" },
+            { name: "ROUTE RUNNING", type: "checkbox" },
+            { name: "BRAKE CONDITION", type: "checkbox" },
+            { name: "VEHICLE CLEANLINESS", type: "checkbox" },
+            { name: "BOMBA CERTIFICATE", type: "checkbox" },
+            { name: "MILLAGE / ODOMETER", type: "textfield" }
+        ];
+
+        // MEDICAL INSPECTION ITEMS - AB1
+        const medicalInspectionItemsAB1 = [
+            { name: "STRETCHER (FOLDABLE)", qty: "1", type: "checkbox" },
+            { name: "STRETCHER (WHEEL / TROLLEY)", qty: "1", type: "checkbox" },
+            { name: "MEDICAL OXYGEN (PORTABLE) – MIN 25%", qty: "1", type: "textfield" },
+            { name: "MEDICAL OXYGEN (FIXED) – MIN 25%", qty: "1", type: "textfield" },
+            { name: "NASAL PRONG & FACE MASK", qty: "1+1", type: "checkbox" },
+            { name: "PULSE OXIMETER (SPO2)", qty: "1", type: "checkbox" },
+            { name: "AMBU BAG RESUSCITATOR", qty: "1", type: "checkbox" },
+            { name: "SUCTION – ELECTRICAL / V-AC", qty: "1", type: "checkbox" },
+            { name: "DIGITAL BLOOD PRESSURE SET", qty: "1", type: "checkbox" },
+            { name: "AUTOMATED EXTERNAL DEFIBRILLATOR SET (AED)", qty: "1", type: "checkbox" },
+            { name: "FIRST AID BAG (c/w SET)", qty: "1", type: "checkbox" },
+            { name: "ABSORBENT UNDER PAD", qty: "1", type: "checkbox" },
+            { name: "KENDRICK EXTRICATION DEVICES", qty: "1", type: "checkbox" },
+            { name: "CERVICAL COLLAR", qty: "2", type: "checkbox" },
+            { name: "SPINAL BOARD / SCOPE STRETCHER", qty: "1", type: "checkbox" },
+            { name: "FRACTURE IMMOBILIZER – HAND & LEG", qty: "1", type: "checkbox" },
+            { name: "TRACTION SPLINT (HARE TRACTION)", qty: "1", type: "checkbox" },
+            { name: "TRANSFER PATIENT SHEET", qty: "1", type: "checkbox" },
+            { name: "BURN FREE SET", qty: "1", type: "checkbox" },
+            { name: "INTRAVENOUS FLUID SET", qty: "MULTY", type: "checkbox" },
+            { name: "SHARP BIN", qty: "1", type: "checkbox" },
+            { name: "TYVEX", qty: "5", type: "checkbox" }
+        ];
+
+        // ADDITIONAL ITEMS FOR AB4
+        const medicalInspectionItemsAB4 = [
+            { name: "STRETCHER (FOLDABLE)", qty: "1", type: "checkbox" },
+            { name: "STRETCHER (WHEEL / TROLLEY)", qty: "1", type: "checkbox" },
+            { name: "MEDICAL OXYGEN (PORTABLE) – MIN 25%", qty: "1", type: "textfield" },
+            { name: "MEDICAL OXYGEN (FIXED) – MIN 25%", qty: "2", type: "textfield" },
+            { name: "NASAL PRONG & FACE MASK", qty: "1+1", type: "checkbox" },
+            { name: "PULSE OXIMETER (SPO2)", qty: "1", type: "checkbox" },
+            { name: "AMBU BAG RESUSCITATOR", qty: "2", type: "checkbox" },
+            { name: "SUCTION – ELECTRICAL / V-AC", qty: "1", type: "checkbox" },
+            { name: "DIGITAL BLOOD PRESSURE SET", qty: "1", type: "checkbox" },
+            { name: "AUTOMATED EXTERNAL DEFIBRILLATOR SET (AED)", qty: "1", type: "checkbox" },
+            { name: "TRAUMA BAG (c/v SET)", qty: "1", type: "checkbox" },
+            { name: "ABSORBENT UNDER PAD", qty: "1", type: "checkbox" },
+            { name: "KENDRICK EXTRICATION DEVICES", qty: "1", type: "checkbox" },
+            { name: "CERVICAL COLLAR", qty: "1", type: "checkbox" },
+            { name: "SPINAL BOARD / SCOPE STRETCHER", qty: "1", type: "checkbox" },
+            { name: "FRACTURE IMMOBILIZER – HAND & LEG (SET)", qty: "1", type: "checkbox" },
+            { name: "TRACTION SPLINT (HARE TRACTION)", qty: "1", type: "checkbox" },
+            { name: "TRANSFER PATIENT SHEET", qty: "1", type: "checkbox" },
+            { name: "BURN FREE SET", qty: "1", type: "checkbox" },
+            { name: "INTRAVENOUS FLUID SET", qty: "MULTY", type: "checkbox" },
+            { name: "SHARP BIN / BIOHAZARD BIN", qty: "1", type: "checkbox" },
+            { name: "TYVEX", qty: "5", type: "checkbox" },
+            { name: "TRANSPORT VENTILATOR *", qty: "1", type: "checkbox" },
+            { name: "DEFIBRILLATOR *", qty: "1", type: "checkbox" },
+            { name: "CARDIAC MONITOR *", qty: "1", type: "checkbox" }
+        ];
+
+        // Initialize Firebase
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeFirebase();
+            loadVehicleDataFromURL();
+        });
+
+        function initializeFirebase() {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.firestore();
+                console.log("✅ Firebase initialized for Ambulance Inspection");
+            } catch (error) {
+                showError('Failed to initialize database.');
+            }
+        }
+
+        // ================ SHIFT LOGIC FUNCTIONS ================ //
+
+        // FIXED: Function to determine current active shift based on time
+        function determineCurrentShift() {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const currentTime = currentHour * 100 + currentMinute;
+            
+            // Shift A: 0800–2000 (8 AM to 8 PM)
+            // Shift B: 2000–0800 (8 PM to 8 AM)
+            
+            if (currentTime >= 800 && currentTime < 2000) {
+                // Between 08:00 and 20:00
+                currentActiveShift = '0800-2000';
+                currentInspectionTime = '0800-2000';
+            } else {
+                // Between 20:00 and 08:00 (next day)
+                currentActiveShift = '2000-0800';
+                currentInspectionTime = '2000-0800';
+            }
+            
+            console.log(`🕐 Current shift determined: ${currentActiveShift}`);
+            return currentActiveShift;
+        }
+
+        // FIXED: Function to get current time display
+        function getCurrentTimeDisplay() {
+            const now = new Date();
+            return now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false 
+            });
+        }
+
+        // FIXED: Function to check and set current date dengan format yang betul
+        function updateCurrentDate() {
+            const today = new Date();
+            currentDate = today.toISOString().split('T')[0];
+            
+            // Format day dan date mengikut requirement
+            const day = today.toLocaleDateString('en-US', { weekday: 'long' });
+            const date = today.toLocaleDateString('en-US', { 
+                day: 'numeric', 
+                month: 'short', 
+                year: 'numeric' 
+            }).toUpperCase();
+            
+            // Update displays
+            document.getElementById('currentDayDisplay').textContent = day;
+            document.getElementById('currentDateDisplay').textContent = date;
+            document.getElementById('modalDayDisplay').textContent = day;
+            document.getElementById('modalDateDisplay').textContent = date;
+            
+            console.log(`📅 Current date: ${currentDate}`);
+        }
+
+        // FIXED: Update current time and shift displays
+        function updateCurrentTimeAndShift() {
+            const activeShift = determineCurrentShift();
+            const currentTime = getCurrentTimeDisplay();
+            
+            // Update main display
+            document.getElementById('currentShiftDisplay').textContent = activeShift;
+            document.getElementById('currentTimeDisplay').textContent = currentTime;
+            
+            // Update modal display
+            document.getElementById('modalCurrentShift').textContent = activeShift;
+            document.getElementById('modalCurrentTime').textContent = currentTime;
+            
+            // Update time option in modal
+            const timeOption = document.getElementById('activeTimeOption');
+            timeOption.textContent = activeShift;
+            timeOption.className = 'time-option active';
+            
+            // Set hidden field value
+            document.getElementById('modalTime').value = activeShift;
+            
+            console.log(`⏰ Display updated - Shift: ${activeShift}, Time: ${currentTime}`);
+        }
+
+        // FIXED: Function to update shift status display
+        function updateShiftStatusDisplay() {
+            const is0800Completed = inspectionDetails0800.completed;
+            const is2000Completed = inspectionDetails2000.completed;
+            
+            // FIXED: Show status for BOTH shifts in the header
+            const currentShiftDisplay = document.getElementById('currentShiftDisplay');
+            const currentTimeDisplay = document.getElementById('currentTimeDisplay');
+            
+            // Update shift display with completion status
+            if (currentActiveShift === '0800-2000') {
+                if (is0800Completed) {
+                    currentShiftDisplay.innerHTML = `0800-2000 ✓`;
+                    currentShiftDisplay.className = 'info-value status-completed';
+                } else {
+                    currentShiftDisplay.textContent = '0800-2000 (Pending)';
+                    currentShiftDisplay.className = 'info-value status-pending';
+                }
+            } else {
+                if (is2000Completed) {
+                    currentShiftDisplay.innerHTML = `2000-0800 ✓`;
+                    currentShiftDisplay.className = 'info-value status-completed';
+                } else {
+                    currentShiftDisplay.textContent = '2000-0800 (Pending)';
+                    currentShiftDisplay.className = 'info-value status-pending';
+                }
+            }
+            
+            console.log(`📊 Shift status: 0800-2000: ${is0800Completed ? 'Completed' : 'Pending'}, 2000-0800: ${is2000Completed ? 'Completed' : 'Pending'}`);
+        }
+
+        // FIXED: Clear modal form
+        function clearModalForm() {
+            document.getElementById('modalInspectBy').value = '';
+            document.getElementById('modalMedic').value = '';
+            document.getElementById('modalSWCWC').value = '';
+            document.getElementById('modalShift').value = '';
+            document.getElementById('modalRemarks').value = '';
+        }
+
+        // FIXED: Update modal instruction text based on active shift
+        function updateModalInstructionText() {
+            const instructionText = document.getElementById('modalInstructionText');
+            let isShiftCompleted = false;
+            
+            if (currentActiveShift === '0800-2000') {
+                isShiftCompleted = inspectionDetails0800.completed;
+            } else {
+                isShiftCompleted = inspectionDetails2000.completed;
+            }
+            
+            if (isShiftCompleted) {
+                instructionText.textContent = `Edit inspection details for ${currentActiveShift} shift`;
+            } else {
+                instructionText.textContent = `Fill in inspection details for ${currentActiveShift} shift`;
+            }
+        }
+
+        // FIXED: Populate modal form with existing data for active shift
+        function populateModalForm() {
+            if (currentActiveShift === '0800-2000') {
+                if (inspectionDetails0800.completed) {
+                    document.getElementById('modalInspectBy').value = inspectionDetails0800.inspectBy || '';
+                    document.getElementById('modalMedic').value = inspectionDetails0800.medic || '';
+                    document.getElementById('modalSWCWC').value = inspectionDetails0800.swcwc || '';
+                    document.getElementById('modalShift').value = inspectionDetails0800.shift || '';
+                    document.getElementById('modalRemarks').value = inspectionDetails0800.remarks || '';
+                } else {
+                    clearModalForm();
+                }
+            } else {
+                if (inspectionDetails2000.completed) {
+                    document.getElementById('modalInspectBy').value = inspectionDetails2000.inspectBy || '';
+                    document.getElementById('modalMedic').value = inspectionDetails2000.medic || '';
+                    document.getElementById('modalSWCWC').value = inspectionDetails2000.swcwc || '';
+                    document.getElementById('modalShift').value = inspectionDetails2000.shift || '';
+                    document.getElementById('modalRemarks').value = inspectionDetails2000.remarks || '';
+                } else {
+                    clearModalForm();
+                }
+            }
+            
+            updateModalInstructionText();
+        }
+
+        function closeInspectionModal() {
+            document.getElementById('inspectionDetailsModal').style.display = 'none';
+        }
+
+        function loadVehicleDataFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let identifier = urlParams.get('vehicle');
+            
+            if (!identifier) {
+                showError('No ambulance identifier provided.');
+                return;
+            }
+
+            identifier = decodeURIComponent(identifier);
+            currentVehicleId = identifier;
+            fetchVehicleDataById(identifier);
+        }
+
+        function fetchVehicleDataById(vehicleNumber) {
+            if (!db) {
+                showError('Database not initialized.');
+                return;
+            }
+
+            showLoading(true);
+
+            db.collection('vehicles')
+                .where('vehicleNumber', '==', vehicleNumber)
+                .get()
+                .then((querySnapshot) => {
+                    showLoading(false);
+                    
+                    if (querySnapshot.empty) {
+                        showError('Ambulance not found. Please scan a valid Ambulance QR code.');
+                        return;
+                    }
+
+                    const doc = querySnapshot.docs[0];
+                    const data = doc.data();
+                    
+                    const vehicleType = data.vehicleType || '';
+                    const normalizedType = vehicleType.toLowerCase().trim();
+                    if (normalizedType !== 'ambulance' && normalizedType !== 'annbulance') {
+                        showError(`This page is for Ambulances only. This vehicle is: ${vehicleType}. Please scan an Ambulance QR code.`);
+                        return;
+                    }
+                    
+                    currentVehicleData = data;
+                    currentDocumentId = doc.id;
+                    
+                    ambulanceType = determineAmbulanceType(vehicleNumber);
+                    
+                    updateCurrentDate();
+                    
+                    // FIXED: Determine current active shift FIRST
+                    determineCurrentShift();
+                    updateCurrentTimeAndShift();
+                    
+                    const dailyInspectionKey = `daily_${currentDate}`;
+                    const hasDailyData = data[dailyInspectionKey];
+                    
+                    if (hasDailyData) {
+                        const dailyData = data[dailyInspectionKey];
+                        
+                        if (dailyData.inspection0800) {
+                            inspectionDetails0800 = dailyData.inspection0800;
+                            if (!inspectionDetails0800.vehicleInspectionData || inspectionDetails0800.vehicleInspectionData.length === 0) {
+                                inspectionDetails0800.vehicleInspectionData = initializeVehicleInspectionData();
+                            }
+                            if (!inspectionDetails0800.medicalInspectionData || inspectionDetails0800.medicalInspectionData.length === 0) {
+                                inspectionDetails0800.medicalInspectionData = initializeMedicalInspectionData();
+                            }
+                        }
+                        
+                        if (dailyData.inspection2000) {
+                            inspectionDetails2000 = dailyData.inspection2000;
+                            if (!inspectionDetails2000.vehicleInspectionData || inspectionDetails2000.vehicleInspectionData.length === 0) {
+                                inspectionDetails2000.vehicleInspectionData = initializeVehicleInspectionData();
+                            }
+                            if (!inspectionDetails2000.medicalInspectionData || inspectionDetails2000.medicalInspectionData.length === 0) {
+                                inspectionDetails2000.medicalInspectionData = initializeMedicalInspectionData();
+                            }
+                        }
+                    } else {
+                        inspectionDetails0800.vehicleInspectionData = initializeVehicleInspectionData();
+                        inspectionDetails0800.medicalInspectionData = initializeMedicalInspectionData();
+                        
+                        inspectionDetails2000.vehicleInspectionData = initializeVehicleInspectionData();
+                        inspectionDetails2000.medicalInspectionData = initializeMedicalInspectionData();
+                    }
+                    
+                    // FIXED: Set current data based on active shift
+                    if (currentActiveShift === '0800-2000') {
+                        vehicleInspectionData = inspectionDetails0800.vehicleInspectionData;
+                        medicalInspectionData = inspectionDetails0800.medicalInspectionData;
+                    } else {
+                        vehicleInspectionData = inspectionDetails2000.vehicleInspectionData;
+                        medicalInspectionData = inspectionDetails2000.medicalInspectionData;
+                    }
+                    
+                    document.getElementById('ambulanceType').textContent = ambulanceType;
+                    
+                    populateVehicleInfo(data);
+                    
+                    updateShiftStatusDisplay();
+                    
+                    // FIXED: Check and show modal for ACTIVE SHIFT only
+                    setTimeout(() => {
+                        checkAndShowInspectionModal();
+                    }, 500);
+                })
+                .catch((error) => {
+                    showLoading(false);
+                    showError(`Database error: ${error.message}`);
+                    console.error("❌ Error fetching Ambulance data:", error);
+                });
+        }
+
+        // Initialize vehicle inspection data array
+        function initializeVehicleInspectionData() {
+            return vehicleInspectionItems.map(item => {
+                if (item.type === "textfield") {
+                    return {
+                        name: item.name,
+                        type: "textfield",
+                        value: "",
+                        checked: false,
+                        remarks: ""
+                    };
+                } else {
+                    return {
+                        name: item.name,
+                        type: "checkbox",
+                        checked: false,
+                        remarks: ""
+                    };
+                }
+            });
+        }
+
+        // Initialize medical inspection data array
+        function initializeMedicalInspectionData() {
+            const medicalItems = (ambulanceType === 'AB4') ? 
+                medicalInspectionItemsAB4 : medicalInspectionItemsAB1;
+            
+            return medicalItems.map(item => {
+                if (item.type === "textfield") {
+                    return {
+                        name: item.name,
+                        qty: item.qty,
+                        type: "textfield",
+                        value: "",
+                        checked: false,
+                        remarks: ""
+                    };
+                } else {
+                    return {
+                        name: item.name,
+                        qty: item.qty,
+                        type: "checkbox",
+                        checked: false,
+                        remarks: ""
+                    };
+                }
+            });
+        }
+
+        // Tentukan ambulance type
+        function determineAmbulanceType(vehicleNumber) {
+    const normalized = vehicleNumber.toUpperCase().trim();
+    
+    // Map vehicle number ke ambulance type
+    const ambulanceMapping = {
+        'CCF6941': 'AB1',
+        'TDC5994': 'AB4'
+        // Tambahkan mapping lain di sini jika perlu
+    };
+    
+    // Jika vehicle number ada dalam mapping, gunakan value tersebut
+    if (ambulanceMapping[normalized]) {
+        return ambulanceMapping[normalized];
+    }
+    
+    // Fallback ke logic lama jika vehicle tidak dalam mapping
+    if (normalized.includes('AB4')) {
+        return 'AB4';
+    } else {
+        return 'AB1';
+    }
+}
+
+        // FIXED: Check if inspection details are needed for ACTIVE SHIFT only
+        function checkAndShowInspectionModal() {
+            let isActiveShiftCompleted = false;
+            
+            // Check completion status for ACTIVE shift only
+            if (currentActiveShift === '0800-2000') {
+                isActiveShiftCompleted = inspectionDetails0800.completed;
+            } else {
+                isActiveShiftCompleted = inspectionDetails2000.completed;
+            }
+            
+            // FIXED: Always show modal for active shift (for filling or editing)
+            document.getElementById('inspectionDetailsModal').style.display = 'flex';
+            
+            // Populate form with existing data if available
+            populateModalForm();
+            
+            // Disable main buttons until modal is completed
+            document.getElementById('vehicleInspectionBtn').disabled = true;
+            document.getElementById('medicalInspectionBtn').disabled = true;
+            
+            console.log(`🔄 Modal shown for ${currentActiveShift} shift (Completed: ${isActiveShiftCompleted})`);
+        }
+
+        // FIXED: Save inspection details for ACTIVE shift only
+        function saveInspectionDetails() {
+            const inspectBy = document.getElementById('modalInspectBy').value.trim();
+            const medic = document.getElementById('modalMedic').value.trim();
+            const swcwc = document.getElementById('modalSWCWC').value.trim();
+            const shift = document.getElementById('modalShift').value;
+            const remarks = document.getElementById('modalRemarks').value.trim();
+            const time = document.getElementById('modalTime').value;
+            
+            if (!inspectBy || !medic || !swcwc || !shift || !time) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            const now = new Date().toISOString();
+            
+            // FIXED: Save data for active shift only
+            if (time === '0800-2000') {
+                inspectionDetails0800 = {
+                    ...inspectionDetails0800,
+                    inspectBy: inspectBy,
+                    medic: medic,
+                    swcwc: swcwc,
+                    shift: shift,
+                    remarks: remarks,
+                    time: time,
+                    completed: true,
+                    timestamp: now
+                };
+                vehicleInspectionData = inspectionDetails0800.vehicleInspectionData;
+                medicalInspectionData = inspectionDetails0800.medicalInspectionData;
+            } else {
+                inspectionDetails2000 = {
+                    ...inspectionDetails2000,
+                    inspectBy: inspectBy,
+                    medic: medic,
+                    swcwc: swcwc,
+                    shift: shift,
+                    remarks: remarks,
+                    time: time,
+                    completed: true,
+                    timestamp: now
+                };
+                vehicleInspectionData = inspectionDetails2000.vehicleInspectionData;
+                medicalInspectionData = inspectionDetails2000.medicalInspectionData;
+            }
+            
+            currentInspectionTime = time;
+            
+            document.getElementById('inspectionDetailsModal').style.display = 'none';
+            
+            // Enable buttons after saving
+            document.getElementById('vehicleInspectionBtn').disabled = false;
+            document.getElementById('medicalInspectionBtn').disabled = false;
+            
+            updateShiftStatusDisplay();
+            updateTimeIndicator();
+            
+            saveDailyInspectionToDB();
+            
+            console.log(`💾 Inspection details saved for ${time} shift`);
+        }
+
+        // Function to save daily inspection to database
+        function saveDailyInspectionToDB() {
+            if (!db || !currentDocumentId) {
+                console.warn('Database not ready for auto-save');
+                return;
+            }
+            
+            const dailyInspectionKey = `daily_${currentDate}`;
+            
+            const dailyData = {
+                [dailyInspectionKey]: {
+                    date: currentDate,
+                    ambulanceNumber: currentVehicleId,
+                    ambulanceType: ambulanceType,
+                    inspection0800: inspectionDetails0800,
+                    inspection2000: inspectionDetails2000,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                }
+            };
+            
+            db.collection('vehicles')
+                .doc(currentDocumentId)
+                .update(dailyData)
+                .then(() => {
+                    console.log(`✅ Daily inspection details saved for ${currentDate}`);
+                })
+                .catch((error) => {
+                    console.error('Error saving daily inspection:', error);
+                });
+        }
+
+        // Update time indicator
+        function updateTimeIndicator() {
+            const timeIndicator = document.getElementById('currentTimeIndicator');
+            const medicalIndicator = document.getElementById('medicalTimeIndicator');
+            
+            if (currentInspectionTime === '0800-2000') {
+                timeIndicator.textContent = '0800-2000';
+                medicalIndicator.textContent = '0800-2000';
+            } else if (currentInspectionTime === '2000-0800') {
+                timeIndicator.textContent = '2000-0800';
+                medicalIndicator.textContent = '2000-0800';
+            } else {
+                timeIndicator.textContent = currentActiveShift;
+                medicalIndicator.textContent = currentActiveShift;
+            }
+        }
+
+        function populateVehicleInfo(data) {
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('vehicleInfoContent').style.display = 'block';
+
+            document.getElementById('vehicleNumber').textContent = data.vehicleNumber || currentVehicleId || '-';
+            document.getElementById('vehicleType').textContent = data.vehicleType || '-';
+        }
+
+        // Populate Vehicle Inspection Table
+        function populateVehicleInspectionTable() {
+            const tableBody = document.getElementById('vehicleInspectionTableBody');
+            
+            let currentData = [];
+            if (currentInspectionTime === '0800-2000') {
+                currentData = inspectionDetails0800.vehicleInspectionData;
+            } else if (currentInspectionTime === '2000-0800') {
+                currentData = inspectionDetails2000.vehicleInspectionData;
+            } else {
+                currentData = vehicleInspectionData;
+            }
+            
+            let html = '';
+            
+            currentData.forEach((item, index) => {
+                const isTextField = item.type === "textfield";
+                const isFuelLevel = item.name === "FUEL LEVEL";
+                const isMillage = item.name === "MILLAGE / ODOMETER";
+                
+                html += `
+                    <tr class="${isTextField ? 'textfield-item' : ''}">
+                        <td><strong>${item.name}</strong></td>
+                        <td style="text-align: center;">
+                `;
+                
+                if (isTextField) {
+                    html += `
+                            <input type="text" 
+                                   class="vehicle-text-field"
+                                   id="vehicle-field-${index}"
+                                   data-index="${index}"
+                                   value="${item.value || ''}"
+                                   placeholder="${isFuelLevel ? 'e.g., 75%, FULL' : 'e.g., 12345 km'}"
+                                   onchange="updateVehicleTextField(${index}, this.value)"
+                                   style="width: 150px;">
+                    `;
+                } else {
+                    html += `
+                            <input type="checkbox" 
+                                   class="inspection-checkbox"
+                                   id="vehicle-checkbox-${index}"
+                                   data-index="${index}"
+                                   ${item.checked ? 'checked' : ''}
+                                   onchange="updateVehicleCheckbox(${index}, this.checked)">
+                    `;
+                }
+                
+                html += `
+                        </td>
+                        <td>
+                            <textarea 
+                                class="remarks-input"
+                                id="vehicle-remarks-${index}"
+                                data-index="${index}"
+                                onchange="updateVehicleRemarks(${index}, this.value)"
+                                placeholder="Enter remarks..."
+                                rows="1">${item.remarks || ''}</textarea>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+
+        // Populate Medical Inspection Table
+        function populateMedicalInspectionTable() {
+            const tableBody = document.getElementById('medicalInspectionTableBody');
+            
+            const medicalItems = (ambulanceType === 'AB4') ? 
+                medicalInspectionItemsAB4 : medicalInspectionItemsAB1;
+            
+            let currentData = [];
+            if (currentInspectionTime === '0800-2000') {
+                currentData = inspectionDetails0800.medicalInspectionData;
+            } else if (currentInspectionTime === '2000-0800') {
+                currentData = inspectionDetails2000.medicalInspectionData;
+            } else {
+                currentData = medicalInspectionData;
+            }
+            
+            let html = '';
+            
+            currentData.forEach((item, index) => {
+                const isTextField = item.type === "textfield";
+                
+                html += `
+                    <tr class="${isTextField ? 'oxygen-item' : ''}">
+                        <td><strong>${item.name}</strong> <span style="color: #666; font-size: 0.9em;">(Qty: ${item.qty})</span></td>
+                        <td style="text-align: center;">
+                `;
+                
+                if (isTextField) {
+                    html += `
+                            <input type="text" 
+                                   class="medical-oxygen-field"
+                                   id="medical-field-${index}"
+                                   data-index="${index}"
+                                   value="${item.value || ''}"
+                                   placeholder="e.g., 75%"
+                                   onchange="updateMedicalTextField(${index}, this.value)"
+                                   style="width: 120px;">
+                            <div style="font-size: 11px; color: #666; margin-top: 3px;">
+                                MIN 25% required
+                            </div>
+                    `;
+                } else {
+                    html += `
+                            <input type="checkbox" 
+                                   class="inspection-checkbox"
+                                   id="medical-checkbox-${index}"
+                                   data-index="${index}"
+                                   ${item.checked ? 'checked' : ''}
+                                   onchange="updateMedicalCheckbox(${index}, this.checked)">
+                    `;
+                }
+                
+                html += `
+                        </td>
+                        <td>
+                            <textarea 
+                                class="remarks-input"
+                                id="medical-remarks-${index}"
+                                data-index="${index}"
+                                onchange="updateMedicalRemarks(${index}, this.value)"
+                                placeholder="Enter remarks..."
+                                rows="1">${item.remarks || ''}</textarea>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+
+        // Update functions untuk checkbox dan textfield
+        function updateVehicleCheckbox(index, isChecked) {
+            if (!currentInspectionTime) {
+                alert('Please select inspection time first');
+                return;
+            }
+            
+            let currentData = currentInspectionTime === '0800-2000' ? 
+                inspectionDetails0800.vehicleInspectionData : 
+                inspectionDetails2000.vehicleInspectionData;
+            
+            if (currentData[index]) {
+                currentData[index].checked = isChecked;
+            }
+        }
+
+        function updateVehicleTextField(index, value) {
+            if (!currentInspectionTime) {
+                alert('Please select inspection time first');
+                return;
+            }
+            
+            let currentData = currentInspectionTime === '0800-2000' ? 
+                inspectionDetails0800.vehicleInspectionData : 
+                inspectionDetails2000.vehicleInspectionData;
+            
+            if (currentData[index]) {
+                currentData[index].value = value;
+            }
+        }
+
+        function updateVehicleRemarks(index, value) {
+            if (!currentInspectionTime) {
+                alert('Please select inspection time first');
+                return;
+            }
+            
+            let currentData = currentInspectionTime === '0800-2000' ? 
+                inspectionDetails0800.vehicleInspectionData : 
+                inspectionDetails2000.vehicleInspectionData;
+            
+            if (currentData[index]) {
+                currentData[index].remarks = value;
+            }
+        }
+
+        function updateMedicalCheckbox(index, isChecked) {
+            if (!currentInspectionTime) {
+                alert('Please select inspection time first');
+                return;
+            }
+            
+            let currentData = currentInspectionTime === '0800-2000' ? 
+                inspectionDetails0800.medicalInspectionData : 
+                inspectionDetails2000.medicalInspectionData;
+            
+            if (currentData[index]) {
+                currentData[index].checked = isChecked;
+            }
+        }
+
+        function updateMedicalTextField(index, value) {
+            if (!currentInspectionTime) {
+                alert('Please select inspection time first');
+                return;
+            }
+            
+            let currentData = currentInspectionTime === '0800-2000' ? 
+                inspectionDetails0800.medicalInspectionData : 
+                inspectionDetails2000.medicalInspectionData;
+            
+            if (currentData[index]) {
+                currentData[index].value = value;
+            }
+        }
+
+        function updateMedicalRemarks(index, value) {
+            if (!currentInspectionTime) {
+                alert('Please select inspection time first');
+                return;
+            }
+            
+            let currentData = currentInspectionTime === '0800-2000' ? 
+                inspectionDetails0800.medicalInspectionData : 
+                inspectionDetails2000.medicalInspectionData;
+            
+            if (currentData[index]) {
+                currentData[index].remarks = value;
+            }
+        }
+
+        function showInspectionSection() {
+            if (!currentInspectionTime) {
+                alert('Please complete inspection details first');
+                document.getElementById('inspectionDetailsModal').style.display = 'flex';
+                return;
+            }
+            
+            const isCompleted = currentInspectionTime === '0800-2000' ? 
+                inspectionDetails0800.completed : inspectionDetails2000.completed;
+            
+            if (!isCompleted) {
+                alert('Please save inspection details first');
+                document.getElementById('inspectionDetailsModal').style.display = 'flex';
+                return;
+            }
+            
+            document.getElementById('basicInfo').style.display = 'none';
+            document.getElementById('mainActions').style.display = 'none';
+            document.getElementById('vehicleInspectionSection').style.display = 'block';
+            document.getElementById('saveSection').style.display = 'block';
+            
+            populateVehicleInspectionTable();
+        }
+
+        function showMedicalInspectionSection() {
+            if (!currentInspectionTime) {
+                alert('Please complete inspection details first');
+                document.getElementById('inspectionDetailsModal').style.display = 'flex';
+                return;
+            }
+            
+            const isCompleted = currentInspectionTime === '0800-2000' ? 
+                inspectionDetails0800.completed : inspectionDetails2000.completed;
+            
+            if (!isCompleted) {
+                alert('Please save inspection details first');
+                document.getElementById('inspectionDetailsModal').style.display = 'flex';
+                return;
+            }
+            
+            document.getElementById('basicInfo').style.display = 'none';
+            document.getElementById('mainActions').style.display = 'none';
+            document.getElementById('medicalInspectionSection').style.display = 'block';
+            document.getElementById('saveSection').style.display = 'block';
+            
+            populateMedicalInspectionTable();
+        }
+
+        function backToMainActions() {
+            document.getElementById('vehicleInspectionSection').style.display = 'none';
+            document.getElementById('medicalInspectionSection').style.display = 'none';
+            document.getElementById('saveSection').style.display = 'none';
+            document.getElementById('basicInfo').style.display = 'flex';
+            document.getElementById('mainActions').style.display = 'flex';
+        }
+
+        // Save All Data
+        function saveAllData() {
+            if (!db || !currentDocumentId) {
+                alert('Database not initialized or no document selected.');
+                return;
+            }
+
+            if (!currentInspectionTime) {
+                alert('Please select inspection time first.');
+                return;
+            }
+
+            saveDailyInspectionToDB();
+            
+            alert('Inspection data saved successfully!');
+            
+            backToMainActions();
+        }
+
+        // PDF function tetap sama seperti sebelumnya
+        function saveAsPDF() {
+            if (!window.jspdf) {
+                alert('PDF library not loaded. Please check internet connection.');
+                return;
+            }
+            
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+                
+                // Set margins
+                const marginLeft = 10;
+                const marginRight = 10;
+                const pageWidth = doc.internal.pageSize.width;
+                
+                // ========== HEADER SECTION ==========
+                doc.setFontSize(16);
+                doc.setFont("helvetica", "bold");
+                doc.text("CENTRAL EMERGENCY & FIRE SERVICES RESPONSE", pageWidth/2, 15, { align: "center" });
+                
+                doc.setFontSize(14);
+                doc.text("VEHICLES & EQUIPMENT CHECKLIST", pageWidth/2, 22, { align: "center" });
+                
+                // ========== VEHICLE INFORMATION ==========
+                let yPos = 35;
+                
+                // Line 1: AMBULANCE TYPE
+                doc.setFontSize(12);
+                doc.setFont("helvetica", "bold");
+                doc.text("AMBULANCE TYPE : ", marginLeft, yPos);
+                doc.setFont("helvetica", "normal");
+                doc.text(ambulanceType === 'AB4' ? 'AB4' : 'AB1', marginLeft + 40, yPos);
+                
+                // Line 2: DATE and VEHICLE NUMBER
+                yPos += 7;
+                
+                const now = new Date();
+                const monthYear = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+                
+                doc.setFont("helvetica", "bold");
+                doc.text("DATE:", marginLeft, yPos);
+                doc.setFont("helvetica", "normal");
+                doc.text(monthYear, marginLeft + 15, yPos);
+                
+                doc.setFont("helvetica", "bold");
+                doc.text("VEHICLE NUMBER", marginLeft + 60, yPos);
+                doc.setFont("helvetica", "normal");
+                const vehicleNumber = document.getElementById('vehicleNumber')?.textContent || 'CCF6941';
+                doc.text(vehicleNumber, marginLeft + 90, yPos);
+                
+                // Line 3: TIME, NAME, SHIFT
+                yPos += 7;
+                
+                doc.setFont("helvetica", "bold");
+                doc.text("TIME:", marginLeft, yPos);
+                doc.setFont("helvetica", "normal");
+                doc.text("0800 - 2000", marginLeft + 15, yPos);
+                
+                doc.setFont("helvetica", "bold");
+                doc.text("NAME:", marginLeft + 45, yPos);
+                doc.setFont("helvetica", "normal");
+                const inspectName = inspectionDetails0800?.inspectBy || inspectionDetails2000?.inspectBy || "test";
+                doc.text(inspectName, marginLeft + 60, yPos);
+                
+                doc.setFont("helvetica", "bold");
+                doc.text("SHIFT:", marginLeft + 90, yPos);
+                doc.setFont("helvetica", "normal");
+                const shiftValue = inspectionDetails0800?.shift || inspectionDetails2000?.shift || "D";
+                doc.text(shiftValue, marginLeft + 105, yPos);
+                
+                yPos += 15;
+                
+                // ========== VEHICLE INSPECTION TABLE ==========
+                // Table Header
+                doc.setFontSize(11);
+                doc.setFont("helvetica", "bold");
+                
+                // Column headers
+                doc.text("TIME", marginLeft, yPos);
+                doc.text("INSPECTION CHECKLIST", marginLeft + 15, yPos);
+                doc.text("0800-2000", marginLeft + 90, yPos);
+                doc.text("2000-0800", marginLeft + 115, yPos);
+                
+                // Draw header line
+                yPos += 3;
+                doc.setLineWidth(0.5);
+                doc.line(marginLeft, yPos, pageWidth - marginRight, yPos);
+                
+                yPos += 5;
+                
+                // Get inspection data
+                const vehicleData0800 = inspectionDetails0800.vehicleInspectionData;
+                const vehicleData2000 = inspectionDetails2000.vehicleInspectionData;
+                
+                // Vehicle Inspection Items
+                vehicleInspectionItems.forEach((item, index) => {
+                    // Number
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(10);
+                    doc.text(`${index + 1}.`, marginLeft, yPos);
+                    
+                    // Item name
+                    const itemName = item.name.length > 25 ? item.name.substring(0, 25) + "..." : item.name;
+                    doc.text(itemName, marginLeft + 10, yPos);
+                    
+                    // 0800-2000 value
+                    const data0800 = vehicleData0800[index];
+                    let value0800 = "BROKEN";
+                    
+                    if (data0800) {
+                        if (item.type === "textfield") {
+                            if (item.name === "FUEL LEVEL") {
+                                value0800 = data0800.value ? `${data0800.value}%` : "BROKEN";
+                            } else if (item.name === "MILLAGE / ODOMETER") {
+                                value0800 = data0800.value ? data0800.value : "BROKEN";
+                            }
+                        } else {
+                            value0800 = data0800.checked ? "OK" : "BROKEN";
+                        }
+                    }
+                    doc.text(value0800, marginLeft + 95, yPos, { align: "center" });
+                    
+                    // 2000-0800 value
+                    const data2000 = vehicleData2000[index];
+                    let value2000 = "BROKEN";
+                    
+                    if (data2000) {
+                        if (item.type === "textfield") {
+                            if (item.name === "FUEL LEVEL") {
+                                value2000 = data2000.value ? `${data2000.value}%` : "BROKEN";
+                            } else if (item.name === "MILLAGE / ODOMETER") {
+                                value2000 = data2000.value ? data2000.value : "BROKEN";
+                            }
+                        } else {
+                            value2000 = data2000.checked ? "OK" : "BROKEN";
+                        }
+                    }
+                    doc.text(value2000, marginLeft + 120, yPos, { align: "center" });
+                    
+                    yPos += 5;
+                    
+                    // Page break handling
+                    if (yPos > 270 && index < vehicleInspectionItems.length - 1) {
+                        doc.addPage();
+                        yPos = 20;
+                        doc.setFontSize(11);
+                        doc.setFont("helvetica", "bold");
+                        doc.text("TIME", marginLeft, yPos);
+                        doc.text("INSPECTION CHECKLIST", marginLeft + 15, yPos);
+                        doc.text("0800-2000", marginLeft + 90, yPos);
+                        doc.text("2000-0800", marginLeft + 115, yPos);
+                        yPos += 8;
+                    }
+                });
+                
+                // ========== MEDICAL RESPONSE INSPECTION TABLE ==========
+                yPos += 10;
+                
+                // Medical Response Header
+                doc.setFontSize(11);
+                doc.setFont("helvetica", "bold");
+                doc.text("INSPECTION CHECKLIST FOR MEDICAL RESPONSE", marginLeft, yPos);
+                doc.text("QTY", marginLeft + 90, yPos);
+                doc.text("0800-2000", marginLeft + 105, yPos);
+                doc.text("2000-0800", marginLeft + 130, yPos);
+                
+                yPos += 3;
+                doc.line(marginLeft, yPos, pageWidth - marginRight, yPos);
+                yPos += 5;
+                
+                // Medical Inspection Items
+                const medicalItems = ambulanceType === 'AB4' ? medicalInspectionItemsAB4 : medicalInspectionItemsAB1;
+                const medicalData0800 = inspectionDetails0800.medicalInspectionData;
+                const medicalData2000 = inspectionDetails2000.medicalInspectionData;
+                
+                medicalItems.forEach((item, index) => {
+                    // Number
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(10);
+                    doc.text(`${index + 1}.`, marginLeft, yPos);
+                    
+                    // Item name
+                    const maxNameLength = 22;
+                    let itemName = item.name;
+                    if (itemName.length > maxNameLength) {
+                        itemName = itemName.substring(0, maxNameLength) + "...";
+                    }
+                    doc.text(itemName, marginLeft + 10, yPos);
+                    
+                    // Quantity
+                    doc.text(item.qty, marginLeft + 95, yPos, { align: "center" });
+                    
+                    // 0800-2000 value
+                    const data0800 = medicalData0800[index];
+                    let value0800 = "BROKEN";
+                    
+                    if (data0800) {
+                        if (item.type === "textfield") {
+                            value0800 = data0800.value ? `${data0800.value}%` : "BROKEN";
+                        } else {
+                            value0800 = data0800.checked ? "OK" : "BROKEN";
+                        }
+                    }
+                    doc.text(value0800, marginLeft + 110, yPos, { align: "center" });
+                    
+                    // 2000-0800 value
+                    const data2000 = medicalData2000[index];
+                    let value2000 = "BROKEN";
+                    
+                    if (data2000) {
+                        if (item.type === "textfield") {
+                            value2000 = data2000.value ? `${data2000.value}%` : "BROKEN";
+                        } else {
+                            value2000 = data2000.checked ? "OK" : "BROKEN";
+                        }
+                    }
+                    doc.text(value2000, marginLeft + 135, yPos, { align: "center" });
+                    
+                    yPos += 5;
+                    
+                    // Page break handling
+                    if (yPos > 270 && index < medicalItems.length - 1) {
+                        doc.addPage();
+                        yPos = 20;
+                        doc.setFontSize(11);
+                        doc.setFont("helvetica", "bold");
+                        doc.text("INSPECTION CHECKLIST FOR MEDICAL RESPONSE", marginLeft, yPos);
+                        doc.text("QTY", marginLeft + 90, yPos);
+                        doc.text("0800-2000", marginLeft + 105, yPos);
+                        doc.text("2000-0800", marginLeft + 130, yPos);
+                        yPos += 8;
+                    }
+                });
+                
+                // ========== INSPECTION DETAILS TABLE ==========
+                yPos += 15;
+                
+                // Create inspection summary table
+                const inspectionSummaryData = [];
+                
+                // Header row
+                inspectionSummaryData.push([
+                    { content: "", styles: { fontStyle: 'bold', fillColor: [220, 220, 220] } },
+                    { content: "INSPECT BY", styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } },
+                    { content: "", styles: { fontStyle: 'bold', fillColor: [220, 220, 220] } },
+                    { content: "SWC/WC", styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } },
+                    { content: "", styles: { fontStyle: 'bold', fillColor: [220, 220, 220] } },
+                    { content: "MEDIC", styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } },
+                    { content: "", styles: { fontStyle: 'bold', fillColor: [220, 220, 220] } }
+                ]);
+                
+                // Sub-header row
+                inspectionSummaryData.push([
+                    { content: "", styles: { fontStyle: 'bold' } },
+                    { content: "0800-2000", styles: { fontStyle: 'bold', halign: 'center' } },
+                    { content: "2000-0800", styles: { fontStyle: 'bold', halign: 'center' } },
+                    { content: "0800-2000", styles: { fontStyle: 'bold', halign: 'center' } },
+                    { content: "2000-0800", styles: { fontStyle: 'bold', halign: 'center' } },
+                    { content: "0800-2000", styles: { fontStyle: 'bold', halign: 'center' } },
+                    { content: "2000-0800", styles: { fontStyle: 'bold', halign: 'center' } }
+                ]);
+                
+                // NAME row
+                inspectionSummaryData.push([
+                    { content: "NAME", styles: { fontStyle: 'bold' } },
+                    { content: inspectionDetails0800.completed ? inspectionDetails0800.inspectBy || "-" : "-", styles: { halign: 'center' } },
+                    { content: inspectionDetails2000.completed ? inspectionDetails2000.inspectBy || "-" : "-", styles: { halign: 'center' } },
+                    { content: inspectionDetails0800.completed ? inspectionDetails0800.swcwc || "-" : "-", styles: { halign: 'center' } },
+                    { content: inspectionDetails2000.completed ? inspectionDetails2000.swcwc || "-" : "-", styles: { halign: 'center' } },
+                    { content: inspectionDetails0800.completed ? inspectionDetails0800.medic || "-" : "-", styles: { halign: 'center' } },
+                    { content: inspectionDetails2000.completed ? inspectionDetails2000.medic || "-" : "-", styles: { halign: 'center' } }
+                ]);
+                
+                // SIGNATURE row
+                inspectionSummaryData.push([
+                    { content: "SIGNATURE", styles: { fontStyle: 'bold' } },
+                    { content: "", styles: { minCellHeight: 15 } },
+                    { content: "", styles: { minCellHeight: 15 } },
+                    { content: "", styles: { minCellHeight: 15 } },
+                    { content: "", styles: { minCellHeight: 15 } },
+                    { content: "", styles: { minCellHeight: 15 } },
+                    { content: "", styles: { minCellHeight: 15 } }
+                ]);
+                
+                // Create table
+                doc.autoTable({
+                    startY: yPos,
+                    head: [],
+                    body: inspectionSummaryData,
+                    theme: 'grid',
+                    tableWidth: pageWidth - marginLeft - marginRight,
+                    margin: { left: marginLeft },
+                    styles: { fontSize: 10, cellPadding: 3 },
+                    columnStyles: {
+                        0: { cellWidth: 25, fontStyle: 'bold' },
+                        1: { cellWidth: 25, halign: 'center' },
+                        2: { cellWidth: 25, halign: 'center' },
+                        3: { cellWidth: 25, halign: 'center' },
+                        4: { cellWidth: 25, halign: 'center' },
+                        5: { cellWidth: 25, halign: 'center' },
+                        6: { cellWidth: 25, halign: 'center' }
+                    }
+                });
+                
+                // ========== SAVE PDF ==========
+                const fileName = `Ambulance_Inspection_${vehicleNumber}_${monthYear.replace(' ', '_')}.pdf`;
+                doc.save(fileName);
+                
+                console.log('✅ PDF generated successfully');
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('Error generating PDF: ' + error.message);
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingMessage').style.display = show ? 'block' : 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            if (!show) document.getElementById('vehicleInfoContent').style.display = 'none';
+        }
+
+        function showError(message) {
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('vehicleInfoContent').style.display = 'none';
+        }
+
+        function retryLoading() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let vehicleId = urlParams.get('vehicle');
+            
+            if (vehicleId) {
+                vehicleId = decodeURIComponent(vehicleId);
+                fetchVehicleDataById(vehicleId);
+            }
+        }
+
+        function closePopup() {
+            if (confirm('Close inspection window?')) {
+                window.location.href = 'public-inspection.html';
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closePopup();
+        });
+    </script>
+</body>
+</html>

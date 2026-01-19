@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rescue Equipment - Public View</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* SAME STYLES AS PUBLIC DASHBOARD */
+        :root {
+            --primary-color: #d9534f;
+            --secondary-color: #6a7c92;
+            --light-bg: #f8f9fa;
+            --dark-bg: #1a202c;
+            --dark-text: #2d3748;
+            --light-text: #718096;
+            --border-color: #e2e8f0;
+        }
+
+        [data-theme="dark"] {
+            --light-bg: #1a202c;
+            --dark-text: #e2e8f0;
+            --light-text: #a0aec0;
+            --border-color: #2d3748;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] .sidebar {
+            background-color: #2d3748;
+        }
+        
+        .logo {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+        
+        .logo h1 {
+            color: var(--primary-color);
+            font-size: 24px;
+        }
+        
+        .user-profile-sidebar {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .sidebar-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), #d9534f);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .sidebar-user-info h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+            color: var(--dark-text);
+        }
+        
+        .sidebar-user-info p {
+            font-size: 12px;
+            color: var(--light-text);
+        }
+        
+        .nav-menu {
+            list-style: none;
+        }
+        
+        .nav-item {
+            padding: 12px 20px;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .nav-item.active {
+            background-color: rgba(74, 108, 247, 0.1);
+            border-left: 4px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .nav-item:hover:not(.active) {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] .nav-item:hover:not(.active) {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            margin-left: 250px;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] .main-content {
+            background-color: #1a202c;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .date {
+            color: var(--light-text);
+            font-size: 14px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .welcome-section {
+            margin-bottom: 30px;
+        }
+        
+        .welcome-section h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .welcome-section p {
+            color: var(--light-text);
+        }
+
+        /* TABLE STYLES FOR PUBLIC VIEW */
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        [data-theme="dark"] .table-container {
+            background: #2d3748;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .table-header h3 {
+            color: var(--dark-text);
+            margin: 0;
+        }
+
+        .table-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-box input {
+            padding-left: 40px;
+            width: 250px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--light-text);
+        }
+
+        .refresh-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #d9534f;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: rgba(74, 108, 247, 0.05);
+            font-weight: 600;
+            color: var(--dark-text);
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        th:hover {
+            background-color: rgba(74, 108, 247, 0.1);
+        }
+
+        th i {
+            margin-left: 5px;
+            opacity: 0.5;
+        }
+
+        th.sort-asc i, th.sort-desc i {
+            opacity: 1;
+        }
+
+        [data-theme="dark"] th {
+            background-color: rgba(74, 108, 247, 0.1);
+        }
+
+        tr:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        [data-theme="dark"] tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Quantity Status Styles */
+        .quantity-low {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+
+        .quantity-adequate {
+            color: #38a169;
+            font-weight: bold;
+        }
+
+        /* Status Badge Styles */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .status-adequate {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-low {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--light-text);
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: var(--light-text);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            
+            .sidebar .logo h1, 
+            .sidebar .nav-item span,
+            .sidebar-user-info {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+            
+            .user-profile-sidebar {
+                justify-content: center;
+                padding: 15px 10px;
+            }
+
+            .table-container {
+                padding: 15px;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th, td {
+                padding: 8px 10px;
+            }
+
+            .table-controls {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+
+            .search-box input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>Public Panel</h1>
+            </div>
+
+            <div class="user-profile-sidebar">
+                <div class="sidebar-avatar">G</div>
+                <div class="sidebar-user-info">
+                    <h3>Guest User</h3>
+                    <p>Public Access</p>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item" onclick="navigateTo('dashboard.html')">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" onclick="navigateTo('public-inspection.html')">
+                    <i class="fas fa-qrcode"></i>
+                    <span>Inspection</span>
+                </li>
+                <li class="nav-item active">
+                    <i class="fas fa-life-ring"></i>
+                    <span>Rescue Equipment</span>
+                </li>
+                <li class="nav-item" onclick="navigateTo('public-contact.html')">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </li>
+
+                <li class="nav-item" onclick="navigateTo('index.html')">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back</span>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div class="date" id="currentDate">Monday, 02 March 2020</div>
+                <div class="user-info">
+                    <div class="user-avatar">G</div>
+                    <div>
+                        <div>Guest</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="welcome-section">
+                <h1>Rescue Equipment Inventory</h1>
+                <p>View-only access to rescue equipment</p>
+            </div>
+
+            <!-- DATA TABLE (READ-ONLY) -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Rescue Equipment</h3>
+                    <div class="table-controls">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchRescue" placeholder="Search rescue equipment..." onkeyup="searchTable()">
+                        </div>
+                        <button class="refresh-btn" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div class="loading" id="loadingMessage">
+                    <i class="fas fa-spinner fa-spin"></i> Loading data from Firebase...
+                </div>
+
+                <div class="no-data" id="noDataMessage" style="display: none;">
+                    <i class="fas fa-inbox"></i> No rescue equipment data available
+                </div>
+
+                <div id="tableContent" style="display: none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('category')">Category <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('equipment')">Equipment <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('minimumQuantity')">Min Qty <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('currentQuantity')">Current Qty <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('location')">Location <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('remarks')">Remarks <i class="fas fa-sort"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody id="rescueTableBody">
+                            <!-- Data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase App -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <!-- Firebase Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        // Firebase configuration (SAME AS ADMIN)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBf9xdF0qmVYaNWFUuEys-P5a1yuTpLdVY",
+            authDomain: "project123-82272.firebaseapp.com",
+            projectId: "project123-82272",
+            storageBucket: "project123-82272.firebasestorage.app",
+            messagingSenderId: "97561643123",
+            appId: "1:97561643123:web:92596bb20645124f68c206",
+            measurementId: "G-D5P85TT95P"
+        };
+
+        // Initialize Firebase
+        let app, db;
+
+        // Sorting state
+        let sortState = { field: null, direction: 'asc' };
+
+        window.addEventListener('load', function() {
+            console.log("🚀 Loading public rescue equipment page...");
+            initializeFirebase();
+            updateCurrentDate();
+        });
+
+        function initializeFirebase() {
+            try {
+                if (typeof firebase === 'undefined') {
+                    console.error("❌ Firebase library not loaded");
+                    alert("Firebase library failed to load. Please check your internet connection.");
+                    return;
+                }
+                
+                app = firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                
+                console.log("✅ Firebase initialized successfully for public page");
+                loadRescueData();
+                
+            } catch (error) {
+                console.error("❌ Firebase initialization error:", error);
+                alert("Firebase initialization failed: " + error.message);
+            }
+        }
+
+        function loadRescueData() {
+            const loadingMessage = document.getElementById('loadingMessage');
+            const noDataMessage = document.getElementById('noDataMessage');
+            const tableContent = document.getElementById('tableContent');
+
+            if (!db) {
+                console.error("❌ Firestore not initialized");
+                loadingMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Firebase not initialized';
+                return;
+            }
+
+            console.log("📡 Loading rescueEquipment data for public view...");
+
+            // Real-time listener - data akan auto update bila admin buat changes
+            db.collection('rescueEquipment')
+                .orderBy('timestamp', 'desc')
+                .onSnapshot((snapshot) => {
+                    console.log("📊 Data snapshot received:", snapshot.size, "documents");
+                    loadingMessage.style.display = 'none';
+                    
+                    if (snapshot.empty) {
+                        console.log("ℹ️ No data found in rescueEquipment collection");
+                        noDataMessage.style.display = 'block';
+                        tableContent.style.display = 'none';
+                        return;
+                    }
+
+                    noDataMessage.style.display = 'none';
+                    tableContent.style.display = 'block';
+                    
+                    let html = '';
+                    
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        
+                        // Determine which quantity to highlight
+                        let currentQtyDisplay = data.currentQuantity || '0';
+
+                        // Jika current quantity < min quantity, current qty turns red
+                        // Jika current quantity >= min quantity, current qty turns green
+                        if (data.currentQuantity < data.minimumQuantity) {
+                            currentQtyDisplay = `<span class="quantity-low">${data.currentQuantity}</span>`;
+                        } else {
+                            currentQtyDisplay = `<span class="quantity-adequate">${data.currentQuantity}</span>`;
+                        }
+                        
+                        html += `
+                            <tr>
+                                <td>${data.category || 'N/A'}</td>
+                                <td>${data.equipment || 'N/A'}</td>
+                                <td>${data.minimumQuantity || '0'}</td>
+                                <td>${currentQtyDisplay}</td>
+                                <td>${data.location || 'N/A'}</td>
+                                <td>${data.remarks || 'No remarks'}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    document.getElementById('rescueTableBody').innerHTML = html;
+                    console.log("✅ Public view data displayed successfully");
+                    
+                }, (error) => {
+                    console.error('❌ Error loading data:', error);
+                    loadingMessage.style.display = 'none';
+                    noDataMessage.style.display = 'block';
+                    noDataMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error loading data from Firebase. Please try refreshing.';
+                });
+        }
+
+        // Search function
+        function searchTable() {
+            const searchTerm = document.getElementById('searchRescue').value.toLowerCase();
+            const tableBody = document.getElementById('rescueTableBody');
+            const rows = tableBody.getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName('td');
+                let found = false;
+                
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j].textContent.toLowerCase().includes(searchTerm)) {
+                        found = true;
+                        break;
+                    }
+                }
+                
+                rows[i].style.display = found ? '' : 'none';
+            }
+        }
+
+        // Sort function
+        function sortTable(field) {
+            const tableBody = document.getElementById('rescueTableBody');
+            const rows = Array.from(tableBody.getElementsByTagName('tr'));
+            
+            // Update sort state
+            if (sortState.field === field) {
+                sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortState.field = field;
+                sortState.direction = 'asc';
+            }
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                const aValue = a.cells[getColumnIndex(field)].textContent;
+                const bValue = b.cells[getColumnIndex(field)].textContent;
+                
+                // Handle numeric values
+                if (field === 'minimumQuantity' || field === 'currentQuantity') {
+                    // Extract numeric value from HTML (might contain span tags)
+                    const aNum = extractNumericValue(aValue);
+                    const bNum = extractNumericValue(bValue);
+                    return sortState.direction === 'asc' ? aNum - bNum : bNum - aNum;
+                }
+                
+                // Handle text values
+                return sortState.direction === 'asc' 
+                    ? aValue.localeCompare(bValue) 
+                    : bValue.localeCompare(aValue);
+            });
+            
+            // Update table
+            rows.forEach(row => tableBody.appendChild(row));
+            
+            // Update sort indicators
+            updateSortIndicators(field);
+        }
+
+        function extractNumericValue(text) {
+            // Extract numeric value from text that might contain HTML
+            const match = text.match(/\d+/);
+            return match ? parseInt(match[0]) : 0;
+        }
+
+        function getColumnIndex(field) {
+            const fieldMap = {
+                'category': 0,
+                'equipment': 1,
+                'minimumQuantity': 2,
+                'currentQuantity': 3,
+                'location': 4,
+                'remarks': 5
+            };
+            
+            return fieldMap[field];
+        }
+
+        function updateSortIndicators(field) {
+            // Reset all sort indicators
+            const headers = document.querySelectorAll('#tableContent th');
+            headers.forEach(header => {
+                header.classList.remove('sort-asc', 'sort-desc');
+                const icon = header.querySelector('i');
+                if (icon) {
+                    icon.className = 'fas fa-sort';
+                }
+            });
+            
+            // Set active sort indicator
+            const activeHeader = document.querySelector(`#tableContent th:nth-child(${getColumnIndex(field) + 1})`);
+            if (activeHeader) {
+                activeHeader.classList.add(`sort-${sortState.direction}`);
+                const icon = activeHeader.querySelector('i');
+                if (icon) {
+                    icon.className = sortState.direction === 'asc' 
+                        ? 'fas fa-sort-up' 
+                        : 'fas fa-sort-down';
+                }
+            }
+        }
+
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        window.refreshData = function() {
+            console.log("🔄 Manually refreshing data...");
+            const loadingMessage = document.getElementById('loadingMessage');
+            const noDataMessage = document.getElementById('noDataMessage');
+            const tableContent = document.getElementById('tableContent');
+            
+            loadingMessage.style.display = 'block';
+            noDataMessage.style.display = 'none';
+            tableContent.style.display = 'none';
+            
+            // Small delay to show loading state
+            setTimeout(() => {
+                loadRescueData();
+            }, 500);
+        };
+    </script>
+</body>
+</html>
