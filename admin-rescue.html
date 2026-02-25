@@ -601,6 +601,7 @@
             display: flex;
             gap: 15px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .search-box {
@@ -633,6 +634,42 @@
 
         .refresh-btn:hover {
             background: #c9302c;
+        }
+
+        /* NEW: Save PDF Button Style */
+        .pdf-btn {
+            background: #38a169;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .pdf-btn:hover {
+            background: #2f855a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .pdf-btn:active {
+            transform: translateY(0);
+        }
+
+        .pdf-btn.loading {
+            opacity: 0.7;
+            cursor: wait;
+            pointer-events: none;
+        }
+
+        .pdf-btn i {
+            font-size: 16px;
         }
 
         .loading {
@@ -1083,6 +1120,10 @@
                             <i class="fas fa-search"></i>
                             <input type="text" id="searchRescue" placeholder="Search station or category..." onkeyup="searchCards()">
                         </div>
+                        <!-- NEW: Save as PDF Button -->
+                        <button class="pdf-btn" id="pdfButton" onclick="generateInventoryPDF()">
+                            <i class="fas fa-file-pdf"></i> Save as PDF
+                        </button>
                         <button class="refresh-btn" onclick="refreshData()">
                             <i class="fas fa-sync-alt"></i> Refresh
                         </button>
@@ -1708,9 +1749,6 @@
                             <td>${item.remarks || ''}</td>
                             <td>
                                 <div style="display: flex; gap: 5px;">
-                                    <button class="table-qr-btn" onclick="generateSingleEquipmentQR('${item.id}')" title="QR Code">
-                                        <i class="fas fa-qrcode"></i>
-                                    </button>
                                     <button class="table-qr-btn" style="background: #4299e1;" onclick="editRescue('${item.id}')" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </button>
@@ -2066,6 +2104,137 @@
 
         function showError(title, message) {
             alert(`${title}: ${message}`);
+        }
+
+        // ========== NEW PDF GENERATION FUNCTION ==========
+        async function generateInventoryPDF() {
+            // Collect all equipment data into a flat array
+            let allEquipment = [];
+            for (const station in stationInventory) {
+                allEquipment = allEquipment.concat(stationInventory[station].items);
+            }
+
+            if (allEquipment.length === 0) {
+                alert("No data available to export. Add some equipment first.");
+                return;
+            }
+
+            console.log("📄 Generating Rescue Equipment PDF...");
+
+            const pdfButton = document.getElementById('pdfButton');
+            const originalHTML = pdfButton.innerHTML;
+            pdfButton.classList.add('loading');
+            pdfButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating PDF...';
+            pdfButton.disabled = true;
+
+            try {
+                if (typeof window.jspdf === 'undefined') {
+                    throw new Error("PDF library not loaded.");
+                }
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const now = new Date();
+                const formattedDate = now.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                const formattedTime = now.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                doc.setFontSize(20);
+                doc.setTextColor(40, 40, 40);
+                doc.text("RESCUE EQUIPMENT INVENTORY REPORT", 14, 20);
+
+                doc.setFontSize(11);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Generated: ${formattedDate} at ${formattedTime}`, 14, 30);
+                doc.text(`Total Items: ${allEquipment.length}`, 14, 36);
+
+                const headers = [
+                    "Station",
+                    "Category",
+                    "Equipment",
+                    "Min Qty",
+                    "Current Qty",
+                    "Remarks"
+                ];
+
+                const tableData = allEquipment.map(item => [
+                    item.station || 'N/A',
+                    item.category || 'N/A',
+                    item.equipment || 'N/A',
+                    item.minimumQuantity || '0',
+                    item.currentQuantity || '0',
+                    item.remarks || ''
+                ]);
+
+                doc.autoTable({
+                    head: [headers],
+                    body: tableData,
+                    startY: 45,
+                    theme: 'grid',
+                    headStyles: {
+                        fillColor: [201, 48, 44],
+                        textColor: [255, 255, 255],
+                        fontSize: 10,
+                        fontStyle: 'bold'
+                    },
+                    bodyStyles: {
+                        fontSize: 9
+                    },
+                    alternateRowStyles: {
+                        fillColor: [245, 245, 245]
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 30 }, // Station
+                        1: { cellWidth: 35 }, // Category
+                        2: { cellWidth: 70 }, // Equipment
+                        3: { cellWidth: 15 }, // Min Qty
+                        4: { cellWidth: 20 }, // Current Qty
+                        5: { cellWidth: 45 }  // Remarks
+                    },
+                    margin: { left: 14, right: 14 }
+                });
+
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.setTextColor(150, 150, 150);
+                    doc.text(
+                        `Page ${i} of ${pageCount}`,
+                        doc.internal.pageSize.width / 2,
+                        doc.internal.pageSize.height - 10,
+                        { align: 'center' }
+                    );
+                }
+
+                const fileName = `rescue_equipment_${now.getFullYear()}_${(now.getMonth()+1).toString().padStart(2,'0')}_${now.getDate().toString().padStart(2,'0')}.pdf`;
+                doc.save(fileName);
+
+                setTimeout(() => {
+                    alert(`✅ PDF saved as "${fileName}"`);
+                }, 300);
+
+            } catch (error) {
+                console.error("PDF Error:", error);
+                alert("Failed to generate PDF: " + error.message);
+            } finally {
+                setTimeout(() => {
+                    pdfButton.classList.remove('loading');
+                    pdfButton.innerHTML = originalHTML;
+                    pdfButton.disabled = false;
+                }, 500);
+            }
         }
 
         document.getElementById('categoryModal').addEventListener('click', function(e) {
