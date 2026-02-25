@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rescue Equipment</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- flatpickr for date picker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- jsPDF & autoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        /* ========== GLOBAL STYLES ========== (sama seperti asal) ========== */
+        :root {
+            --primary-color: #c9302c;
+            --secondary-color: #6a7c92;
+            --light-bg: #f8f9fa;
+            --dark-bg: #1a202c;
+            --dark-text: #2d3748;
+            --light-text: #718096;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .logo {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .logo h1 {
+            color: var(--primary-color);
+            font-size: 24px;
+        }
+
+        .user-profile-sidebar {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), #c9302c);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .sidebar-user-info h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+            color: var(--dark-text);
+        }
+
+        .sidebar-user-info p {
+            font-size: 12px;
+            color: var(--light-text);
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            padding: 12px 20px;
+            margin: 5px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .nav-item.active {
+            background-color: rgba(74, 108, 247, 0.1);
+            border-left: 4px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .nav-item:hover:not(.active) {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            margin-left: 250px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .date {
+            color: var(--light-text);
+            font-size: 14px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .welcome-section {
+            margin-bottom: 30px;
+        }
+
+        .welcome-section h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .welcome-section p {
+            color: var(--light-text);
+        }
+
+        /* Navigation area */
+        .navigation-area {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .back-button {
+            display: inline-block;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .back-button i {
+            margin-right: 5px;
+        }
+
+        .back-button:hover {
+            text-decoration: underline;
+        }
+
+        .date-pdf-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .date-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .date-picker-container i {
+            color: var(--primary-color);
+        }
+
+        .date-picker-input {
+            border: none;
+            outline: none;
+            font-size: 14px;
+            min-width: 130px;
+            background: transparent;
+        }
+
+        .export-pdf-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .export-pdf-btn:hover {
+            background: #c82333;
+        }
+
+        /* Station Cards (first level) */
+        .station-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .station-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .station-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+            border-color: var(--primary-color);
+        }
+
+        .station-card h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: var(--dark-text);
+        }
+
+        .station-card .category-count {
+            font-size: 16px;
+            color: var(--light-text);
+            margin-bottom: 10px;
+        }
+
+        .station-card i {
+            font-size: 40px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        /* Category Cards (second level) – DIBESARKAN SEDIKIT */
+        .category-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .category-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px 20px;        /* asalnya 20px 15px */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .category-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+            border-color: var(--primary-color);
+        }
+
+        .category-card i {
+            font-size: 36px;            /* asalnya 30px */
+            color: var(--primary-color);
+            margin-bottom: 12px;
+        }
+
+        .category-card h4 {
+            font-size: 18px;             /* asalnya 16px */
+            margin-bottom: 10px;
+            color: var(--dark-text);
+        }
+
+        .category-card .item-count {
+            font-size: 15px;              /* asalnya 14px */
+            color: var(--light-text);
+        }
+
+        /* Loading & no data */
+        .loading, .no-data {
+            text-align: center;
+            padding: 40px;
+            color: var(--light-text);
+        }
+
+        /* ========== RSV‑STYLE EQUIPMENT MODAL ========== (sama seperti asal) ========== */
+        .equipment-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .equipment-modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .equipment-modal-content {
+            background: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow: hidden;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .equipment-modal-overlay.active .equipment-modal-content {
+            transform: translateY(0);
+        }
+
+        .equipment-modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .equipment-modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .equipment-modal-header .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .equipment-modal-body {
+            padding: 20px;
+            max-height: 65vh;
+            overflow-y: auto;
+        }
+
+        .inspection-meta {
+            background: #f0f4f8;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            font-size: 14px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .inspection-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .inspection-meta i {
+            color: var(--primary-color);
+            width: 18px;
+        }
+
+        .equipment-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .equipment-table th {
+            background-color: #f8f9fa;
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .equipment-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .equipment-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .quantity-low {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+
+        .quantity-adequate {
+            color: #38a169;
+            font-weight: bold;
+        }
+
+        /* Status badge */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 70px;
+            text-align: center;
+        }
+
+        .status-ok {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-not-recorded {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .equipment-modal-footer {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            text-align: right;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .btn-close {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .btn-close:hover {
+            background: #5a6268;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            .sidebar .logo h1,
+            .sidebar .nav-item span,
+            .sidebar-user-info {
+                display: none;
+            }
+            .main-content {
+                margin-left: 70px;
+                padding: 15px;
+            }
+            .user-profile-sidebar {
+                justify-content: center;
+                padding: 15px 10px;
+            }
+            .station-cards, .category-cards {
+                grid-template-columns: 1fr;
+            }
+            .equipment-modal-content {
+                width: 95%;
+                max-height: 90vh;
+            }
+            .equipment-table th,
+            .equipment-table td {
+                padding: 8px 6px;
+                font-size: 13px;
+            }
+            .navigation-area {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar (sama seperti asal) -->
+        <div class="sidebar">
+            <div class="logo">
+                <h1>Admin Panel</h1>
+            </div>
+            <div class="user-profile-sidebar">
+                <div class="sidebar-avatar">G</div>
+                <div class="sidebar-user-info">
+                    <h3>Admin User</h3>
+                    <p>Admin Access</p>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item" onclick="navigateTo('admin-dashboard.html')">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" onclick="navigateTo('admin-info.html')">
+                    <i class="fas fa-qrcode"></i>
+                    <span>Inspection</span>
+                </li>
+                <li class="nav-item active">
+                    <i class="fas fa-rescue"></i>
+                    <span>Rescue</span>
+                </li>
+                <li class="nav-item" onclick="navigateTo('admin-contact.html')">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </li>
+                <li class="nav-item" onclick="navigateTo('login.html')">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div class="date" id="currentDate"></div>
+                <div class="user-info">
+                    <div class="user-avatar">G</div>
+                    <div>Guest</div>
+                </div>
+            </div>
+
+            <!-- Navigation & controls (shown when station selected) -->
+            <div id="navigationArea" class="navigation-area" style="display: none;">
+                <button class="back-button" onclick="showStations()">
+                    <i class="fas fa-arrow-left"></i> Back to Stations
+                </button>
+                <div class="date-pdf-controls">
+                    <div class="date-picker-container">
+                        <i class="fas fa-calendar-alt"></i>
+                        <input type="text" id="datePicker" class="date-picker-input" placeholder="Select date">
+                    </div>
+                    <button class="export-pdf-btn" onclick="exportPDF()">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Page Title -->
+            <div class="welcome-section" id="pageHeader">
+                <h1><i class="fas fa-life-ring"></i> Rescue Equipment</h1>
+                <p id="pageDescription">Select a station to view equipment categories</p>
+            </div>
+
+            <!-- Loading indicator -->
+            <div class="loading" id="loadingMessage">
+                <i class="fas fa-spinner fa-spin"></i> Loading equipment data...
+            </div>
+
+            <!-- No data message -->
+            <div class="no-data" id="noDataMessage" style="display: none;">
+                <i class="fas fa-inbox"></i> No rescue equipment found.
+            </div>
+
+            <!-- Stations Container -->
+            <div id="stationsContainer" class="station-cards"></div>
+
+            <!-- Categories Container -->
+            <div id="categoriesContainer" class="category-cards" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Equipment Modal -->
+    <div class="equipment-modal-overlay" id="equipmentModal">
+        <div class="equipment-modal-content">
+            <div class="equipment-modal-header">
+                <h3 id="modalTitle"><i class="fas fa-folder-open"></i> <span id="modalCategoryName">Category</span></h3>
+                <button class="modal-close" onclick="closeEquipmentModal()">&times;</button>
+            </div>
+            <div class="equipment-modal-body">
+                <div id="inspectionMeta" class="inspection-meta" style="display: none;"></div>
+                <table class="equipment-table">
+                    <thead>
+                        <tr>
+                            <th width="50">No.</th>
+                            <th>Equipment Item</th>
+                            <th width="90">Required Qty</th>
+                            <th width="90">Current Qty</th>
+                            <th width="100">Status</th>
+                            <th width="150">Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalEquipmentList"></tbody>
+                </table>
+            </div>
+            <div class="equipment-modal-footer">
+                <button class="btn-close" onclick="closeEquipmentModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase & flatpickr -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <script>
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBf9xdF0qmVYaNWFUuEys-P5a1yuTpLdVY",
+            authDomain: "project123-82272.firebaseapp.com",
+            projectId: "project123-82272",
+            storageBucket: "project123-82272.firebasestorage.app",
+            messagingSenderId: "97561643123",
+            appId: "1:97561643123:web:92596bb20645124f68c206",
+            measurementId: "G-D5P85TT95P"
+        };
+
+        let db;
+        // Master equipment data (admin defined)
+        let masterEquipment = [];
+        let stationInventory = {
+            "Main Station": { items: [] },
+            "Station A": { items: [] },
+            "Station B": { items: [] }
+        };
+        let currentStation = null;
+        let currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+        // Navigation
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        // Initialize Firebase
+        function initializeFirebase() {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.firestore();
+                console.log("✅ Firebase initialized");
+                loadMasterEquipment();
+            } catch (error) {
+                console.error("❌ Firebase error:", error);
+                showError("Failed to connect to database.");
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('loadingMessage').style.display = 'none';
+            document.getElementById('noDataMessage').style.display = 'block';
+            document.getElementById('noDataMessage').innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+        }
+
+        // Load master equipment (skip inspection documents)
+        function loadMasterEquipment() {
+            const loading = document.getElementById('loadingMessage');
+            const noData = document.getElementById('noDataMessage');
+            const stationsContainer = document.getElementById('stationsContainer');
+
+            loading.style.display = 'block';
+            noData.style.display = 'none';
+            stationsContainer.innerHTML = '';
+
+            stationInventory = {
+                "Main Station": { items: [] },
+                "Station A": { items: [] },
+                "Station B": { items: [] }
+            };
+            masterEquipment = [];
+
+            db.collection("rescueEquipment").get()
+                .then((snapshot) => {
+                    loading.style.display = 'none';
+
+                    if (snapshot.empty) {
+                        noData.style.display = 'block';
+                        return;
+                    }
+
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        // Skip inspection documents (jika ada)
+                        if (data.inspectionDate) return;
+
+                        let station = data.station;
+                        if (station === "ST A") station = "Station A";
+                        if (station === "ST B") station = "Station B";
+                        if (!["Main Station", "Station A", "Station B"].includes(station)) {
+                            station = "Main Station";
+                        }
+
+                        const item = {
+                            id: doc.id,
+                            station: station,
+                            category: data.category || "Uncategorized",
+                            equipment: data.equipment || "Unknown",
+                            minimumQuantity: data.minimumQuantity || 0,
+                            masterCurrentQuantity: data.currentQuantity || 0,
+                            masterRemarks: data.remarks || ""
+                        };
+
+                        masterEquipment.push(item);
+                        stationInventory[station].items.push(item);
+                    });
+
+                    if (masterEquipment.length === 0) {
+                        noData.style.display = 'block';
+                    } else {
+                        displayStations();
+                    }
+                })
+                .catch((error) => {
+                    console.error("Load error:", error);
+                    loading.style.display = 'none';
+                    showError("Error loading data: " + error.message);
+                });
+        }
+
+        // Display stations
+        function displayStations() {
+            const stationsContainer = document.getElementById('stationsContainer');
+            stationsContainer.style.display = 'grid';
+            stationsContainer.innerHTML = '';
+
+            const stations = ['Main Station', 'Station A', 'Station B'];
+
+            stations.forEach(station => {
+                const items = stationInventory[station].items;
+                const categoriesSet = new Set(items.map(item => item.category));
+                const categoryCount = categoriesSet.size;
+
+                const card = document.createElement('div');
+                card.className = 'station-card';
+                card.onclick = () => selectStation(station);
+                card.innerHTML = `
+                    <i class="fas fa-building"></i>
+                    <h3>${station}</h3>
+                    <div class="category-count">${categoryCount} categor${categoryCount === 1 ? 'y' : 'ies'}</div>
+                    <div style="font-size: 14px; color: var(--light-text);">${items.length} equipment items</div>
+                `;
+                stationsContainer.appendChild(card);
+            });
+        }
+
+        // Select a station
+        function selectStation(station) {
+            currentStation = station;
+
+            document.getElementById('stationsContainer').style.display = 'none';
+            document.getElementById('categoriesContainer').style.display = 'grid';
+            document.getElementById('navigationArea').style.display = 'flex';
+            document.getElementById('pageDescription').textContent = `Select a category in ${station}`;
+
+            // Initialize date picker with today
+            const datePicker = document.getElementById('datePicker');
+            flatpickr(datePicker, {
+                dateFormat: "Y-m-d",
+                maxDate: "today",
+                defaultDate: currentDate,
+                onChange: function(selectedDates, dateStr) {
+                    if (dateStr) {
+                        currentDate = dateStr;
+                        // 🔴 KEMASKINI KATEGORI APABILA TARIKH BERUBAH
+                        displayCategories(currentStation);
+                    }
+                }
+            });
+
+            displayCategories(station);
+        }
+
+        // 🔴 DISPLAY KATEGORI – HANYA YANG ADA INSPECTION PADA TARIKH DIPILIH
+        async function displayCategories(station) {
+            const categoriesContainer = document.getElementById('categoriesContainer');
+            categoriesContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading categories...</div>';
+
+            // Dapatkan semua inspection untuk stesen ini pada tarikh terpilih
+            let inspectedCategories = new Set();
+            try {
+                const snapshot = await db.collection('rescueInspections')
+                    .where('station', '==', station)
+                    .where('date', '==', currentDate)
+                    .get();
+                
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.category) {
+                        inspectedCategories.add(data.category);
+                    }
+                });
+            } catch (error) {
+                console.error("Error fetching inspections for categories:", error);
+                // Jika gagal, mungkin papar semua kategori sebagai fallback? Kita akan papar kosong.
+            }
+
+            // Dapatkan semua kategori dari master equipment
+            const items = stationInventory[station].items;
+            const allCategories = {};
+            items.forEach(item => {
+                const cat = item.category;
+                if (!allCategories[cat]) allCategories[cat] = [];
+                allCategories[cat].push(item);
+            });
+
+            // Tapis hanya kategori yang ada inspection
+            const categoryNames = Object.keys(allCategories).filter(cat => inspectedCategories.has(cat)).sort();
+
+            categoriesContainer.innerHTML = '';
+
+            if (categoryNames.length === 0) {
+                categoriesContainer.innerHTML = '<div class="no-data" style="grid-column: 1/-1;">No inspections found for this date</div>';
+                return;
+            }
+
+            categoryNames.forEach(cat => {
+                const catItems = allCategories[cat];
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.onclick = () => showEquipmentModal(station, cat);
+                card.innerHTML = `
+                    <i class="fas fa-folder"></i>
+                    <h4>${cat}</h4>
+                    <div class="item-count">${catItems.length} item${catItems.length === 1 ? '' : 's'}</div>
+                `;
+                categoriesContainer.appendChild(card);
+            });
+        }
+
+        // Return to stations view
+        function showStations() {
+            currentStation = null;
+            document.getElementById('stationsContainer').style.display = 'grid';
+            document.getElementById('categoriesContainer').style.display = 'none';
+            document.getElementById('navigationArea').style.display = 'none';
+            document.getElementById('pageDescription').textContent = 'Select a station to view equipment categories';
+        }
+
+        // Show equipment modal for selected station, category, and currentDate
+        async function showEquipmentModal(station, category) {
+            const modal = document.getElementById('equipmentModal');
+            document.getElementById('modalCategoryName').textContent = `${station} - ${category}`;
+
+            // Fetch inspection data for this station, category, and date (guna field 'date')
+            const inspections = await fetchInspections(station, category, currentDate);
+
+            // Get master items for this category
+            const masterItems = stationInventory[station].items.filter(item => item.category === category);
+
+            // Merge: use inspection if exists, else master with default status
+            const mergedItems = masterItems.map(master => {
+                const insp = inspections.find(i => i.equipment === master.equipment);
+                if (insp) {
+                    return {
+                        equipment: master.equipment,
+                        minimumQuantity: master.minimumQuantity,
+                        currentQuantity: insp.currentQuantity,
+                        remarks: insp.remarks,
+                        status: insp.status,
+                        inspector: insp.inspector,
+                        shift: insp.shift
+                    };
+                } else {
+                    return {
+                        equipment: master.equipment,
+                        minimumQuantity: master.minimumQuantity,
+                        currentQuantity: master.masterCurrentQuantity,
+                        remarks: master.masterRemarks,
+                        status: null,
+                        inspector: null,
+                        shift: null
+                    };
+                }
+            });
+
+            // Populate table
+            const tbody = document.getElementById('modalEquipmentList');
+            tbody.innerHTML = '';
+
+            if (mergedItems.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px;">No equipment found</td></tr>';
+                document.getElementById('inspectionMeta').style.display = 'none';
+            } else {
+                mergedItems.sort((a, b) => a.equipment.localeCompare(b.equipment));
+                mergedItems.forEach((item, index) => {
+                    const qtyClass = item.currentQuantity < item.minimumQuantity ? 'quantity-low' : 'quantity-adequate';
+                    const statusText = item.status === 'Checked' ? 'OK' : 'NOT RECORDED';
+                    const statusClass = item.status === 'Checked' ? 'status-ok' : 'status-not-recorded';
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td><strong>${item.equipment}</strong></td>
+                        <td>${item.minimumQuantity}</td>
+                        <td class="${qtyClass}">${item.currentQuantity}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>${item.remarks || '-'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // Show inspector info if any inspection exists
+                const anyInsp = mergedItems.find(i => i.inspector);
+                if (anyInsp) {
+                    document.getElementById('inspectionMeta').style.display = 'flex';
+                    document.getElementById('inspectionMeta').innerHTML = `
+                        <span><i class="fas fa-user"></i> Inspector: ${anyInsp.inspector || '-'}</span>
+                        <span><i class="fas fa-clock"></i> Shift: ${anyInsp.shift || '-'}</span>
+                        <span><i class="fas fa-calendar"></i> Date: ${currentDate}</span>
+                    `;
+                } else {
+                    document.getElementById('inspectionMeta').style.display = 'none';
+                }
+            }
+
+            modal.classList.add('active');
+        }
+
+        // Fetch inspections – GUNA FIELD 'date'
+        async function fetchInspections(station, category, dateStr) {
+            if (!db) return [];
+
+            try {
+                const snapshot = await db.collection('rescueInspections')
+                    .where('station', '==', station)
+                    .where('category', '==', category)
+                    .where('date', '==', dateStr)
+                    .get();
+
+                const inspections = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    inspections.push({
+                        equipment: data.equipment,
+                        currentQuantity: data.currentQuantity,
+                        remarks: data.remarks,
+                        status: data.status,
+                        inspector: data.inspector,
+                        shift: data.shift
+                    });
+                });
+                return inspections;
+            } catch (error) {
+                console.error("Error fetching inspections:", error);
+                return [];
+            }
+        }
+
+        function closeEquipmentModal() {
+            document.getElementById('equipmentModal').classList.remove('active');
+        }
+
+        // PDF Export – gunakan field 'date'
+        async function exportPDF() {
+            if (!currentStation) {
+                alert("Please select a station first.");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+
+            // Title
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.text("Rescue Equipment Inspection Report", 105, 15, { align: "center" });
+
+            // Station, Date
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Station: ${currentStation}`, 14, 30);
+            doc.text(`Date: ${currentDate}`, 14, 38);
+
+            // Dapatkan inspector/shift dari mana‑mana inspection pada tarikh tersebut
+            let inspector = "-", shift = "-";
+            try {
+                const anyInsp = await db.collection('rescueInspections')
+                    .where('station', '==', currentStation)
+                    .where('date', '==', currentDate)
+                    .limit(1)
+                    .get();
+                if (!anyInsp.empty) {
+                    const data = anyInsp.docs[0].data();
+                    inspector = data.inspector || '-';
+                    shift = data.shift || '-';
+                }
+            } catch (e) {
+                console.warn("Could not fetch inspector info", e);
+            }
+
+            doc.text(`Inspector: ${inspector}`, 14, 46);
+            doc.text(`Shift: ${shift}`, 14, 54);
+
+            // Untuk setiap kategori yang ADA inspection pada tarikh ini
+            const categories = {};
+            // Dapatkan semua inspection untuk stesen pada tarikh ini, kumpul mengikut kategori
+            try {
+                const snapshot = await db.collection('rescueInspections')
+                    .where('station', '==', currentStation)
+                    .where('date', '==', currentDate)
+                    .get();
+                
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    if (!categories[d.category]) {
+                        categories[d.category] = [];
+                    }
+                    // Simpan inspection dalam map untuk senarai equipment nanti
+                });
+            } catch (e) {
+                console.error("Error fetching categories for PDF", e);
+            }
+
+            // Dapatkan senarai equipment untuk setiap kategori yang diinspeksi
+            const categoryNames = Object.keys(categories);
+            if (categoryNames.length === 0) {
+                doc.text("No inspection data for this date.", 14, 70);
+            } else {
+                let yPos = 70;
+                for (const category of categoryNames) {
+                    // Category title
+                    doc.setFontSize(14);
+                    doc.setFont("helvetica", "bold");
+                    doc.text(category, 14, yPos);
+                    yPos += 8;
+
+                    // Fetch inspections untuk kategori ini
+                    const inspMap = new Map();
+                    try {
+                        const snapshot = await db.collection('rescueInspections')
+                            .where('station', '==', currentStation)
+                            .where('category', '==', category)
+                            .where('date', '==', currentDate)
+                            .get();
+                        snapshot.forEach(doc => {
+                            const d = doc.data();
+                            inspMap.set(d.equipment, d);
+                        });
+                    } catch (e) {
+                        console.error("Error fetching inspections for PDF", e);
+                    }
+
+                    // Dapatkan master items untuk kategori ini (guna stationInventory)
+                    const masterItems = stationInventory[currentStation].items.filter(item => item.category === category);
+                    
+                    // Build table data
+                    const tableData = [];
+                    masterItems.sort((a, b) => a.equipment.localeCompare(b.equipment)).forEach((item, idx) => {
+                        const insp = inspMap.get(item.equipment);
+                        const currentQty = insp ? insp.currentQuantity : item.masterCurrentQuantity;
+                        const status = insp ? (insp.status === 'Checked' ? 'OK' : 'NOT RECORDED') : 'NOT RECORDED';
+                        const remarks = insp ? insp.remarks : item.masterRemarks;
+                        tableData.push([
+                            (idx + 1).toString(),
+                            item.equipment,
+                            item.minimumQuantity.toString(),
+                            currentQty.toString(),
+                            status,
+                            remarks || '-'
+                        ]);
+                    });
+
+                    doc.autoTable({
+                        startY: yPos,
+                        head: [['No.', 'Equipment', 'Req Qty', 'Curr Qty', 'Status', 'Remarks']],
+                        body: tableData,
+                        theme: 'grid',
+                        styles: { fontSize: 9 },
+                        headStyles: { fillColor: [201, 48, 44] },
+                        margin: { left: 14, right: 14 },
+                        didDrawPage: function(data) {
+                            yPos = data.cursor.y + 10;
+                        }
+                    });
+
+                    yPos = doc.lastAutoTable.finalY + 15;
+                    if (yPos > 270) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                }
+            }
+
+            doc.save(`Rescue_Report_${currentStation}_${currentDate}.pdf`);
+        }
+
+        // Close modal when clicking overlay
+        document.getElementById('equipmentModal').addEventListener('click', function(e) {
+            if (e.target === this) closeEquipmentModal();
+        });
+
+        window.addEventListener('load', function() {
+            updateCurrentDate();
+            initializeFirebase();
+        });
+    </script>
+</body>
+</html>
