@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="adminradio.css">
     <!-- QR Code Library - FIXED VERSION -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <!-- jsPDF Library for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -269,6 +272,10 @@
                             <i class="fas fa-search"></i>
                             <input type="text" id="searchPortable" placeholder="Search records..." onkeyup="searchTable('portable')">
                         </div>
+                        <!-- NEW: Save as PDF Button for Portable -->
+                        <button class="pdf-btn" id="pdfPortableBtn" onclick="generatePortablePDF()">
+                            <i class="fas fa-file-pdf"></i> Save as PDF
+                        </button>
                         <button class="refresh-btn" onclick="refreshData()">
                             <i class="fas fa-sync-alt"></i> Refresh
                         </button>
@@ -294,6 +301,7 @@
                                 <th onclick="sortTable('portable', 'manufacturer')">Manufacturer <i class="fas fa-sort"></i></th>
                                 <th onclick="sortTable('portable', 'brand')">Brand <i class="fas fa-sort"></i></th>
                                 <th onclick="sortTable('portable', 'location')">Location <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('portable', 'remarks')">Remarks <i class="fas fa-sort"></i></th>
                                 <th onclick="sortTable('portable', 'timestamp')">Date Added <i class="fas fa-sort"></i></th>
                                 <th>Actions</th>
                             </tr>
@@ -314,6 +322,10 @@
                             <i class="fas fa-search"></i>
                             <input type="text" id="searchRental" placeholder="Search rental records..." onkeyup="searchTable('rental')">
                         </div>
+                        <!-- NEW: Save as PDF Button for Rental -->
+                        <button class="pdf-btn" id="pdfRentalBtn" onclick="generateRentalPDF()">
+                            <i class="fas fa-file-pdf"></i> Save as PDF
+                        </button>
                         <button class="refresh-btn" onclick="refreshData()">
                             <i class="fas fa-sync-alt"></i> Refresh
                         </button>
@@ -341,6 +353,7 @@
                                 <th onclick="sortTable('rental', 'batterySerialNumber')">Battery S/N <i class="fas fa-sort"></i></th>
                                 <th onclick="sortTable('rental', 'personInCharge')">Person In Charge <i class="fas fa-sort"></i></th>
                                 <th onclick="sortTable('rental', 'location')">Location <i class="fas fa-sort"></i></th>
+                                <th onclick="sortTable('rental', 'remarks')">Remarks <i class="fas fa-sort"></i></th>
                                 <th onclick="sortTable('rental', 'timestamp')">Date Added <i class="fas fa-sort"></i></th>
                                 <th>Actions</th>
                             </tr>
@@ -388,6 +401,44 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <!-- Firebase Firestore -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        /* NEW: PDF Button Styles (from Hose page) */
+        .pdf-btn {
+            background: #38a169;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .pdf-btn:hover {
+            background: #2f855a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .pdf-btn:active {
+            transform: translateY(0);
+        }
+
+        .pdf-btn.loading {
+            opacity: 0.7;
+            cursor: wait;
+            pointer-events: none;
+        }
+
+        .pdf-btn i {
+            font-size: 16px;
+        }
+    </style>
 
     <script>
         // Firebase configuration
@@ -701,6 +752,7 @@
                                 <td>${data.manufacturer || 'N/A'}</td>
                                 <td>${data.brand || 'N/A'}</td>
                                 <td>${data.location || 'N/A'}</td>
+                                <td>${data.remarks || ''}</td>
                                 <td>${timestampDisplay}</td>
                                 <td>
                                     <div class="action-buttons">
@@ -781,6 +833,27 @@
                         const endDate = data.dateEndRental ? 
                             new Date(data.dateEndRental).toLocaleDateString() : 'N/A';
                         
+                        // Tentukan warna berdasarkan baki hari
+                        let endDateStyle = '';
+                        if (data.dateEndRental) {
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);   // set ke tengah malam untuk banding tarikh sahaja
+                            
+                            const end = new Date(data.dateEndRental);
+                            end.setHours(0, 0, 0, 0);
+                            
+                            const diffTime = end - today;
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            
+                            if (end < today) {
+                                endDateStyle = 'color: red; font-weight: bold;';           // 🟥 sudah lepas
+                            } else if (diffDays <= 7) {
+                                endDateStyle = 'color: #e6b800; font-weight: bold;';       // 🟨 kurang 7 hari
+                            } else {
+                                endDateStyle = 'color: green; font-weight: bold;';         // 🟩 masih aktif
+                            }
+                        }
+                        
                         // Format timestamp untuk Malaysia
                         let timestampDisplay = 'N/A';
                         if (data.timestamp) {
@@ -808,13 +881,14 @@
                             <tr>
                                 <td>${data.poNumber || 'N/A'}</td>
                                 <td>${startDate}</td>
-                                <td>${endDate}</td>
+                                <td style="${endDateStyle}">${endDate}</td>
                                 <td>${data.rentalPeriod || 'N/A'}</td>
                                 <td>${data.serialNumber || 'N/A'}</td>
                                 <td>${data.tagging || 'N/A'}</td>
                                 <td>${data.batterySerialNumber || 'N/A'}</td>
                                 <td>${data.personInCharge || 'N/A'}</td>
                                 <td>${data.location || 'N/A'}</td>
+                                <td>${data.remarks || ''}</td>
                                 <td>${timestampDisplay}</td>
                                 <td>
                                     <div class="action-buttons">
@@ -846,6 +920,187 @@
                         noDataMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error loading data from Firebase. Please try refreshing.';
                     }
                 });
+        }
+
+        // ============================================
+        // NEW: PDF Generation Functions
+        // ============================================
+        function generatePortablePDF() {
+            const tableBody = document.getElementById('portableRadioTableBody');
+            const rows = tableBody.getElementsByTagName('tr');
+            if (rows.length === 0) {
+                alert("No data to export.");
+                return;
+            }
+
+            const btn = document.getElementById('pdfPortableBtn');
+            const originalHTML = btn.innerHTML;
+            btn.classList.add('loading');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating PDF...';
+            btn.disabled = true;
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+                const now = new Date();
+                doc.setFontSize(20);
+                doc.text("PORTABLE RADIO INVENTORY REPORT", 14, 20);
+                doc.setFontSize(11);
+                doc.text(`Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 14, 30);
+                doc.text(`Total Records: ${rows.length}`, 14, 36);
+
+                // Headers - based on table columns (excluding Actions)
+                const headers = [
+                    "User", "Radio ID", "Serial Number", "Tagging", "Manufacturer", 
+                    "Brand", "Location", "Remarks", "Date Added"
+                ];
+
+                // Data rows
+                const data = [];
+                for (let row of rows) {
+                    const cells = row.getElementsByTagName('td');
+                    const rowData = [];
+                    // Skip last column (Actions)
+                    for (let i = 0; i < cells.length - 1; i++) {
+                        let cellText = cells[i].innerText || cells[i].textContent;
+                        rowData.push(cellText.trim());
+                    }
+                    data.push(rowData);
+                }
+
+                doc.autoTable({
+                    head: [headers],
+                    body: data,
+                    startY: 45,
+                    theme: 'grid',
+                    headStyles: { fillColor: [201, 48, 44], textColor: 255 },
+                    styles: { fontSize: 8 },
+                    columnStyles: {
+                        0: { cellWidth: 20 },
+                        1: { cellWidth: 20 },
+                        2: { cellWidth: 25 },
+                        3: { cellWidth: 20 },
+                        4: { cellWidth: 20 },
+                        5: { cellWidth: 20 },
+                        6: { cellWidth: 25 },
+                        7: { cellWidth: 30 },
+                        8: { cellWidth: 25 }
+                    }
+                });
+
+                // Footer
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
+                }
+
+                const filename = `portable_radio_${now.getFullYear()}_${(now.getMonth()+1).toString().padStart(2,'0')}_${now.getDate().toString().padStart(2,'0')}.pdf`;
+                doc.save(filename);
+
+                setTimeout(() => {
+                    alert(`✅ PDF saved as ${filename}`);
+                }, 300);
+            } catch (error) {
+                console.error("PDF error:", error);
+                alert("Error generating PDF: " + error.message);
+            } finally {
+                btn.classList.remove('loading');
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        }
+
+        function generateRentalPDF() {
+            const tableBody = document.getElementById('rentalRadioTableBody');
+            const rows = tableBody.getElementsByTagName('tr');
+            if (rows.length === 0) {
+                alert("No data to export.");
+                return;
+            }
+
+            const btn = document.getElementById('pdfRentalBtn');
+            const originalHTML = btn.innerHTML;
+            btn.classList.add('loading');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating PDF...';
+            btn.disabled = true;
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+                const now = new Date();
+                doc.setFontSize(20);
+                doc.text("RENTAL RADIO INVENTORY REPORT", 14, 20);
+                doc.setFontSize(11);
+                doc.text(`Generated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 14, 30);
+                doc.text(`Total Records: ${rows.length}`, 14, 36);
+
+                // Headers - based on table columns (excluding Actions)
+                const headers = [
+                    "PO Number", "Start Date", "End Date", "Period", "Serial Number",
+                    "Tagging", "Battery S/N", "Person In Charge", "Location", "Remarks", "Date Added"
+                ];
+
+                // Data rows
+                const data = [];
+                for (let row of rows) {
+                    const cells = row.getElementsByTagName('td');
+                    const rowData = [];
+                    // Skip last column (Actions)
+                    for (let i = 0; i < cells.length - 1; i++) {
+                        let cellText = cells[i].innerText || cells[i].textContent;
+                        rowData.push(cellText.trim());
+                    }
+                    data.push(rowData);
+                }
+
+                doc.autoTable({
+                    head: [headers],
+                    body: data,
+                    startY: 45,
+                    theme: 'grid',
+                    headStyles: { fillColor: [201, 48, 44], textColor: 255 },
+                    styles: { fontSize: 7 },
+                    columnStyles: {
+                        0: { cellWidth: 20 },
+                        1: { cellWidth: 20 },
+                        2: { cellWidth: 20 },
+                        3: { cellWidth: 15 },
+                        4: { cellWidth: 20 },
+                        5: { cellWidth: 15 },
+                        6: { cellWidth: 20 },
+                        7: { cellWidth: 20 },
+                        8: { cellWidth: 20 },
+                        9: { cellWidth: 25 },
+                        10: { cellWidth: 25 }
+                    }
+                });
+
+                // Footer
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
+                }
+
+                const filename = `rental_radio_${now.getFullYear()}_${(now.getMonth()+1).toString().padStart(2,'0')}_${now.getDate().toString().padStart(2,'0')}.pdf`;
+                doc.save(filename);
+
+                setTimeout(() => {
+                    alert(`✅ PDF saved as ${filename}`);
+                }, 300);
+            } catch (error) {
+                console.error("PDF error:", error);
+                alert("Error generating PDF: " + error.message);
+            } finally {
+                btn.classList.remove('loading');
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
         }
 
         function editRadio(id, type) {
@@ -1037,7 +1292,8 @@
                     'manufacturer': 4,
                     'brand': 5,
                     'location': 6,
-                    'timestamp': 7
+                    'remarks': 7,
+                    'timestamp': 8
                 },
                 rental: {
                     'poNumber': 0,
@@ -1049,7 +1305,8 @@
                     'batterySerialNumber': 6,
                     'personInCharge': 7,
                     'location': 8,
-                    'timestamp': 9
+                    'remarks': 9,
+                    'timestamp': 10
                 }
             };
             
