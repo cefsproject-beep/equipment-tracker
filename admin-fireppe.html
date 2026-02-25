@@ -6,7 +6,6 @@
     <title>Fire PPE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* SEMUA STYLE ASAL KEKAL SAMA */
         :root {
             --primary-color: #c9302c;
             --secondary-color: #6a7c92;
@@ -369,6 +368,8 @@
 
         .refresh-btn:hover {
             background: #c9302c;
+            
+
         }
 
         table {
@@ -580,77 +581,6 @@
             background: #1a202c;
         }
 
-        /* INVENTORY CARD STYLES (NEW) */
-        .inventory-container {
-            margin-bottom: 30px;
-        }
-
-        .inventory-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-left: 4px solid var(--primary-color);
-        }
-
-        [data-theme="dark"] .inventory-card {
-            background: #2d3748;
-        }
-
-        .inventory-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-        }
-
-        .inventory-card h3 {
-            color: var(--dark-text);
-            margin: 0 0 5px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .inventory-card p {
-            color: var(--light-text);
-            margin: 0;
-            font-size: 14px;
-        }
-
-        .inventory-count {
-            background: var(--primary-color);
-            color: white;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        /* DYNAMIC FORM CONTAINER */
-        .dynamic-form-container {
-            margin-top: 20px;
-            padding: 20px;
-            background: var(--light-bg);
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        /* PPE TABLE INSIDE CARD */
-        .ppe-table-container {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            margin-top: 15px;
-            margin-bottom: 30px;
-        }
-
-        [data-theme="dark"] .ppe-table-container {
-            background: #2d3748;
-        }
-
         @media (max-width: 768px) {
             .sidebar {
                 width: 70px;
@@ -785,8 +715,8 @@
             </div>
             
             <div class="welcome-section">
-                <h1>Fire PPE Management</h1>
-                <p>Add, edit, and manage Fire PPE Equipment</p>
+                <h1>Fire Fighting Equipment Management</h1>
+                <p>Add, edit, and manage Equipment</p>
             </div>
 
             <!-- FORM TABS -->
@@ -795,10 +725,10 @@
                 <div class="form-tab" onclick="switchFormTab('form2', this)">Fire PPE Stock</div>
             </div>
 
-            <!-- FORM 1: PPE Issuance (KEKAL SAMA) -->
+            <!-- FORM 1: PPE Issuance -->
             <div class="form-container form-content active" id="form1">
                 <div class="form-header">
-                    <h3>Add Fire PPE Form</h3>
+                    <h3>Add Fire Fighting Equipment Management</h3>
                 </div>
                 <form id="ppeIssuanceForm">
                     <div class="form-row">
@@ -822,6 +752,7 @@
                             <h4>Size and Quantity</h4>
                         </div>
                         
+                        <!-- COMPACT SIZE GRID -->
                         <div class="size-quantity-grid" id="sizeQuantityGrid1">
                             <!-- Sizes will be populated here -->
                         </div>
@@ -860,7 +791,7 @@
 
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Add
+                            <i class="fas fa-plus"></i> Add Equipment
                         </button>
                         <button type="button" class="btn btn-secondary" onclick="clearForm('ppeIssuanceForm', 'sizeDisplay1')">
                             <i class="fas fa-times"></i> Clear
@@ -878,45 +809,49 @@
                     <div class="form-row">
                         <div class="form-column">
                             <div class="form-group">
-                                <label for="ppeType">PPE Type / Category *</label>
-                                <select id="ppeType" name="ppeType" required onchange="handlePpeTypeChange()">
+                                <label for="typesOfPPE2">Types of PPE *</label>
+                                <select id="typesOfPPE2" name="typesOfPPE" required onchange="autoFillPPEMinQty()">
                                     <option value="">Select PPE Type</option>
-                                    <option value="Bunker Coat">Bunker Coat</option>
-                                    <option value="Bunker Pant">Bunker Pant</option>
-                                    <option value="Fire Helmet">Fire Helmet</option>
-                                    <option value="Fire Boots">Fire Boots</option>
+                                    <option value="Firefighting Helmet (HPS7000)">Firefighting Helmet (HPS7000)</option>
                                     <option value="Head Hood">Head Hood</option>
-                                    <option value="Helmet Face Visor">Helmet Face Visor</option>
-                                    <option value="Lampu Helmet">Lampu Helmet</option>
-                                    <option value="Front Plate">Front Plate</option>
-                                    <option value="Facemask">Facemask</option>
-                                    <option value="Bag Bunker Gear">Bag Bunker Gear</option>
-                                    <option value="Fire Glove">Fire Glove</option>
+                                    <option value="Bunker Gear">Bunker Gear</option>
+                                    <option value="Firefighting Gloves">Firefighting Gloves</option>
+                                    <option value="Firefighting Boots">Firefighting Boots</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Dynamic Form Container -->
-                    <div id="dynamicFormContainer" class="dynamic-form-container" style="display: none;">
-                        <!-- Dynamic form akan dipaparkan di sini -->
+                    <div class="form-row">
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="minQty">Min. Stock Qty *</label>
+                                <input type="number" id="minQty" name="minQty" min="0" placeholder="Enter minimum stock quantity" required>
+                            </div>
+                        </div>
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="currentQty">Current Qty *</label>
+                                <input type="number" id="currentQty" name="currentQty" min="0" placeholder="Enter current quantity" required>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Add to Inventory
+                            <i class="fas fa-plus"></i> Add
                         </button>
-                        <button type="button" class="btn btn-secondary" onclick="clearFirePpeStockForm()">
+                        <button type="button" class="btn btn-secondary" onclick="clearForm('ppeStockForm')">
                             <i class="fas fa-times"></i> Clear
                         </button>
                     </div>
                 </form>
             </div>
 
-            <!-- TABLE 1: PPE Issuance (KEKAL SAMA) -->
+            <!-- TABLE 1: PPE Issuance -->
             <div class="table-container" id="issuanceTable">
                 <div class="table-header">
-                    <h3>PPE Issuance Records</h3>
+                    <h3>Fire Fighting Equipment Records</h3>
                     <div class="table-controls">
                         <div class="search-box">
                             <i class="fas fa-search"></i>
@@ -956,27 +891,10 @@
                 </div>
             </div>
 
-            <!-- TABLE 2: PPE Stock Inventory (CARD-BASED) -->
-            <div class="table-container" id="ppeStockInventory" style="display: none;">
-                <div class="table-header">
-                    <h3>PPE Stock Inventory</h3>
-                    <div class="table-controls">
-                        <button class="refresh-btn" onclick="loadAllPpeStockData()">
-                            <i class="fas fa-sync-alt"></i> Refresh All
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Inventory Cards Container -->
-                <div id="inventoryCardsContainer">
-                    <!-- Cards will be generated here -->
-                </div>
-            </div>
-
-            <!-- TABLE 3: Old PPE Stock  -->
+            <!-- TABLE 2: PPE Stock -->
             <div class="table-container" id="stockTable" style="display: none;">
                 <div class="table-header">
-                    <h3>PPE Stock Inventory (Old System)</h3>
+                    <h3>PPE Stock Inventory</h3>
                     <div class="table-controls">
                         <div class="search-box">
                             <i class="fas fa-search"></i>
@@ -1056,10 +974,8 @@
         // Initialize Firebase
         let app, db;
         let editingId = null;
-        let editingType = null; // 'issuance' atau 'stock'
+        let editingType = null; // 'issuance' or 'stock'
         let sizeQuantities = {};
-        let editingPpeStockId = null;
-        let currentPpeType = null;
 
         // Sorting state
         let sortState = {
@@ -1070,98 +986,6 @@
         // Size options
         const sizeOptions = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL'];
 
-        // PPE Type configurations dengan collection yang BETUL
-        const ppeTypeConfigs = {
-            'Bunker Coat': {
-                fields: [
-                    { name: 'size', type: 'select', label: 'Size *', options: ['S', 'M', 'L', 'XL', '2XL', '3XL'], required: true },
-                    { name: 'colour', type: 'select', label: 'Colour *', options: ['RED', 'YELLOW'], required: true },
-                    { name: 'unit', type: 'number', label: 'Unit *', min: 1, required: true }
-                ],
-                icon: 'fa-tshirt',
-                collection: 'bunkerCoatStock'
-            },
-            'Bunker Pant': {
-                fields: [
-                    { name: 'size', type: 'select', label: 'Size *', options: ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'], required: true },
-                    { name: 'colour', type: 'select', label: 'Colour *', options: ['RED', 'YELLOW'], required: true },
-                    { name: 'unit', type: 'number', label: 'Unit *', min: 1, required: true }
-                ],
-                icon: 'fa-tshirt',
-                collection: 'bunkerPantStock'
-            },
-            'Fire Helmet': {
-                fields: [
-                    { name: 'condition', type: 'select', label: 'Condition *', options: ['BARU', 'LAMA'], required: true },
-                    { name: 'colour', type: 'select', label: 'Colour *', options: ['RED', 'YELLOW'], required: true },
-                    { name: 'unit', type: 'number', label: 'Unit *', min: 1, required: true }
-                ],
-                icon: 'fa-hard-hat',
-                collection: 'fireHelmetStock'
-            },
-            'Fire Boots': {
-                fields: [
-                    { name: 'size', type: 'text', label: 'Size *', placeholder: 'Enter size (e.g., 10)', required: true },
-                    { name: 'tahun', type: 'select', label: 'Tahun *', options: ['BARU (2024)', 'LAMA (2015)'], required: true },
-                    { name: 'unit', type: 'number', label: 'Unit *', min: 1, required: true }
-                ],
-                icon: 'fa-shoe-prints',
-                collection: 'fireBootsStock'
-            },
-            'Head Hood': {
-                fields: [
-                    { name: 'colour', type: 'text', label: 'Colour *', placeholder: 'Enter colour', required: true },
-                    { name: 'unit', type: 'number', label: 'Unit *', min: 1, required: true }
-                ],
-                icon: 'fa-head-side-mask',
-                collection: 'headHoodStock'
-            },
-            'Helmet Face Visor': {
-                fields: [
-                    { name: 'colour', type: 'select', label: 'Colour *', options: ['CLEAR'], required: true },
-                    { name: 'unit', type: 'number', label: 'Unit *', min: 1, required: true }
-                ],
-                icon: 'fa-eye',
-                collection: 'helmetFaceVisorStock'
-            },
-            'Lampu Helmet': {
-                fields: [
-                    { name: 'unit', type: 'number', label: 'Unit *', min: 1, required: true }
-                ],
-                icon: 'fa-lightbulb',
-                collection: 'lampuHelmetStock'
-            },
-            'Tapak Lampu': {
-                fields: [
-                    { name: 'unit', type: 'number', label: 'Unit *', min: 1, required: true }
-                ],
-                icon: 'fa-battery-full',
-                collection: 'tapakLampuStock'
-            },
-            'Facemask': {
-                fields: [
-                    { name: 'unit', type: 'number', label: 'Unit *', min: 1, required: true }
-                ],
-                icon: 'fa-head-side-cough',
-                collection: 'facemaskStock'
-            },
-            'Bag Bunker Gear': {
-                fields: [
-                    { name: 'unit', type: 'number', label: 'Unit *', min: 1, required: true }
-                ],
-                icon: 'fa-briefcase',
-                collection: 'bagBunkerGearStock'
-            },
-            'Fire Glove': {
-                fields: [
-                    { name: 'size', type: 'select', label: 'Size *', options: ['12', '11', '9'], required: true },
-                    { name: 'unit', type: 'number', label: 'Unit *', min: 1, required: true }
-                ],
-                icon: 'fa-hand-paper',
-                collection: 'fireGloveStock'
-            }
-        };
-
         window.addEventListener('load', function() {
             console.log("🚀 Loading admin fire PPE page...");
             initializeFirebase();
@@ -1171,8 +995,13 @@
             
             // Set initial table visibility - show issuance table first
             document.getElementById('issuanceTable').style.display = 'block';
-            document.getElementById('ppeStockInventory').style.display = 'none';
             document.getElementById('stockTable').style.display = 'none';
+            
+            // Add event listener untuk auto-fill min qty when PPE type is selected
+            const ppeSelect = document.getElementById('typesOfPPE2');
+            if (ppeSelect) {
+                ppeSelect.addEventListener('change', autoFillPPEMinQty);
+            }
         });
 
         function initializeFirebase() {
@@ -1192,11 +1021,6 @@
                 db = firebase.firestore();
                 
                 console.log("✅ Firebase initialized successfully for fire PPE page");
-                console.log("📊 Available collections for PPE types:");
-                Object.keys(ppeTypeConfigs).forEach(ppeType => {
-                    console.log(`- ${ppeType}: ${ppeTypeConfigs[ppeType].collection}`);
-                });
-                
                 loadFirePPEData();
                 
             } catch (error) {
@@ -1219,729 +1043,55 @@
             if (stockForm) {
                 stockForm.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    savePpeStockData();
+                    saveFirePPEData('stock');
                 });
             }
         }
 
-        // Function untuk handle PPE type change
-        function handlePpeTypeChange() {
-            const ppeType = document.getElementById('ppeType').value;
-            const dynamicFormContainer = document.getElementById('dynamicFormContainer');
-            currentPpeType = ppeType;
-            
-            if (!ppeType) {
-                dynamicFormContainer.style.display = 'none';
-                dynamicFormContainer.innerHTML = '';
-                return;
-            }
-            
-            const config = ppeTypeConfigs[ppeType];
-            if (!config) {
-                dynamicFormContainer.style.display = 'none';
-                return;
-            }
-            
-            // Generate dynamic form
-            let formHTML = '<div class="form-row">';
-            
-            config.fields.forEach((field, index) => {
-                if (index > 0 && index % 2 === 0) {
-                    formHTML += '</div><div class="form-row">';
-                }
-                
-                formHTML += `
-                    <div class="form-column">
-                        <div class="form-group">
-                            <label for="${field.name}">${field.label}</label>
-                `;
-                
-                if (field.type === 'select') {
-                    formHTML += `<select id="${field.name}" name="${field.name}" ${field.required ? 'required' : ''}>`;
-                    formHTML += `<option value="">Select ${field.label.replace(' *', '')}</option>`;
-                    field.options.forEach(option => {
-                        formHTML += `<option value="${option}">${option}</option>`;
-                    });
-                    formHTML += '</select>';
-                } else if (field.type === 'number') {
-                    formHTML += `<input type="number" id="${field.name}" name="${field.name}" 
-                        ${field.min ? `min="${field.min}"` : ''} 
-                        ${field.required ? 'required' : ''}
-                        placeholder="${field.placeholder || 'Enter value'}">`;
-                } else if (field.type === 'text') {
-                    formHTML += `<input type="text" id="${field.name}" name="${field.name}" 
-                        ${field.required ? 'required' : ''}
-                        placeholder="${field.placeholder || 'Enter value'}">`;
-                }
-                
-                formHTML += `
-                        </div>
-                    </div>
-                `;
-            });
-            
-            formHTML += '</div>';
-            dynamicFormContainer.innerHTML = formHTML;
-            dynamicFormContainer.style.display = 'block';
-            
-            // Reset editing state
-            editingPpeStockId = null;
-            document.querySelector('#ppeStockForm button[type="submit"]').innerHTML = '<i class="fas fa-plus"></i> Add to Inventory';
-        }
-
-        // Function untuk save PPE stock data
-        async function savePpeStockData() {
+        // FUNCTION YANG DIPERBAIKI: Auto-fill min qty berdasarkan jenis PPE yang dipilih
+        function autoFillPPEMinQty() {
             if (!db) {
-                alert("Firebase not initialized. Please refresh the page.");
+                console.log("❌ Firebase not initialized");
                 return;
             }
-
-            const ppeType = document.getElementById('ppeType').value;
-            if (!ppeType) {
-                alert("Please select PPE Type");
+            
+            const selectedPPE = document.getElementById('typesOfPPE2').value;
+            
+            if (!selectedPPE) {
+                console.log("ℹ️ No PPE type selected");
+                document.getElementById('minQty').value = '';
                 return;
             }
-
-            const config = ppeTypeConfigs[ppeType];
-            if (!config) {
-                alert("Invalid PPE Type configuration");
-                return;
-            }
-
-            console.log(`💾 Saving data to collection: ${config.collection}`);
-
-            // Collect form data
-            const formData = {
-                ppeType: ppeType,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            // Add dynamic fields data
-            config.fields.forEach(field => {
-                const element = document.getElementById(field.name);
-                if (element) {
-                    formData[field.name] = field.type === 'number' ? parseInt(element.value) || 0 : element.value;
-                }
-            });
-
-            console.log("📝 Form data to save:", formData);
-
-            // Validation
-            let isValid = true;
-            let errorFields = [];
-            config.fields.forEach(field => {
-                if (field.required) {
-                    const element = document.getElementById(field.name);
-                    if (!element || !element.value) {
-                        isValid = false;
-                        element.style.borderColor = '#e53e3e';
-                        errorFields.push(field.label.replace(' *', ''));
+            
+            console.log("🔍 Getting min qty for selected PPE type:", selectedPPE);
+            
+            // Cari rekod untuk jenis PPE yang dipilih (yang TERBARU)
+            db.collection('firePPEStock')
+                .where('typesOfPPE', '==', selectedPPE)
+                .orderBy('timestamp', 'desc')
+                .limit(1)
+                .get()
+                .then((snapshot) => {
+                    if (!snapshot.empty) {
+                        const latestRecord = snapshot.docs[0].data();
+                        const latestMinQty = latestRecord.minQty;
+                        
+                        console.log("✅ FOUND PPE STOCK RECORD - Min Qty:", latestMinQty, "for", selectedPPE);
+                        
+                        // Auto-set min qty field dengan nilai untuk PPE yang dipilih
+                        document.getElementById('minQty').value = latestMinQty;
+                        console.log("🎉 AUTO-FILLED Min Qty for", selectedPPE, ":", latestMinQty);
+                        
                     } else {
-                        element.style.borderColor = '';
-                    }
-                }
-            });
-
-            if (!isValid) {
-                alert(`Please fill in all required fields: ${errorFields.join(', ')}`);
-                return;
-            }
-
-            // Debug: Show what we're saving
-            console.log(`📤 Saving to Firebase Collection: ${config.collection}`);
-            console.log('Data:', formData);
-
-            if (editingPpeStockId) {
-                // Update existing record
-                db.collection(config.collection).doc(editingPpeStockId).update(formData)
-                    .then(() => {
-                        console.log(`✅ ${ppeType} updated successfully in ${config.collection}`);
-                        alert(`${ppeType} updated successfully!`);
-                        clearFirePpeStockForm();
-                        loadAllPpeStockData();
-                    })
-                    .catch(error => {
-                        console.error(`❌ Error updating ${ppeType} in ${config.collection}:`, error);
-                        alert(`Error updating ${ppeType}: ` + error.message);
-                    });
-            } else {
-                // Check for duplicate based on unique fields
-                let duplicateCheckQuery = db.collection(config.collection);
-                let hasDuplicates = false;
-                let duplicateQueryConditions = [];
-                
-                // Build query for duplicate check based on fields
-                if (formData.size && formData.colour) {
-                    duplicateCheckQuery = duplicateCheckQuery
-                        .where('size', '==', formData.size)
-                        .where('colour', '==', formData.colour);
-                    duplicateQueryConditions.push(`Size: ${formData.size}, Colour: ${formData.colour}`);
-                    hasDuplicates = true;
-                } else if (formData.size && !formData.colour) {
-                    duplicateCheckQuery = duplicateCheckQuery
-                        .where('size', '==', formData.size);
-                    duplicateQueryConditions.push(`Size: ${formData.size}`);
-                    hasDuplicates = true;
-                } else if (formData.colour && !formData.size) {
-                    duplicateCheckQuery = duplicateCheckQuery
-                        .where('colour', '==', formData.colour);
-                    duplicateQueryConditions.push(`Colour: ${formData.colour}`);
-                    hasDuplicates = true;
-                } else if (formData.condition && formData.colour) {
-                    duplicateCheckQuery = duplicateCheckQuery
-                        .where('condition', '==', formData.condition)
-                        .where('colour', '==', formData.colour);
-                    duplicateQueryConditions.push(`Condition: ${formData.condition}, Colour: ${formData.colour}`);
-                    hasDuplicates = true;
-                } else if (formData.tahun && formData.size) {
-                    duplicateCheckQuery = duplicateCheckQuery
-                        .where('tahun', '==', formData.tahun)
-                        .where('size', '==', formData.size);
-                    duplicateQueryConditions.push(`Tahun: ${formData.tahun}, Size: ${formData.size}`);
-                    hasDuplicates = true;
-                }
-
-                if (hasDuplicates) {
-                    try {
-                        console.log(`🔍 Checking for duplicate in ${config.collection} with:`, duplicateQueryConditions);
-                        const querySnapshot = await duplicateCheckQuery.limit(1).get();
-                        
-                        if (!querySnapshot.empty) {
-                            // Record exists, ask to update
-                            const existingDoc = querySnapshot.docs[0];
-                            const docId = existingDoc.id;
-                            const existingData = existingDoc.data();
-                            
-                            let message = `${ppeType} already exists.\n\n`;
-                            message += duplicateQueryConditions.join('\n') + '\n';
-                            message += `Current unit: ${existingData.unit}\n`;
-                            message += `New unit: ${formData.unit}\n\n`;
-                            message += `Do you want to update the existing record?`;
-                            
-                            const confirmUpdate = confirm(message);
-                            
-                            if (confirmUpdate) {
-                                // Update existing record
-                                await db.collection(config.collection).doc(docId).update({
-                                    unit: formData.unit,
-                                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                                });
-                                
-                                console.log(`✅ Updated existing record in ${config.collection}`);
-                                alert(`${ppeType} record updated successfully!`);
-                                clearFirePpeStockForm();
-                                loadAllPpeStockData();
-                                return;
-                            } else {
-                                console.log("❌ User cancelled update operation");
-                                return;
-                            }
-                        } else {
-                            console.log("✅ No duplicate found, adding new record");
-                        }
-                    } catch (error) {
-                        console.error("❌ Error checking for duplicate:", error);
-                        // Continue with adding new record even if duplicate check fails
-                    }
-                }
-                
-                // Add new record
-                db.collection(config.collection).add(formData)
-                    .then((docRef) => {
-                        console.log(`✅ ${ppeType} added successfully to ${config.collection} with ID: ${docRef.id}`);
-                        console.log('Saved data:', formData);
-                        alert(`${ppeType} added successfully!`);
-                        clearFirePpeStockForm();
-                        loadAllPpeStockData();
-                    })
-                    .catch(error => {
-                        console.error(`❌ Error adding ${ppeType} to ${config.collection}:`, error);
-                        console.error('Error details:', error.message, error.code);
-                        alert(`Error adding ${ppeType}: ` + error.message);
-                    });
-            }
-        }
-
-        // Function untuk clear Fire PPE Stock form
-        function clearFirePpeStockForm() {
-            document.getElementById('ppeStockForm').reset();
-            document.getElementById('dynamicFormContainer').style.display = 'none';
-            document.getElementById('dynamicFormContainer').innerHTML = '';
-            editingPpeStockId = null;
-            currentPpeType = null;
-            document.querySelector('#ppeStockForm button[type="submit"]').innerHTML = '<i class="fas fa-plus"></i> Add to Inventory';
-        }
-
-        // Function untuk load semua PPE stock data
-        function loadAllPpeStockData() {
-            if (!db) {
-                console.error("❌ Firebase not initialized");
-                return;
-            }
-            
-            console.log("📡 Loading all PPE stock data...");
-            
-            // Clear existing cards
-            const container = document.getElementById('inventoryCardsContainer');
-            container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading PPE inventory data...</div>';
-            
-            // Counter untuk track berapa banyak collections sudah selesai loading
-            let loadedCount = 0;
-            const totalTypes = Object.keys(ppeTypeConfigs).length;
-            
-            // Load data untuk semua PPE types
-            Object.keys(ppeTypeConfigs).forEach(ppeType => {
-                loadPpeStockData(ppeType).then(() => {
-                    loadedCount++;
-                    console.log(`✅ Loaded ${ppeType} (${loadedCount}/${totalTypes})`);
-                    
-                    // Jika semua sudah selesai loading
-                    if (loadedCount === totalTypes) {
-                        console.log("🎉 All PPE stock data loaded successfully");
-                        // Remove loading message jika tidak ada data
-                        const loadingMsg = container.querySelector('.loading');
-                        if (loadingMsg && !container.querySelector('.inventory-card')) {
-                            loadingMsg.innerHTML = '<i class="fas fa-inbox"></i> No PPE inventory data available';
-                        }
-                    }
-                }).catch(error => {
-                    loadedCount++;
-                    console.error(`❌ Failed to load ${ppeType}:`, error);
-                });
-            });
-        }
-
-        // Function untuk load data specific PPE type
-        function loadPpeStockData(ppeType) {
-            return new Promise((resolve, reject) => {
-                const config = ppeTypeConfigs[ppeType];
-                if (!config || !db) {
-                    reject(new Error(`Invalid config or Firebase not initialized for ${ppeType}`));
-                    return;
-                }
-
-                console.log(`📡 Loading ${ppeType} data from collection: ${config.collection}`);
-                
-                db.collection(config.collection)
-                    .orderBy('timestamp', 'desc')
-                    .get()
-                    .then((snapshot) => {
-                        console.log(`📊 ${ppeType} data loaded:`, snapshot.size, "documents from", config.collection);
-                        
-                        // Update atau create inventory card
-                        updateInventoryCard(ppeType, snapshot);
-                        resolve(snapshot);
-                        
-                    })
-                    .catch((error) => {
-                        console.error(`❌ Error loading ${ppeType} data from ${config.collection}:`, error);
-                        // Masih create card walaupun error, tapi dengan 0 count
-                        updateInventoryCard(ppeType, { empty: true });
-                        reject(error);
-                    });
-            });
-        }
-
-        // Function untuk update atau create inventory card
-        function updateInventoryCard(ppeType, snapshot) {
-            const container = document.getElementById('inventoryCardsContainer');
-            const cardId = `card-${ppeType.replace(/\s+/g, '-').toLowerCase()}`;
-            const config = ppeTypeConfigs[ppeType];
-            
-            // Remove loading message if exists and this is the first card
-            const loadingMsg = container.querySelector('.loading');
-            if (loadingMsg && !container.querySelector('.inventory-card')) {
-                container.innerHTML = '';
-            }
-            
-            let card = document.getElementById(cardId);
-            const itemCount = snapshot.empty ? 0 : snapshot.size;
-            
-            if (!card) {
-                // Create new card
-                card = document.createElement('div');
-                card.id = cardId;
-                card.className = 'inventory-card';
-                card.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <h3 style="color: var(--dark-text); margin: 0 0 5px 0;">
-                                <i class="fas ${config.icon}" style="color: var(--primary-color); margin-right: 10px;"></i>
-                                ${ppeType}
-                                <span class="inventory-count" id="count-${cardId}">${itemCount}</span>
-                            </h3>
-                            <p style="color: var(--light-text); margin: 0; font-size: 14px;">
-                                Click to view inventory details
-                            </p>
-                        </div>
-                        <i class="fas fa-chevron-down" id="arrow-${cardId}" style="transition: transform 0.3s ease;"></i>
-                    </div>
-                `;
-                
-                card.onclick = function() {
-                    togglePpeTable(cardId, ppeType, snapshot);
-                };
-                
-                container.appendChild(card);
-            } else {
-                // Update count
-                const countElement = document.getElementById(`count-${cardId}`);
-                if (countElement) {
-                    countElement.textContent = itemCount;
-                }
-            }
-            
-            // Update or create table if there's data
-            if (!snapshot.empty) {
-                updatePpeTable(cardId, ppeType, snapshot);
-            } else {
-                // Remove table if exists and no data
-                const tableId = `table-${cardId}`;
-                const existingTable = document.getElementById(tableId);
-                if (existingTable) {
-                    existingTable.remove();
-                }
-            }
-            
-            // Reset arrow
-            const arrow = document.getElementById(`arrow-${cardId}`);
-            if (arrow) {
-                arrow.style.transform = 'rotate(0deg)';
-            }
-        }
-
-        // Function untuk toggle table visibility
-        function togglePpeTable(cardId, ppeType, snapshot) {
-            const tableId = `table-${cardId}`;
-            let table = document.getElementById(tableId);
-            const arrow = document.getElementById(`arrow-${cardId}`);
-            
-            if (!table) {
-                if (snapshot.empty) {
-                    alert(`No ${ppeType} data available`);
-                    return;
-                }
-                // Create table if doesn't exist
-                createPpeTable(cardId, ppeType);
-                // Reload data to ensure fresh data
-                loadPpeStockData(ppeType);
-                if (arrow) arrow.style.transform = 'rotate(180deg)';
-                return;
-            }
-            
-            if (table.style.display === 'none' || !table.style.display) {
-                table.style.display = 'block';
-                if (arrow) arrow.style.transform = 'rotate(180deg)';
-                // Refresh data when opening table
-                loadPpeStockData(ppeType);
-            } else {
-                table.style.display = 'none';
-                if (arrow) arrow.style.transform = 'rotate(0deg)';
-            }
-        }
-
-        // Function untuk create PPE table
-        function createPpeTable(cardId, ppeType) {
-            const container = document.getElementById('inventoryCardsContainer');
-            const config = ppeTypeConfigs[ppeType];
-            const tableId = `table-${cardId}`;
-            
-            // Remove existing table if any
-            const existingTable = document.getElementById(tableId);
-            if (existingTable) {
-                existingTable.remove();
-            }
-            
-            const tableDiv = document.createElement('div');
-            tableDiv.id = tableId;
-            tableDiv.className = 'ppe-table-container';
-            tableDiv.style.display = 'none';
-            
-            tableDiv.innerHTML = `
-                <div class="table-header">
-                    <h4>${ppeType} Inventory</h4>
-                    <div class="table-controls">
-                        <div class="search-box">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="search-${tableId}" placeholder="Search ${ppeType}..." onkeyup="searchPpeTable('${tableId}')">
-                        </div>
-                        <button class="refresh-btn" onclick="loadPpeStockData('${ppeType}')">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
-                    </div>
-                </div>
-                <div class="loading" id="loading-${tableId}">
-                    <i class="fas fa-spinner fa-spin"></i> Loading ${ppeType} data...
-                </div>
-                <div class="no-data" id="no-data-${tableId}" style="display: none;">
-                    <i class="fas fa-inbox"></i> No ${ppeType} data available
-                </div>
-                <div id="content-${tableId}" style="display: none;">
-                    <table>
-                        <thead>
-                            <tr id="headers-${tableId}">
-                                <!-- Headers will be generated dynamically -->
-                            </tr>
-                        </thead>
-                        <tbody id="body-${tableId}">
-                            <!-- Data will be populated here -->
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            
-            // Insert after the card
-            const card = document.getElementById(cardId);
-            if (card) {
-                container.insertBefore(tableDiv, card.nextSibling);
-            } else {
-                container.appendChild(tableDiv);
-            }
-        }
-
-        // Function untuk update PPE table dengan data
-        function updatePpeTable(cardId, ppeType, snapshot) {
-            const tableId = `table-${cardId}`;
-            const loadingElement = document.getElementById(`loading-${tableId}`);
-            const noDataElement = document.getElementById(`no-data-${tableId}`);
-            const contentElement = document.getElementById(`content-${tableId}`);
-            const headersElement = document.getElementById(`headers-${tableId}`);
-            const bodyElement = document.getElementById(`body-${tableId}`);
-            const config = ppeTypeConfigs[ppeType];
-            
-            // If elements don't exist yet, create them
-            if (!loadingElement || !noDataElement || !contentElement || !headersElement || !bodyElement) {
-                createPpeTable(cardId, ppeType);
-                // Try again after a short delay
-                setTimeout(() => {
-                    updatePpeTable(cardId, ppeType, snapshot);
-                }, 100);
-                return;
-            }
-            
-            if (snapshot.empty) {
-                if (loadingElement) loadingElement.style.display = 'none';
-                if (noDataElement) noDataElement.style.display = 'block';
-                if (contentElement) contentElement.style.display = 'none';
-                return;
-            }
-            
-            if (loadingElement) loadingElement.style.display = 'none';
-            if (noDataElement) noDataElement.style.display = 'none';
-            if (contentElement) contentElement.style.display = 'block';
-            
-            // Generate table headers based on PPE type fields
-            let headersHTML = '';
-            config.fields.forEach(field => {
-                headersHTML += `<th>${field.label.replace(' *', '')}</th>`;
-            });
-            headersHTML += '<th>Date Added</th><th>Actions</th>';
-            headersElement.innerHTML = headersHTML;
-            
-            // Generate table rows
-            let bodyHTML = '';
-            
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                const id = doc.id;
-                
-                // Format timestamp untuk Malaysia
-                let timestampDisplay = 'N/A';
-                if (data.timestamp) {
-                    const timestamp = data.timestamp.toDate ? data.timestamp.toDate() : new Date(data.timestamp);
-                    const day = timestamp.getDate().toString().padStart(2, '0');
-                    const month = (timestamp.getMonth() + 1).toString().padStart(2, '0');
-                    const year = timestamp.getFullYear();
-                    const hours = timestamp.getHours();
-                    const minutes = timestamp.getMinutes().toString().padStart(2, '0');
-                    const ampm = hours >= 12 ? 'pm' : 'am';
-                    const hours12 = hours % 12 || 12;
-                    
-                    timestampDisplay = `
-                        <div class="timestamp-malaysia">
-                            <div>${day}/${month}/${year}</div>
-                            <div>${hours12}:${minutes} ${ampm}</div>
-                        </div>
-                    `;
-                }
-                
-                let rowHTML = '<tr>';
-                
-                // Add data for each field
-                config.fields.forEach(field => {
-                    const value = data[field.name] || 'N/A';
-                    rowHTML += `<td>${value}</td>`;
-                });
-                
-                rowHTML += `
-                    <td>${timestampDisplay}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-sm btn-edit" onclick="editPpeStock('${id}', '${ppeType}')">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button class="btn-sm btn-delete" onclick="deletePpeStock('${id}', '${ppeType}')">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </div>
-                    </td>
-                </tr>`;
-                
-                bodyHTML += rowHTML;
-            });
-            
-            bodyElement.innerHTML = bodyHTML;
-        }
-
-        // Function untuk edit PPE stock
-        function editPpeStock(id, ppeType) {
-            if (!db) {
-                alert("Firebase not initialized. Please refresh the page.");
-                return;
-            }
-
-            const config = ppeTypeConfigs[ppeType];
-            if (!config) return;
-
-            console.log(`📝 Editing ${ppeType} with ID: ${id} from collection: ${config.collection}`);
-
-            db.collection(config.collection).doc(id).get()
-                .then((doc) => {
-                    if (doc.exists) {
-                        const data = doc.data();
-                        console.log(`📋 Data loaded for editing:`, data);
-                        
-                        // Switch to PPE Stock tab
-                        switchFormTab('form2', document.querySelector('.form-tab[onclick*="form2"]'));
-                        
-                        // Set PPE type
-                        document.getElementById('ppeType').value = ppeType;
-                        handlePpeTypeChange();
-                        
-                        // Fill form with existing data
-                        setTimeout(() => {
-                            config.fields.forEach(field => {
-                                const element = document.getElementById(field.name);
-                                if (element && data[field.name] !== undefined) {
-                                    element.value = data[field.name];
-                                    console.log(`✅ Set ${field.name} to: ${data[field.name]}`);
-                                }
-                            });
-                        }, 100);
-                        
-                        // Change form to edit mode
-                        editingPpeStockId = id;
-                        document.querySelector('#ppeStockForm button[type="submit"]').innerHTML = '<i class="fas fa-save"></i> Update';
-                        
-                        // Scroll to form
-                        document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
-                        
-                        console.log(`✅ Editing ${ppeType}:`, id);
-                    } else {
-                        console.error(`❌ Document not found: ${id} in ${config.collection}`);
-                        alert(`${ppeType} record not found!`);
+                        console.log("❌ No records found for", selectedPPE, "in firePPEStock database");
+                        document.getElementById('minQty').value = '';
                     }
                 })
                 .catch((error) => {
-                    console.error(`❌ Error loading ${ppeType} for edit:`, error);
-                    alert(`Error loading ${ppeType} data: ` + error.message);
+                    console.log("❌ Error getting PPE stock record:", error);
+                    document.getElementById('minQty').value = '';
                 });
         }
-
-        // Function untuk delete PPE stock
-        function deletePpeStock(id, ppeType) {
-            if (!confirm(`Are you sure you want to delete this ${ppeType} record?`)) {
-                return;
-            }
-
-            if (!db) {
-                alert("Firebase not initialized. Please refresh the page.");
-                return;
-            }
-
-            const config = ppeTypeConfigs[ppeType];
-            if (!config) return;
-
-            console.log(`🗑️ Deleting ${ppeType} with ID: ${id} from collection: ${config.collection}`);
-
-            db.collection(config.collection).doc(id).delete()
-                .then(() => {
-                    console.log(`✅ ${ppeType} deleted successfully from ${config.collection}`);
-                    alert(`${ppeType} deleted successfully!`);
-                    loadPpeStockData(ppeType);
-                })
-                .catch((error) => {
-                    console.error(`❌ Error deleting ${ppeType}:`, error);
-                    alert(`Error deleting ${ppeType}: ` + error.message);
-                });
-        }
-
-        // Function untuk search dalam PPE table
-        function searchPpeTable(tableId) {
-            const searchTerm = document.getElementById(`search-${tableId}`).value.toLowerCase();
-            const bodyElement = document.getElementById(`body-${tableId}`);
-            
-            if (!bodyElement) return;
-            
-            const rows = bodyElement.getElementsByTagName('tr');
-            
-            for (let i = 0; i < rows.length; i++) {
-                const cells = rows[i].getElementsByTagName('td');
-                let found = false;
-                
-                for (let j = 0; j < cells.length; j++) {
-                    if (cells[j].textContent.toLowerCase().includes(searchTerm)) {
-                        found = true;
-                        break;
-                    }
-                }
-                
-                rows[i].style.display = found ? '' : 'none';
-            }
-        }
-
-        // Function to switch between form tabs - UPDATED
-        function switchFormTab(tabId, clickedTab) {
-            // Hide all form contents
-            const formContents = document.querySelectorAll('.form-content');
-            formContents.forEach(content => {
-                content.classList.remove('active');
-            });
-            
-            // Show selected form content
-            document.getElementById(tabId).classList.add('active');
-            
-            // Update tab active state
-            const tabs = document.querySelectorAll('.form-tab');
-            tabs.forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Activate the clicked tab
-            clickedTab.classList.add('active');
-            
-            // Show/hide tables based on active tab
-            if (tabId === 'form1') {
-                // Show issuance table, hide stock tables
-                document.getElementById('issuanceTable').style.display = 'block';
-                document.getElementById('ppeStockInventory').style.display = 'none';
-                document.getElementById('stockTable').style.display = 'none';
-            } else if (tabId === 'form2') {
-                // Show PPE Stock Inventory table, hide issuance table
-                document.getElementById('issuanceTable').style.display = 'none';
-                document.getElementById('ppeStockInventory').style.display = 'block';
-                document.getElementById('stockTable').style.display = 'none';
-                
-                // Load all PPE stock data
-                setTimeout(() => {
-                    loadAllPpeStockData();
-                }, 300);
-            }
-        }
-
-        // ================================================
-        // SEMUA FUNCTION ASAL UNTUK PPE ISSUANCE KEKAL SAMA
-        // ================================================
 
         // Initialize compact size grid
         function initializeSizeGrid() {
@@ -1965,6 +1115,41 @@
             });
             
             grid.innerHTML = html;
+        }
+
+        // Function to switch between form tabs - FIXED VERSION
+        function switchFormTab(tabId, clickedTab) {
+            // Hide all form contents
+            const formContents = document.querySelectorAll('.form-content');
+            formContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Show selected form content
+            document.getElementById(tabId).classList.add('active');
+            
+            // Update tab active state
+            const tabs = document.querySelectorAll('.form-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Activate the clicked tab
+            clickedTab.classList.add('active');
+            
+            // Show/hide tables based on active tab
+            if (tabId === 'form1') {
+                // Show issuance table, hide stock table
+                document.getElementById('issuanceTable').style.display = 'block';
+                document.getElementById('stockTable').style.display = 'none';
+            } else if (tabId === 'form2') {
+                // Show stock table, hide issuance table
+                document.getElementById('issuanceTable').style.display = 'none';
+                document.getElementById('stockTable').style.display = 'block';
+                
+                // Auto-fill min qty when switching to stock tab based on selected PPE
+                setTimeout(autoFillPPEMinQty, 300);
+            }
         }
 
         // Function to add size to display
@@ -2026,7 +1211,7 @@
             updateSizeDisplay(displayId);
         }
 
-        // Save data untuk PPE issuance (KEKAL SAMA)
+        // FUNCTION YANG DIPERBAIKI: Save data dengan pencegahan duplicate untuk jenis PPE yang sama
         async function saveFirePPEData(type) {
             if (!db) {
                 alert("Firebase not initialized. Please refresh the page.");
@@ -2063,7 +1248,7 @@
                     typesOfPPE: document.getElementById('typesOfPPE2').value,
                     minQty: parseInt(document.getElementById('minQty').value),
                     currentQty: parseInt(document.getElementById('currentQty').value),
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp() // Update timestamp setiap kali
                 };
 
                 collectionName = 'firePPEStock';
@@ -2085,7 +1270,7 @@
             }
 
             if (editingId && editingType === type) {
-                // Update existing record
+                // Update existing record - update timestamp juga
                 formData.timestamp = firebase.firestore.FieldValue.serverTimestamp();
                 
                 db.collection(collectionName).doc(editingId).update(formData)
@@ -2104,16 +1289,19 @@
                 // Untuk PPE Stock: Periksa jika jenis PPE sudah wujud
                 if (type === 'stock') {
                     try {
+                        // Cari jika sudah ada rekod untuk jenis PPE ini
                         const querySnapshot = await db.collection(collectionName)
                             .where('typesOfPPE', '==', formData.typesOfPPE)
                             .limit(1)
                             .get();
                         
                         if (!querySnapshot.empty) {
+                            // Jenis PPE sudah wujud, update rekod sedia ada
                             const existingDoc = querySnapshot.docs[0];
                             const docId = existingDoc.id;
                             const existingData = existingDoc.data();
                             
+                            // Tanya pengguna samada nak update
                             const confirmUpdate = confirm(
                                 `"${formData.typesOfPPE}" already exists in the database.\n\n` +
                                 `Current values: Min=${existingData.minQty}, Current=${existingData.currentQty}\n` +
@@ -2122,6 +1310,7 @@
                             );
                             
                             if (confirmUpdate) {
+                                // Update rekod sedia ada dengan timestamp baru
                                 formData.timestamp = firebase.firestore.FieldValue.serverTimestamp();
                                 
                                 await db.collection(collectionName).doc(docId).update(formData);
@@ -2159,7 +1348,7 @@
         function loadFirePPEData() {
             // Load both data initially, but tables will be shown/hidden based on active tab
             loadIssuanceData();
-            // Not loading old stock data
+            loadStockData();
         }
 
         function loadIssuanceData() {
@@ -2262,8 +1451,116 @@
                 });
         }
 
+        function loadStockData() {
+            const loadingMessage = document.getElementById('loadingStockMessage');
+            const noDataMessage = document.getElementById('noStockDataMessage');
+            const tableContent = document.getElementById('stockTableContent');
+
+            if (!db) {
+                console.error("❌ Firestore not initialized");
+                if (loadingMessage) {
+                    loadingMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Firebase not initialized';
+                }
+                return;
+            }
+
+            console.log("📡 Loading fire PPE stock data...");
+
+            db.collection('firePPEStock')
+                .orderBy('timestamp', 'desc')
+                .get()
+                .then((snapshot) => {
+                    console.log("📊 Stock data loaded:", snapshot.size, "documents");
+                    if (loadingMessage) loadingMessage.style.display = 'none';
+                    
+                    if (snapshot.empty) {
+                        console.log("ℹ️ No data found in firePPEStock collection");
+                        if (noDataMessage) noDataMessage.style.display = 'block';
+                        if (tableContent) tableContent.style.display = 'none';
+                        return;
+                    }
+
+                    if (noDataMessage) noDataMessage.style.display = 'none';
+                    if (tableContent) tableContent.style.display = 'block';
+                    
+                    let html = '';
+                    
+                    snapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const id = doc.id;
+                        
+                        let minQtyDisplay = data.minQty || '0';
+                        let currentQtyDisplay = data.currentQty || '0';
+                        let status = '';
+
+                        // Format timestamp untuk Malaysia
+                        let timestampDisplay = 'N/A';
+                        if (data.timestamp) {
+                            const timestamp = data.timestamp.toDate ? data.timestamp.toDate() : new Date(data.timestamp);
+                            const day = timestamp.getDate().toString().padStart(2, '0');
+                            const month = (timestamp.getMonth() + 1).toString().padStart(2, '0');
+                            const year = timestamp.getFullYear();
+                            const hours = timestamp.getHours();
+                            const minutes = timestamp.getMinutes().toString().padStart(2, '0');
+                            const ampm = hours >= 12 ? 'pm' : 'am';
+                            const hours12 = hours % 12 || 12;
+                            
+                            timestampDisplay = `
+                                <div class="timestamp-malaysia">
+                                    <div>${day}/${month}/${year}</div>
+                                    <div>${hours12}:${minutes} ${ampm}</div>
+                                </div>
+                            `;
+                        }
+
+                        // Jika current quantity kurang daripada min quantity, current qty turns red
+                        // Jika current quantity lebih atau sama dengan min quantity, current qty turns green
+                        if (data.currentQty < data.minQty) {
+                            currentQtyDisplay = `<span class="quantity-low">${data.currentQty}</span>`;
+                            status = '<span class="quantity-low">Low Stock</span>';
+                        } else {
+                            currentQtyDisplay = `<span class="quantity-adequate">${data.currentQty}</span>`;
+                            status = '<span class="quantity-adequate">Adequate</span>';
+                        }
+                        
+                        html += `
+                            <tr>
+                                <td>${data.typesOfPPE || 'N/A'}</td>
+                                <td>${minQtyDisplay}</td>
+                                <td>${currentQtyDisplay}</td>
+                                <td>${status}</td>
+                                <td>${timestampDisplay}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-sm btn-edit" onclick="editFirePPE('${id}', 'stock')">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="btn-sm btn-delete" onclick="deleteFirePPE('${id}', 'stock')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    if (document.getElementById('ppeStockTableBody')) {
+                        document.getElementById('ppeStockTableBody').innerHTML = html;
+                    }
+                    console.log("✅ Stock table data displayed successfully");
+                    
+                })
+                .catch((error) => {
+                    console.error('❌ Error loading stock data:', error);
+                    if (loadingMessage) loadingMessage.style.display = 'none';
+                    if (noDataMessage) {
+                        noDataMessage.style.display = 'block';
+                        noDataMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error loading data from Firebase. Please try refreshing.';
+                    }
+                });
+        }
+
         function editFirePPE(id, type) {
-            // Function asal untuk edit PPE issuance
             if (!db) {
                 alert("Firebase not initialized. Please refresh the page.");
                 return;
@@ -2303,7 +1600,7 @@
                             // Change form to edit mode
                             document.querySelector('#ppeIssuanceForm button[type="submit"]').innerHTML = '<i class="fas fa-save"></i> Update PPE Issuance';
                         } else if (type === 'stock') {
-                            // Switch to stock form tab (old stock system)
+                            // Switch to stock form tab
                             switchFormTab('form2', document.querySelector('.form-tab[onclick*="form2"]'));
                             
                             // Fill form with existing data
@@ -2370,6 +1667,11 @@
                 document.querySelector('#ppeIssuanceForm button[type="submit"]').innerHTML = '<i class="fas fa-plus"></i> Add PPE Issuance';
             } else if (formId === 'ppeStockForm') {
                 document.querySelector('#ppeStockForm button[type="submit"]').innerHTML = '<i class="fas fa-plus"></i> Add PPE Stock';
+                
+                // Auto-fill min qty again when form is cleared jika ada jenis PPE yang dipilih
+                if (document.getElementById('typesOfPPE2').value) {
+                    setTimeout(autoFillPPEMinQty, 300);
+                }
             }
         }
 
@@ -2486,24 +1788,24 @@
 
         window.refreshData = function() {
             console.log("🔄 Manually refreshing data...");
-            
-            // Refresh issuance data
             const loadingIssuanceMessage = document.getElementById('loadingIssuanceMessage');
             const noIssuanceDataMessage = document.getElementById('noIssuanceDataMessage');
             const issuanceTableContent = document.getElementById('issuanceTableContent');
+            
+            const loadingStockMessage = document.getElementById('loadingStockMessage');
+            const noStockDataMessage = document.getElementById('noStockDataMessage');
+            const stockTableContent = document.getElementById('stockTableContent');
             
             if (loadingIssuanceMessage) loadingIssuanceMessage.style.display = 'block';
             if (noIssuanceDataMessage) noIssuanceDataMessage.style.display = 'none';
             if (issuanceTableContent) issuanceTableContent.style.display = 'none';
             
-            // Refresh PPE stock data
-            if (document.getElementById('ppeStockInventory').style.display === 'block') {
-                loadAllPpeStockData();
-            }
+            if (loadingStockMessage) loadingStockMessage.style.display = 'block';
+            if (noStockDataMessage) noStockDataMessage.style.display = 'none';
+            if (stockTableContent) stockTableContent.style.display = 'none';
             
-            // Also refresh issuance data
             setTimeout(() => {
-                loadIssuanceData();
+                loadFirePPEData();
             }, 500);
         };
     </script>
