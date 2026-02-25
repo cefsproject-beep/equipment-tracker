@@ -638,14 +638,14 @@
         <!-- Sidebar Navigation -->
         <div class="sidebar">
             <div class="logo">
-                <h1>Public Panel</h1>
+                <h1>Admin Panel</h1>
             </div>
 
             <div class="user-profile-sidebar">
                 <div class="sidebar-avatar">G</div>
                 <div class="sidebar-user-info">
-                    <h3>Guest User</h3>
-                    <p>Public Access</p>
+                    <h3>Admin User</h3>
+                    <p>Admin Access</p>
                 </div>
             </div>
             
@@ -654,7 +654,7 @@
                     <i class="fas fa-th-large"></i>
                     <span>Dashboard</span>
                 </li>
-                <li class="nav-item" onclick="navigateTo('public-inspection.html')">
+                <li class="nav-item" onclick="navigateTo('admin-info.html')">
                     <i class="fas fa-qrcode"></i>
                     <span>Inspection</span>
                 </li>
@@ -662,11 +662,11 @@
                     <i class="fas fa-car"></i>
                     <span>Vehicle</span>
                 </li>
-                <li class="nav-item" onclick="navigateTo('public-contact.html')">
+                <li class="nav-item" onclick="navigateTo('admin-contact.html')">
                     <i class="fas fa-envelope"></i>
                     <span>Contact</span>
                 </li>
-                <li class="nav-item" onclick="navigateTo('index.html')">
+                <li class="nav-item" onclick="navigateTo('login.html')">
                     <i class="fas fa-arrow-left"></i>
                     <span>Back</span>
                 </li>
@@ -1065,19 +1065,19 @@
                     let html = '';
                     
                     const typeIcons = {
-                        'Fire Truck': '',
-                        'Ambulance': '',
-                        'MPRV': '',
-                        'RSV': '',
-                        'Rapid Support Vehicle': '',
-                        'Truck': '',
-                        'Car': '',
-                        'Van': ''
+                        'Fire Truck': '🚒',
+                        'Ambulance': '🚑',
+                        'MPRV': '🚙',
+                        'RSV': '🚐',
+                        'Rapid Support Vehicle': '🚐',
+                        'Truck': '🚚',
+                        'Car': '🚗',
+                        'Van': '🚐'
                     };
                     
                     vehicleTypes.forEach(type => {
                         const count = allVehiclesData.filter(v => v.vehicleType === type || (!v.vehicleType && type === 'Ambulance')).length;
-                        const icon = typeIcons[type] || '';
+                        const icon = typeIcons[type] || '🚗';
                         
                         html += `
                             <div class="vehicle-type-card" onclick="selectVehicleType('${type.replace(/'/g, "\\'")}')">
@@ -3090,3 +3090,4 @@ doc.text(vehicleTypeDisplay, marginLeft + 35, yPos);
     </script>
 </body>
 </html>
+
