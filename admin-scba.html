@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- QR Code Library -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <!-- jsPDF Library - FOR PDF GENERATION -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root {
             --primary-color: #c9302c;
@@ -354,6 +357,7 @@
             display: flex;
             gap: 15px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .search-box {
@@ -386,6 +390,42 @@
 
         .refresh-btn:hover {
             background: #c9302c;
+        }
+
+        /* NEW: Save PDF Button Style */
+        .pdf-btn {
+            background: #38a169;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .pdf-btn:hover {
+            background: #2f855a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .pdf-btn:active {
+            transform: translateY(0);
+        }
+
+        .pdf-btn.loading {
+            opacity: 0.7;
+            cursor: wait;
+            pointer-events: none;
+        }
+
+        .pdf-btn i {
+            font-size: 16px;
         }
 
         table {
@@ -648,6 +688,11 @@
                 width: 95%;
                 padding: 20px;
             }
+
+            .pdf-btn {
+                padding: 8px 15px;
+                font-size: 13px;
+            }
         }
     </style>
 </head>
@@ -816,6 +861,10 @@
                             <i class="fas fa-search"></i>
                             <input type="text" id="searchSCBA" placeholder="Search SCBA..." onkeyup="searchTable()">
                         </div>
+                        <!-- NEW: Save as PDF Button -->
+                        <button class="pdf-btn" id="pdfButton" onclick="generateInventoryPDF()">
+                            <i class="fas fa-file-pdf"></i> Save as PDF
+                        </button>
                         <button class="refresh-btn" onclick="refreshData()">
                             <i class="fas fa-sync-alt"></i> Refresh
                         </button>
@@ -934,9 +983,18 @@
 
         window.addEventListener('load', function() {
             console.log("🚀 Loading admin SCBA page...");
+            console.log("📚 Libraries check:");
+            console.log("- QRCode:", typeof QRCode !== 'undefined' ? "✅ Loaded" : "❌ Missing");
+            console.log("- jsPDF:", typeof window.jspdf !== 'undefined' ? "✅ Loaded" : "❌ Missing");
+            
             initializeFirebase();
             updateCurrentDate();
             setupFormListener();
+            
+            // Add click event listener for PDF button
+            document.getElementById('pdfButton').addEventListener('click', function(e) {
+                console.log("🖱️ PDF Button Clicked!");
+            });
         });
 
         function initializeFirebase() {
@@ -1303,6 +1361,217 @@
         }
 
         // ============================================
+        // WORKING PDF GENERATION FUNCTION (adapted for SCBA)
+        // ============================================
+        async function generateInventoryPDF() {
+            // Check if there's data to export
+            if (allSCBAData.length === 0) {
+                alert("No data available to export. Please add some SCBA data first.");
+                return;
+            }
+
+            console.log("📄 Generating SCBA PDF report...");
+
+            // Show loading state on button
+            const pdfButton = document.getElementById('pdfButton');
+            const originalHTML = pdfButton.innerHTML;
+            pdfButton.classList.add('loading');
+            pdfButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating PDF...';
+            pdfButton.disabled = true;
+
+            try {
+                // Check if jsPDF library is available
+                if (typeof window.jspdf === 'undefined') {
+                    throw new Error("PDF library not loaded. Please refresh the page and ensure you have internet connection.");
+                }
+
+                // Use the jsPDF library
+                const { jsPDF } = window.jspdf;
+                
+                // Create PDF in landscape mode
+                const doc = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                // Current date and time
+                const now = new Date();
+                const formattedDate = now.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                const formattedTime = now.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                // Title
+                doc.setFontSize(20);
+                doc.setTextColor(40, 40, 40);
+                doc.text("SCBA INVENTORY REPORT", 14, 20);
+
+                // Report details
+                doc.setFontSize(11);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Generated: ${formattedDate} at ${formattedTime}`, 14, 30);
+                doc.text(`Total Items: ${allSCBAData.length}`, 14, 36);
+
+                // Prepare table data
+                const headers = [
+                    "Item",
+                    "Min Qty", 
+                    "Current Qty",
+                    "Location",
+                    "Last Inspection",
+                    "Next Inspection",
+                    "Remarks"
+                ];
+
+                const tableData = allSCBAData.map(item => {
+                    return [
+                        item.item || 'N/A',
+                        item.minimumQuantity || '0',
+                        item.currentQuantity || '0',
+                        item.location || 'N/A',
+                        item.inspectionDate || 'Not Set',
+                        item.nextInspectionDate || 'Not Set',
+                        item.remarks || 'No remarks'
+                    ];
+                });
+
+                // Add the table
+                doc.autoTable({
+                    head: [headers],
+                    body: tableData,
+                    startY: 45,
+                    theme: 'grid',
+                    headStyles: {
+                        fillColor: [201, 48, 44], // Primary red color
+                        textColor: [255, 255, 255],
+                        fontSize: 10,
+                        fontStyle: 'bold'
+                    },
+                    bodyStyles: {
+                        fontSize: 9
+                    },
+                    alternateRowStyles: {
+                        fillColor: [245, 245, 245]
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 40 }, // Item
+                        1: { cellWidth: 20 }, // Min Qty
+                        2: { cellWidth: 25 }, // Current Qty
+                        3: { cellWidth: 30 }, // Location
+                        4: { cellWidth: 30 }, // Last Inspection
+                        5: { cellWidth: 30 }, // Next Inspection
+                        6: { cellWidth: 45 }  // Remarks
+                    },
+                    margin: { left: 14, right: 14 }
+                });
+
+                // Add footer
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.setTextColor(150, 150, 150);
+                    doc.text(
+                        `Page ${i} of ${pageCount}`,
+                        doc.internal.pageSize.width / 2,
+                        doc.internal.pageSize.height - 10,
+                        { align: 'center' }
+                    );
+                }
+
+                // Save the PDF
+                const fileName = `scba_inventory_${now.getFullYear()}_${(now.getMonth()+1).toString().padStart(2,'0')}_${now.getDate().toString().padStart(2,'0')}.pdf`;
+                doc.save(fileName);
+
+                console.log("✅ PDF generated successfully:", fileName);
+                
+                // Show success message after a short delay
+                setTimeout(() => {
+                    alert(`✅ PDF report has been saved as:\n"${fileName}"\n\nYou can now print it or share it as needed.`);
+                }, 300);
+
+            } catch (error) {
+                console.error("❌ Error generating PDF:", error);
+                
+                // Try alternative simple method
+                try {
+                    console.log("🔄 Trying alternative PDF method...");
+                    generateSimplePDF();
+                } catch (altError) {
+                    console.error("❌ Alternative method failed:", altError);
+                    alert("❌ Failed to generate PDF. Error: " + error.message + "\n\nPlease ensure:\n1. You have internet connection\n2. Refresh the page\n3. Try a different browser");
+                }
+                
+            } finally {
+                // Restore button state
+                setTimeout(() => {
+                    pdfButton.classList.remove('loading');
+                    pdfButton.innerHTML = originalHTML;
+                    pdfButton.disabled = false;
+                }, 500);
+            }
+        }
+
+        // Alternative simple PDF method
+        function generateSimplePDF() {
+            // Check if jsPDF is available
+            if (typeof window.jspdf === 'undefined') {
+                alert("PDF library not available. Please refresh the page.");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Title
+            doc.setFontSize(16);
+            doc.text("SCBA INVENTORY REPORT", 20, 20);
+            
+            // Date
+            doc.setFontSize(12);
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 30);
+            doc.text(`Total Items: ${allSCBAData.length}`, 20, 38);
+            
+            // Table headers
+            let yPos = 50;
+            doc.setFontSize(10);
+            doc.text("No.", 20, yPos);
+            doc.text("Item", 30, yPos);
+            doc.text("Min", 100, yPos);
+            doc.text("Current", 120, yPos);
+            doc.text("Location", 150, yPos);
+            
+            yPos += 10;
+            
+            // Data rows
+            allSCBAData.forEach((item, index) => {
+                if (yPos > 270) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+                
+                doc.text(`${index + 1}.`, 20, yPos);
+                doc.text(item.item || 'N/A', 30, yPos);
+                doc.text(item.minimumQuantity || '0', 100, yPos);
+                doc.text(item.currentQuantity || '0', 120, yPos);
+                doc.text(item.location || 'N/A', 150, yPos);
+                
+                yPos += 8;
+            });
+            
+            // Save
+            const fileName = `scba_simple_${new Date().getTime()}.pdf`;
+            doc.save(fileName);
+            alert(`Simple PDF saved as: ${fileName}`);
+        }
+
+        // ============================================
         // FIXED QR CODE FUNCTIONS
         // ============================================
 
@@ -1467,15 +1736,7 @@
         }
 
         // ============================================
-        // TEST FUNCTION untuk debug
-        // ============================================
-        function testQRCode() {
-            console.log("🧪 Testing QR Code generation...");
-            generateQRCode("Test SCBA Item");
-        }
-
-        // ============================================
-        // END OF QR CODE FIXES
+        // SEARCH AND SORT FUNCTIONS
         // ============================================
 
         // SEARCH FUNCTION
