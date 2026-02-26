@@ -636,41 +636,7 @@
             background: #c9302c;
         }
 
-        /* NEW: Save PDF Button Style */
-        .pdf-btn {
-            background: #38a169;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-        }
-
-        .pdf-btn:hover {
-            background: #2f855a;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        .pdf-btn:active {
-            transform: translateY(0);
-        }
-
-        .pdf-btn.loading {
-            opacity: 0.7;
-            cursor: wait;
-            pointer-events: none;
-        }
-
-        .pdf-btn i {
-            font-size: 16px;
-        }
+        /* REMOVED global PDF button style – now per station */
 
         .loading {
             text-align: center;
@@ -967,16 +933,6 @@
                 margin-bottom: 8px !important;
             }
             
-            .pdf-btn {
-                padding: 8px 15px;
-                font-size: 13px;
-            }
-            
-            .category-qr-btn {
-                padding: 4px 8px;
-                font-size: 10px;
-            }
-            
             .station-card {
                 height: auto;
                 min-height: 350px;
@@ -1074,6 +1030,8 @@
                             <option value="">Select Equipment</option>
                             <!-- Options akan diisi secara dynamic -->
                         </select>
+                        <!-- Custom equipment input -->
+                        <input type="text" id="customEquipment" class="form-control" placeholder="Enter custom equipment name" style="display: none; margin-top: 10px;">
                     </div>
 
                     <!-- Quantity Fields -->
@@ -1120,10 +1078,7 @@
                             <i class="fas fa-search"></i>
                             <input type="text" id="searchRescue" placeholder="Search station or category..." onkeyup="searchCards()">
                         </div>
-                        <!-- NEW: Save as PDF Button -->
-                        <button class="pdf-btn" id="pdfButton" onclick="generateInventoryPDF()">
-                            <i class="fas fa-file-pdf"></i> Save as PDF
-                        </button>
+                        <!-- Global PDF button removed – per station buttons added below -->
                         <button class="refresh-btn" onclick="refreshData()">
                             <i class="fas fa-sync-alt"></i> Refresh
                         </button>
@@ -1396,6 +1351,13 @@
                     option.textContent = item;
                     equipmentSelect.appendChild(option);
                 });
+
+                // Add "Other" option
+                const otherOption = document.createElement('option');
+                otherOption.value = "Other";
+                otherOption.textContent = "Other (specify)";
+                equipmentSelect.appendChild(otherOption);
+
             } else if (category) {
                 equipmentGroup.style.display = 'block';
             } else {
@@ -1406,15 +1368,26 @@
         function onEquipmentChange() {
             const equipment = document.getElementById('equipment').value;
             const quantityFields = document.getElementById('quantityFields');
+            const customEquipment = document.getElementById('customEquipment');
             
             if (equipment) {
                 quantityFields.style.display = 'block';
             } else {
                 quantityFields.style.display = 'none';
             }
+
+            // Handle custom equipment field
+            if (equipment === "Other") {
+                customEquipment.style.display = 'block';
+                customEquipment.required = true;
+            } else {
+                customEquipment.style.display = 'none';
+                customEquipment.required = false;
+                customEquipment.value = '';
+            }
         }
 
-        // ==================== 🛑 FIXED: SAVE DATA (TANPA DUPLIKAT) ====================
+        // ==================== SAVE DATA (TANPA DUPLIKAT) ====================
         async function saveRescueData() {
             if (!db) {
                 alert("Database not ready. Please wait...");
@@ -1429,7 +1402,17 @@
 
             const station = document.getElementById('station').value;
             const category = document.getElementById('category').value;
-            const equipment = document.getElementById('equipment').value;
+            let equipment = document.getElementById('equipment').value;
+            
+            // If "Other", get value from custom input
+            if (equipment === "Other") {
+                equipment = document.getElementById('customEquipment').value.trim();
+                if (!equipment) {
+                    alert("Please specify the custom equipment name.");
+                    return;
+                }
+            }
+
             const minQty = parseInt(document.getElementById('minimumQuantity').value) || 0;
             const currQty = parseInt(document.getElementById('currentQuantity').value) || 0;
             const remarks = document.getElementById('remarks').value;
@@ -1707,6 +1690,10 @@
                         <div class="action-buttons">
                             <button class="btn-sm btn-primary" onclick="addEquipmentForStation('${station}')" style="background: var(--primary-color);">
                                 <i class="fas fa-plus"></i> Add Equipment
+                            </button>
+                            <!-- NEW: PDF button for this station -->
+                            <button class="btn-sm btn-success" onclick="generateStationPDF('${station}')" style="background: #38a169;">
+                                <i class="fas fa-file-pdf"></i> PDF
                             </button>
                         </div>
                     </div>
@@ -2005,7 +1992,6 @@
                         
                         document.getElementById('station').value = data.station || '';
                         document.getElementById('category').value = data.category || '';
-                        document.getElementById('equipment').value = data.equipment || '';
                         document.getElementById('minimumQuantity').value = data.minimumQuantity || '';
                         document.getElementById('currentQuantity').value = data.currentQuantity || '';
                         document.getElementById('remarks').value = data.remarks || '';
@@ -2016,6 +2002,29 @@
                             setTimeout(() => {
                                 document.getElementById('equipmentGroup').style.display = 'block';
                                 document.getElementById('quantityFields').style.display = 'block';
+                                
+                                // Set equipment value, handling "Other"
+                                setTimeout(() => {
+                                    const equipmentSelect = document.getElementById('equipment');
+                                    const customEquipment = document.getElementById('customEquipment');
+                                    const equipmentName = data.equipment || '';
+                                    const category = data.category || '';
+                                    
+                                    // Check if equipmentName is in the standard list for this category
+                                    const standardList = equipmentDatabase[category] || [];
+                                    if (standardList.includes(equipmentName)) {
+                                        equipmentSelect.value = equipmentName;
+                                        customEquipment.style.display = 'none';
+                                        customEquipment.value = '';
+                                    } else {
+                                        equipmentSelect.value = "Other";
+                                        customEquipment.style.display = 'block';
+                                        customEquipment.value = equipmentName;
+                                    }
+                                    
+                                    // Trigger onEquipmentChange to ensure quantity fields & custom field visibility are correct
+                                    onEquipmentChange();
+                                }, 200);
                             }, 100);
                         }, 100);
                         
@@ -2061,6 +2070,10 @@
             document.getElementById('categoryGroup').style.display = 'none';
             document.getElementById('equipmentGroup').style.display = 'none';
             document.getElementById('quantityFields').style.display = 'none';
+
+            // Hide and clear custom equipment field
+            document.getElementById('customEquipment').style.display = 'none';
+            document.getElementById('customEquipment').value = '';
         }
 
         function addEquipmentForCategory(station, category) {
@@ -2106,26 +2119,32 @@
             alert(`${title}: ${message}`);
         }
 
-        // ========== NEW PDF GENERATION FUNCTION ==========
-        async function generateInventoryPDF() {
-            // Collect all equipment data into a flat array
-            let allEquipment = [];
-            for (const station in stationInventory) {
-                allEquipment = allEquipment.concat(stationInventory[station].items);
-            }
-
-            if (allEquipment.length === 0) {
-                alert("No data available to export. Add some equipment first.");
+        // ========== PER‑STATION PDF GENERATION ==========
+        async function generateStationPDF(stationName) {
+            // Get items for the selected station
+            const items = stationInventory[stationName]?.items || [];
+            if (items.length === 0) {
+                alert(`No equipment found for ${stationName}.`);
                 return;
             }
 
-            console.log("📄 Generating Rescue Equipment PDF...");
+            console.log(`📄 Generating PDF for ${stationName}...`);
 
-            const pdfButton = document.getElementById('pdfButton');
-            const originalHTML = pdfButton.innerHTML;
-            pdfButton.classList.add('loading');
-            pdfButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating PDF...';
-            pdfButton.disabled = true;
+            // Find the PDF button that was clicked (if any) for loading animation
+            // Since we have multiple buttons, we need to identify the correct one.
+            // We'll just use a generic approach: disable all PDF buttons during generation? 
+            // For simplicity, we'll just show a loading state on the button if we can find it.
+            // But to keep it simple, we'll just disable the button if we can find it by station name.
+            // However, there might be multiple buttons with the same station name? No, each station card has one.
+            // We'll target the specific button using the onclick parameter.
+            // We'll pass the button element reference? Instead, we can use a global flag but we'll just
+            // disable all PDF buttons during the process to avoid double clicks.
+
+            const pdfButtons = document.querySelectorAll(`button[onclick*="generateStationPDF('${stationName}')"]`);
+            pdfButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PDF...';
+            });
 
             try {
                 if (typeof window.jspdf === 'undefined') {
@@ -2152,15 +2171,14 @@
 
                 doc.setFontSize(20);
                 doc.setTextColor(40, 40, 40);
-                doc.text("RESCUE EQUIPMENT INVENTORY REPORT", 14, 20);
+                doc.text(`${stationName.toUpperCase()} - RESCUE EQUIPMENT`, 14, 20);
 
                 doc.setFontSize(11);
                 doc.setTextColor(100, 100, 100);
                 doc.text(`Generated: ${formattedDate} at ${formattedTime}`, 14, 30);
-                doc.text(`Total Items: ${allEquipment.length}`, 14, 36);
+                doc.text(`Total Items: ${items.length}`, 14, 36);
 
                 const headers = [
-                    "Station",
                     "Category",
                     "Equipment",
                     "Min Qty",
@@ -2168,8 +2186,7 @@
                     "Remarks"
                 ];
 
-                const tableData = allEquipment.map(item => [
-                    item.station || 'N/A',
+                const tableData = items.map(item => [
                     item.category || 'N/A',
                     item.equipment || 'N/A',
                     item.minimumQuantity || '0',
@@ -2195,12 +2212,11 @@
                         fillColor: [245, 245, 245]
                     },
                     columnStyles: {
-                        0: { cellWidth: 30 }, // Station
-                        1: { cellWidth: 35 }, // Category
-                        2: { cellWidth: 70 }, // Equipment
-                        3: { cellWidth: 15 }, // Min Qty
-                        4: { cellWidth: 20 }, // Current Qty
-                        5: { cellWidth: 45 }  // Remarks
+                        0: { cellWidth: 35 }, // Category
+                        1: { cellWidth: 70 }, // Equipment
+                        2: { cellWidth: 15 }, // Min Qty
+                        3: { cellWidth: 20 }, // Current Qty
+                        4: { cellWidth: 45 }  // Remarks
                     },
                     margin: { left: 14, right: 14 }
                 });
@@ -2218,7 +2234,8 @@
                     );
                 }
 
-                const fileName = `rescue_equipment_${now.getFullYear()}_${(now.getMonth()+1).toString().padStart(2,'0')}_${now.getDate().toString().padStart(2,'0')}.pdf`;
+                const safeStationName = stationName.replace(/\s+/g, '_').toLowerCase();
+                const fileName = `rescue_${safeStationName}_${now.getFullYear()}_${(now.getMonth()+1).toString().padStart(2,'0')}_${now.getDate().toString().padStart(2,'0')}.pdf`;
                 doc.save(fileName);
 
                 setTimeout(() => {
@@ -2229,11 +2246,11 @@
                 console.error("PDF Error:", error);
                 alert("Failed to generate PDF: " + error.message);
             } finally {
-                setTimeout(() => {
-                    pdfButton.classList.remove('loading');
-                    pdfButton.innerHTML = originalHTML;
-                    pdfButton.disabled = false;
-                }, 500);
+                // Re‑enable the buttons
+                pdfButtons.forEach(btn => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-file-pdf"></i> PDF';
+                });
             }
         }
 
