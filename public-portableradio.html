@@ -777,259 +777,263 @@
         }
 
         function createRadioCards(stations) {
-    const cardsGrid = document.getElementById('radioCardsGrid');
-    let html = '';
-    
-    stations.forEach(station => {
-        const radiosInStation = allRadioData.filter(data => data.location === station);
-        const count = radiosInStation.length;
-        
-        html += `
-            <div class="radio-card" onclick="showStationDetails('${station.replace(/'/g, "\\'")}')">
-                <div class="radio-card-header">
-                    <h3 class="radio-card-title">${station}</h3>
-                    <div class="radio-card-count">${count}</div>
-                </div>
-            </div>
-        `;
-    });
-    
-    if (cardsGrid) {
-        cardsGrid.innerHTML = html;
-    }
-}
-
-        // Function to show station details in modal 
-window.showStationDetails = function(station) {
-    const modal = document.getElementById('stationDetailsModal');
-    const modalTitle = document.getElementById('modalStationTitle');
-    const modalBody = document.getElementById('modalStationBody');
-    
-    modalTitle.textContent = `${station} - Portable Radios`;
-    
-    // Find all radios for this station
-    const stationRadios = allRadioData.filter(data => 
-        data.location === station
-    );
-    
-    if (!stationRadios.length) {
-        modalBody.innerHTML = `
-            <div style="text-align: center; padding: 30px;">
-                <i class="fas fa-exclamation-circle fa-3x" style="color: var(--light-text); margin-bottom: 20px;"></i>
-                <h4 style="color: var(--light-text); margin-bottom: 10px;">No Radios Available</h4>
-                <p style="color: var(--light-text);">No portable radios found at ${station}</p>
-            </div>
-        `;
-    } else {
-        // BUANG: Active/inactive counts dan status section
-        // TAMBAH: Search and sort controls
-        let html = `
-            <div class="detail-item">
-                <div class="detail-label">Station:</div>
-                <div class="detail-value">${station}</div>
-            </div>
+            const cardsGrid = document.getElementById('radioCardsGrid');
+            let html = '';
             
-            <div class="detail-item">
-                <div class="detail-label">Total Radios:</div>
-                <div class="detail-value">${stationRadios.length}</div>
-            </div>
-            
-            <!-- TAMBAHAN: Search and Sort Controls -->
-            <div class="detail-item" style="border-bottom: none; margin-bottom: 20px; padding-bottom: 0;">
-                <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 200px;">
-                        <input type="text" id="radioSearchInput" placeholder="Search by User ID or Name..." 
-                               style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--light-bg); color: var(--dark-text);">
-                    </div>
-                    <div style="min-width: 180px;">
-                        <select id="radioSortSelect" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--light-bg); color: var(--dark-text);">
-                            <option value="user-asc">Sort by User (A-Z)</option>
-                            <option value="user-desc">Sort by User (Z-A)</option>
-                            <option value="id-asc">Sort by Radio ID (A-Z)</option>
-                            <option value="id-desc">Sort by Radio ID (Z-A)</option>
-                            <option value="brand-asc">Sort by Brand (A-Z)</option>
-                            <option value="brand-desc">Sort by Brand (Z-A)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="detail-item" style="border-bottom: none; margin-bottom: 10px;">
-                <div class="detail-label">All Radios:</div>
-            </div>
-            
-            <div class="radio-list" id="radioListContainer">
-        `;
-        
-        // Function to render radio list
-        const renderRadioList = (radios) => {
-            let listHtml = '';
-            radios.forEach((radio, index) => {
-                //=Status class dan status display
-                listHtml += `
-                    <div class="radio-item" onclick="showRadioDetail('${radio.id}')">
-                        <div class="radio-item-header">
-                            <span class="radio-item-name">${radio.user || 'Unknown User'}</span>
-                            <span class="radio-item-id">${radio.radioId || 'No ID'}</span>
-                        </div>
-                        <div class="radio-item-details">
-                            <span>${radio.brand || 'Unknown Brand'}</span>
-                            <span>${radio.manufacturer || 'Unknown Manufacturer'}</span>
+            stations.forEach(station => {
+                const radiosInStation = allRadioData.filter(data => data.location === station);
+                const count = radiosInStation.length;
+                
+                html += `
+                    <div class="radio-card" onclick="showStationDetails('${station.replace(/'/g, "\\'")}')">
+                        <div class="radio-card-header">
+                            <h3 class="radio-card-title">${station}</h3>
+                            <div class="radio-card-count">${count}</div>
                         </div>
                     </div>
                 `;
             });
-            return listHtml;
-        };
-        
-        // Initial render
-        html += renderRadioList(stationRadios);
-        
-        html += `
-            </div>
-            <div style="text-align: center; margin-top: 15px; font-size: 12px; color: var(--light-text);">
-                <i class="fas fa-info-circle"></i> Click on any radio to view detailed information
-            </div>
-        `;
-        
-        modalBody.innerHTML = html;
-        
-        //  Setup search and sort event listeners
-        setTimeout(() => {
-            const searchInput = document.getElementById('radioSearchInput');
-            const sortSelect = document.getElementById('radioSortSelect');
             
-            // Store original station radios for this modal instance
-            let currentStationRadios = [...stationRadios];
-            
-            const updateRadioList = () => {
-                let filteredRadios = [...currentStationRadios];
-                
-                // Apply search filter
-                const searchTerm = searchInput.value.toLowerCase().trim();
-                if (searchTerm) {
-                    filteredRadios = filteredRadios.filter(radio => 
-                        (radio.user && radio.user.toLowerCase().includes(searchTerm)) ||
-                        (radio.radioId && radio.radioId.toLowerCase().includes(searchTerm)) ||
-                        (radio.brand && radio.brand.toLowerCase().includes(searchTerm)) ||
-                        (radio.manufacturer && radio.manufacturer.toLowerCase().includes(searchTerm))
-                    );
-                }
-                
-                // Apply sorting
-                const sortValue = sortSelect.value;
-                filteredRadios.sort((a, b) => {
-                    switch(sortValue) {
-                        case 'user-asc':
-                            return (a.user || '').localeCompare(b.user || '');
-                        case 'user-desc':
-                            return (b.user || '').localeCompare(a.user || '');
-                        case 'id-asc':
-                            return (a.radioId || '').localeCompare(b.radioId || '');
-                        case 'id-desc':
-                            return (b.radioId || '').localeCompare(a.radioId || '');
-                        case 'brand-asc':
-                            return (a.brand || '').localeCompare(b.brand || '');
-                        case 'brand-desc':
-                            return (b.brand || '').localeCompare(a.brand || '');
-                        default:
-                            return 0;
-                    }
-                });
-                
-                // Update the list
-                document.getElementById('radioListContainer').innerHTML = renderRadioList(filteredRadios);
-            };
-            
-            searchInput.addEventListener('input', updateRadioList);
-            sortSelect.addEventListener('change', updateRadioList);
-        }, 100);
-    }
-    
-    modal.classList.add('active');
-    
-    // Close modal when clicking outside
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-            closeModal();
+            if (cardsGrid) {
+                cardsGrid.innerHTML = html;
+            }
         }
-    });
-}
+
+        // Function to show station details in modal 
+        window.showStationDetails = function(station) {
+            const modal = document.getElementById('stationDetailsModal');
+            const modalTitle = document.getElementById('modalStationTitle');
+            const modalBody = document.getElementById('modalStationBody');
+            
+            modalTitle.textContent = `${station} - Portable Radios`;
+            
+            // Find all radios for this station
+            const stationRadios = allRadioData.filter(data => 
+                data.location === station
+            );
+            
+            if (!stationRadios.length) {
+                modalBody.innerHTML = `
+                    <div style="text-align: center; padding: 30px;">
+                        <i class="fas fa-exclamation-circle fa-3x" style="color: var(--light-text); margin-bottom: 20px;"></i>
+                        <h4 style="color: var(--light-text); margin-bottom: 10px;">No Radios Available</h4>
+                        <p style="color: var(--light-text);">No portable radios found at ${station}</p>
+                    </div>
+                `;
+            } else {
+                // BUANG: Active/inactive counts dan status section
+                // TAMBAH: Search and sort controls
+                let html = `
+                    <div class="detail-item">
+                        <div class="detail-label">Station:</div>
+                        <div class="detail-value">${station}</div>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <div class="detail-label">Total Radios:</div>
+                        <div class="detail-value">${stationRadios.length}</div>
+                    </div>
+                    
+                    <!-- TAMBAHAN: Search and Sort Controls -->
+                    <div class="detail-item" style="border-bottom: none; margin-bottom: 20px; padding-bottom: 0;">
+                        <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <input type="text" id="radioSearchInput" placeholder="Search by User ID or Name..." 
+                                       style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--light-bg); color: var(--dark-text);">
+                            </div>
+                            <div style="min-width: 180px;">
+                                <select id="radioSortSelect" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--light-bg); color: var(--dark-text);">
+                                    <option value="user-asc">Sort by User (A-Z)</option>
+                                    <option value="user-desc">Sort by User (Z-A)</option>
+                                    <option value="id-asc">Sort by Radio ID (A-Z)</option>
+                                    <option value="id-desc">Sort by Radio ID (Z-A)</option>
+                                    <option value="brand-asc">Sort by Brand (A-Z)</option>
+                                    <option value="brand-desc">Sort by Brand (Z-A)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-item" style="border-bottom: none; margin-bottom: 10px;">
+                        <div class="detail-label">All Radios:</div>
+                    </div>
+                    
+                    <div class="radio-list" id="radioListContainer">
+                `;
+                
+                // Function to render radio list
+                const renderRadioList = (radios) => {
+                    let listHtml = '';
+                    radios.forEach((radio, index) => {
+                        //=Status class dan status display
+                        listHtml += `
+                            <div class="radio-item" onclick="showRadioDetail('${radio.id}')">
+                                <div class="radio-item-header">
+                                    <span class="radio-item-name">${radio.user || 'Unknown User'}</span>
+                                    <span class="radio-item-id">${radio.radioId || 'No ID'}</span>
+                                </div>
+                                <div class="radio-item-details">
+                                    <span>${radio.brand || 'Unknown Brand'}</span>
+                                    <span>${radio.manufacturer || 'Unknown Manufacturer'}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    return listHtml;
+                };
+                
+                // Initial render
+                html += renderRadioList(stationRadios);
+                
+                html += `
+                    </div>
+                    <div style="text-align: center; margin-top: 15px; font-size: 12px; color: var(--light-text);">
+                        <i class="fas fa-info-circle"></i> Click on any radio to view detailed information
+                    </div>
+                `;
+                
+                modalBody.innerHTML = html;
+                
+                //  Setup search and sort event listeners
+                setTimeout(() => {
+                    const searchInput = document.getElementById('radioSearchInput');
+                    const sortSelect = document.getElementById('radioSortSelect');
+                    
+                    // Store original station radios for this modal instance
+                    let currentStationRadios = [...stationRadios];
+                    
+                    const updateRadioList = () => {
+                        let filteredRadios = [...currentStationRadios];
+                        
+                        // Apply search filter
+                        const searchTerm = searchInput.value.toLowerCase().trim();
+                        if (searchTerm) {
+                            filteredRadios = filteredRadios.filter(radio => 
+                                (radio.user && radio.user.toLowerCase().includes(searchTerm)) ||
+                                (radio.radioId && radio.radioId.toLowerCase().includes(searchTerm)) ||
+                                (radio.brand && radio.brand.toLowerCase().includes(searchTerm)) ||
+                                (radio.manufacturer && radio.manufacturer.toLowerCase().includes(searchTerm))
+                            );
+                        }
+                        
+                        // Apply sorting
+                        const sortValue = sortSelect.value;
+                        filteredRadios.sort((a, b) => {
+                            switch(sortValue) {
+                                case 'user-asc':
+                                    return (a.user || '').localeCompare(b.user || '');
+                                case 'user-desc':
+                                    return (b.user || '').localeCompare(a.user || '');
+                                case 'id-asc':
+                                    return (a.radioId || '').localeCompare(b.radioId || '');
+                                case 'id-desc':
+                                    return (b.radioId || '').localeCompare(a.radioId || '');
+                                case 'brand-asc':
+                                    return (a.brand || '').localeCompare(b.brand || '');
+                                case 'brand-desc':
+                                    return (b.brand || '').localeCompare(a.brand || '');
+                                default:
+                                    return 0;
+                            }
+                        });
+                        
+                        // Update the list
+                        document.getElementById('radioListContainer').innerHTML = renderRadioList(filteredRadios);
+                    };
+                    
+                    searchInput.addEventListener('input', updateRadioList);
+                    sortSelect.addEventListener('change', updateRadioList);
+                }, 100);
+            }
+            
+            modal.classList.add('active');
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+        }
 
         // Function to show radio detail - KEEPCARD SAMA DAN TIDAK BOLD
-window.showRadioDetail = function(radioId) {
-    const radioData = allRadioData.find(data => data.id === radioId);
-    
-    if (!radioData) {
-        alert("Radio data not found!");
-        return;
-    }
-    
-    const modal = document.getElementById('stationDetailsModal');
-    const modalTitle = document.getElementById('modalStationTitle');
-    const modalBody = document.getElementById('modalStationBody');
-    
-    modalTitle.textContent = `${radioData.user || 'Unknown User'} - Radio Details`;
-    
-    let html = `
-        <div class="detail-item">
-            <div class="detail-label">User:</div>
-            <div class="detail-value">${radioData.user || 'N/A'}</div>
-        </div>
-        
-        <div class="radio-details-grid">
-            <div class="detail-box">
-                <div class="detail-box-label">RADIO ID</div>
-                <div class="detail-box-value" style="font-weight: normal;">${radioData.radioId || 'N/A'}</div>
-            </div>
+        window.showRadioDetail = function(radioId) {
+            const radioData = allRadioData.find(data => data.id === radioId);
             
-            <div class="detail-box">
-                <div class="detail-box-label">SERIAL NUMBER</div>
-                <div class="detail-box-value" style="font-weight: normal;">${radioData.serialNumber || 'N/A'}</div>
-            </div>
+            if (!radioData) {
+                alert("Radio data not found!");
+                return;
+            }
             
-            <div class="detail-box">
-                <div class="detail-box-label">BRAND</div>
-                <div class="detail-box-value" style="font-weight: normal;">${radioData.brand || 'N/A'}</div>
-            </div>
+            const modal = document.getElementById('stationDetailsModal');
+            const modalTitle = document.getElementById('modalStationTitle');
+            const modalBody = document.getElementById('modalStationBody');
             
-            <div class="detail-box">
-                <div class="detail-box-label">MANUFACTURER</div>
-                <div class="detail-box-value" style="font-weight: normal;">${radioData.manufacturer || 'N/A'}</div>
-            </div>
+            modalTitle.textContent = `${radioData.user || 'Unknown User'} - Radio Details`;
             
-            <div class="detail-box">
-                <div class="detail-box-label">LOCATION</div>
-                <div class="detail-box-value" style="font-weight: normal;">${radioData.location || 'N/A'}</div>
-            </div>
+            let html = `
+                <div class="detail-item">
+                    <div class="detail-label">User:</div>
+                    <div class="detail-value">${radioData.user || 'N/A'}</div>
+                </div>
+                
+                <div class="radio-details-grid">
+                    <div class="detail-box">
+                        <div class="detail-box-label">RADIO ID</div>
+                        <div class="detail-box-value" style="font-weight: normal;">${radioData.radioId || 'N/A'}</div>
+                    </div>
+                    
+                    <div class="detail-box">
+                        <div class="detail-box-label">SERIAL NUMBER</div>
+                        <div class="detail-box-value" style="font-weight: normal;">${radioData.serialNumber || 'N/A'}</div>
+                    </div>
+                    
+                    <div class="detail-box">
+                        <div class="detail-box-label">BRAND</div>
+                        <div class="detail-box-value" style="font-weight: normal;">${radioData.brand || 'N/A'}</div>
+                    </div>
+                    
+                    <div class="detail-box">
+                        <div class="detail-box-label">MANUFACTURER</div>
+                        <div class="detail-box-value" style="font-weight: normal;">${radioData.manufacturer || 'N/A'}</div>
+                    </div>
+                    
+                    <div class="detail-box">
+                        <div class="detail-box-label">LOCATION</div>
+                        <div class="detail-box-value" style="font-weight: normal;">${radioData.location || 'N/A'}</div>
+                    </div>
+                    
+                    <div class="detail-box" style="grid-column: span 2;">
+                        <div class="detail-box-label">TAGGING</div>
+                        <div class="detail-box-value" style="font-weight: normal;">${radioData.tagging || 'N/A'}</div>
+                    </div>
+                    
+                    <div class="detail-box" style="grid-column: span 2;">
+                        <div class="detail-box-label">REMARKS</div>
+                        <div class="detail-box-value" style="font-weight: normal; white-space: pre-wrap;">${radioData.remarks || 'N/A'}</div>
+                    </div>
+
+                    <!-- CONDITION (TAMBAHAN) -->
+                    <div class="detail-box" style="grid-column: span 2;">
+                        <div class="detail-box-label">CONDITION</div>
+                        <div class="detail-box-value" style="font-weight: normal; white-space: pre-wrap;">${radioData.condition || 'N/A'}</div>
+                    </div>
+                </div>
+            `;
             
-            <!-- TAGGING CARD -->
-            <div class="detail-box" style="grid-column: span 2;">
-                <div class="detail-box-label">TAGGING</div>
-                <div class="detail-box-value" style="font-weight: normal;">${radioData.tagging || 'N/A'}</div>
-            </div>
+            // Add back button
+            html += `
+                <div style="margin-top: 25px; text-align: center;">
+                    <button onclick="showStationDetails('${radioData.location.replace(/'/g, "\\'")}')" 
+                            style="background: var(--primary-color); color: white; border: none; 
+                                   padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px;">
+                        <i class="fas fa-arrow-left"></i> Back to Station
+                    </button>
+                </div>
+            `;
             
-            <!-- REMARKS CARD -->
-            <div class="detail-box" style="grid-column: span 2;">
-                <div class="detail-box-label">REMARKS</div>
-                <div class="detail-box-value" style="font-weight: normal; white-space: pre-wrap;">${radioData.remarks || 'N/A'}</div>
-            </div>
-        </div>
-    `;
-    
-    // Add back button
-    html += `
-        <div style="margin-top: 25px; text-align: center;">
-            <button onclick="showStationDetails('${radioData.location.replace(/'/g, "\\'")}')" 
-                    style="background: var(--primary-color); color: white; border: none; 
-                           padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 14px;">
-                <i class="fas fa-arrow-left"></i> Back to Station
-            </button>
-        </div>
-    `;
-    
-    modalBody.innerHTML = html;
-}
+            modalBody.innerHTML = html;
+        }
         
 
         // Function to close modal
