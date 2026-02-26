@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="scanner.css">
     <style>
-        /* ========== YOUR EXACT STYLES (unchanged structure) ========== */
+        /* ========== YOUR EXACT STYLES (unchanged) ========== */
         body {
             background-image: url('images/rescue.jpg');
             background-size: cover;
@@ -33,7 +33,6 @@
         }
         .close-btn:hover { background-color: #c82333; }
 
-        /* table base – exactly like fire truck code */
         .equipment-table-container {
             width: 100%;
             overflow-x: auto;
@@ -210,7 +209,7 @@
         .modal-btn-secondary:hover { background: #5a6268; }
         .required-star { color: #dc3545; }
 
-        /* ========== 📱 MOBILE COMPACT – exactly like fire truck ========== */
+        /* ========== 📱 MOBILE COMPACT ========== */
         @media screen and (max-width: 768px) {
             .info-popup { padding: 10px; }
             .popup-header h1 { font-size: 1.3rem; }
@@ -219,9 +218,8 @@
                 gap: 10px;
                 padding: 15px;
             }
-            /* table becomes horizontally scrollable */
             .equipment-table {
-                min-width: 650px;  /* forces scroll on small screens */
+                min-width: 650px;
                 font-size: 0.85rem;
             }
             .equipment-table th,
@@ -260,7 +258,6 @@
             .inspection-modal-content { width: 95%; margin: 10px; }
         }
 
-        /* extra small */
         @media screen and (max-width: 480px) {
             .equipment-table th,
             .equipment-table td {
@@ -272,7 +269,7 @@
 </head>
 <body>
 
-    <!-- INSPECTION DETAILS MODAL (same) -->
+    <!-- INSPECTION DETAILS MODAL -->
     <div id="inspectionDetailsModalRescue" class="inspection-modal-overlay" style="display: none;">
         <div class="inspection-modal-content">
             <div class="inspection-modal-header">
@@ -374,7 +371,7 @@
             appId: "1:97561643123:web:92596bb20645124f68c206"
         };
 
-        // Maps (same as before)
+        // Maps
         const CATEGORY_MAP = { 'RO':'Rope Bag','TO':'Top Bag','BO':'Bottom Bag','AU':'Auxiliary','PP':'PPE' };
         const STATION_MAP = { 'MA':'Main Station','ST':'ST_AMBIGUOUS','SA':'Station A','SB':'Station B' };
         const STATION_OLD_MAP = { 'Station A':'ST A','Station B':'ST B' };
@@ -392,7 +389,10 @@
         let inspectionDetailsRescue = { inspectorName: '', shift: '', submitted: false };
         let isAmbiguousStation = false;
 
-        function sanitizeDocId(str) { return str.replace(/[^a-zA-Z0-9_-]/g, '_'); }
+        // Fungsi sanitasi yang lebih agresif – tukar semua aksara bukan alfanumerik, underscore, atau sempang kepada underscore
+        function sanitizeDocId(str) {
+            return str.replace(/[^a-zA-Z0-9_-]/g, '_');
+        }
 
         document.addEventListener('DOMContentLoaded', () => { initializeFirebase(); loadRescueDataFromURL(); });
 
@@ -424,7 +424,7 @@
         function loadRescueDataFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
             let identifier = urlParams.get('ropebag');
-            if (!identifier) { showError('No rope bag identifier.'); return; }
+            if (!identifier) { showError('No bag identifier.'); return; }
             identifier = decodeURIComponent(identifier);
             const parsed = parseQRIdentifier(identifier);
             if (!isAmbiguousStation && !parsed.station) { showError('Station not recognised.'); return; }
@@ -451,7 +451,7 @@
                 query = db.collection('rescueEquipment').where('station', 'in', stationQueryArray).where('category', '==', currentCategory);
             }
 
-            query.get().then(snapshot => {
+            query.get().then(async (snapshot) => {
                 showLoading(false);
                 // Filter out daily records (if any have inspectionDate)
                 const masterDocs = [];
@@ -492,18 +492,65 @@
                     isAmbiguousStation = false;
                 }
 
-                if (uniqueEquipment.length === 0) { createDefaultEquipment(); return; }
+                if (uniqueEquipment.length === 0) { 
+                    await createDefaultEquipment(); 
+                    return; 
+                }
 
                 // Filter by current station
                 equipmentData = uniqueEquipment.filter(item => {
                     const can = STATION_CANONICAL[item.station] || item.station;
                     return can === currentStation;
                 });
-                if (equipmentData.length === 0) { createDefaultEquipment(); return; }
+                if (equipmentData.length === 0) { 
+                    await createDefaultEquipment(); 
+                    return; 
+                }
+
+                // Reset data berdasarkan inspeksi hari ini
+                await resetWithTodaysInspections(equipmentData, currentStation, currentCategory);
 
                 populateEquipmentTable();
                 showInspectionDetailsModal();
             }).catch(err => { showLoading(false); showError(err.message); });
+        }
+
+        // ========== Fungsi reset berdasarkan inspeksi hari ini ==========
+        async function resetWithTodaysInspections(equipmentArray, station, category) {
+            try {
+                const todayStr = new Date().toISOString().split('T')[0];
+                const inspectionsSnapshot = await db.collection('rescueInspections')
+                    .where('station', '==', station)
+                    .where('category', '==', category)
+                    .where('date', '==', todayStr)
+                    .get();
+
+                const inspectionMap = new Map();
+                inspectionsSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    inspectionMap.set(data.equipment, {
+                        currentQuantity: data.currentQuantity || 0,
+                        remarks: data.remarks || '',
+                        status: data.status || 'Not Checked'
+                    });
+                });
+
+                for (let i = 0; i < equipmentArray.length; i++) {
+                    const item = equipmentArray[i];
+                    const insp = inspectionMap.get(item.equipment);
+                    if (insp) {
+                        item.currentQuantity = insp.currentQuantity;
+                        item.remarks = insp.remarks;
+                        item.status = insp.status;
+                    } else {
+                        item.currentQuantity = 0;
+                        item.remarks = '';
+                        item.status = 'Not Checked';
+                    }
+                }
+            } catch (err) {
+                console.warn('Gagal mendapatkan inspeksi hari ini, guna data master sebagai fallback', err);
+            }
         }
 
         function populateEquipmentTable() {
@@ -522,7 +569,7 @@
         }
 
         // ========== CREATE DEFAULT WITH DETERMINISTIC ID ==========
-        function createDefaultEquipment() {
+        async function createDefaultEquipment() {
             const defaultList = EQUIPMENT_DATABASE[currentCategory];
             if (!defaultList || defaultList.length === 0) {
                 equipmentData = [];
@@ -546,10 +593,9 @@
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
             });
-            batch.commit().then(() => {
-                console.log('✅ Default equipment created');
-                fetchEquipmentForStationAndCategory();
-            }).catch(err => showError(err.message));
+            await batch.commit();
+            console.log('✅ Default equipment created');
+            await fetchEquipmentForStationAndCategory();
         }
 
         // ========== INSPECTION MODAL ==========
@@ -621,11 +667,15 @@
                     await db.collection('rescueEquipment').doc(item.id).update(updated);
                     equipmentData[i] = { ...item, ...updated };
 
-                    const safeStation = currentStation.replace(/\s+/g,'_');
-                    const safeCategory = currentCategory.replace(/\s+/g,'_');
-                    const safeEq = item.equipment.replace(/\s+/g,'_');
+                    // Bina ID inspeksi yang selamat – tukar semua aksara bukan alfanumerik, underscore, sempang kepada underscore
+                    const safeStation = currentStation.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_-]/g, '_');
+                    const safeCategory = currentCategory.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_-]/g, '_');
+                    const safeEq = item.equipment.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_-]/g, '_');
                     const inspId = `${safeStation}_${safeCategory}_${safeEq}_${todayStr}`;
-                    await db.collection('rescueInspections').doc(inspId).set({
+                    // Langkah tambahan: pastikan tiada slash (walaupun sudah ditukar di atas)
+                    const safeInspId = inspId.replace(/\//g, '_');
+                    
+                    await db.collection('rescueInspections').doc(safeInspId).set({
                         station: currentStation, category: currentCategory, equipment: item.equipment,
                         currentQuantity: updated.currentQuantity, remarks: updated.remarks, status: updated.status,
                         inspector: inspectionDetailsRescue.inspectorName, shift: inspectionDetailsRescue.shift,
@@ -636,7 +686,10 @@
                 document.getElementById('saveSuccessMessage').style.display = 'flex';
                 setTimeout(() => document.getElementById('saveSuccessMessage').style.display = 'none', 2000);
                 setTimeout(() => toggleInspectionMode(), 2000);
-            } catch (err) { alert('Save failed: '+err.message); } finally {
+            } catch (err) { 
+                alert('Save failed: '+err.message); 
+                console.error(err);
+            } finally {
                 saveBtn.innerHTML = '<i class="fas fa-save"></i> SAVE ALL';
                 saveBtn.disabled = false;
             }
@@ -672,4 +725,3 @@
     </script>
 </body>
 </html>
-
