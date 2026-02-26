@@ -112,16 +112,15 @@
             }
         }
         
-        /* EQUIPMENT ITEM STYLES - UPDATED FOR COMPACT VIEW */
+        /* EQUIPMENT ITEM STYLES - UPDATED FOR COMPACT VIEW + REMARKS */
         .equipment-item {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px !important; /* Dikecilkan dari 18px 20px */
-            margin-bottom: 10px !important; /* Dikecilkan dari 15px */
+            flex-direction: column;
+            padding: 12px 15px !important;
+            margin-bottom: 10px !important;
             background-color: var(--light-bg);
-            border-radius: 8px !important; /* Dikecilkan dari 10px */
-            border-left: 3px solid var(--primary-color) !important; /* Dikecilkan dari 4px */
+            border-radius: 8px !important;
+            border-left: 3px solid var(--primary-color) !important;
             transition: all 0.3s ease;
         }
         
@@ -132,36 +131,37 @@
         
         .equipment-details {
             flex: 1;
-            padding-right: 10px;
+            margin-bottom: 8px;
         }
         
         .equipment-name {
             font-weight: 600;
             color: var(--dark-text);
-            margin-bottom: 3px !important; /* Dikecilkan dari 5px */
-            font-size: 15px !important; /* Dikecilkan dari 16px */
+            margin-bottom: 3px !important;
+            font-size: 15px !important;
         }
         
         .equipment-description {
-            font-size: 13px !important; /* Dikecilkan dari 14px */
+            font-size: 13px !important;
             color: var(--light-text);
-            margin-bottom: 5px !important; /* Dikecilkan dari 8px */
+            margin-bottom: 5px !important;
         }
         
         .equipment-code {
-            font-size: 11px !important; /* Dikecilkan dari 12px */
+            font-size: 11px !important;
             color: var(--secondary-color);
             background-color: rgba(0, 0, 0, 0.05);
-            padding: 2px 6px !important; /* Dikecilkan dari 3px 8px */
-            border-radius: 3px !important; /* Dikecilkan dari 4px */
+            padding: 2px 6px !important;
+            border-radius: 3px !important;
             display: inline-block;
         }
         
-        /* Checkbox style untuk equipment inspection */
-        .equipment-checkbox-container {
+        .equipment-actions {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             gap: 10px;
+            margin-top: 8px;
         }
         
         .equipment-checkbox {
@@ -189,6 +189,17 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+        }
+        
+        .equipment-remarks {
+            flex: 1;
+            min-width: 150px;
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
         }
         
         .checkbox-label {
@@ -352,6 +363,31 @@
         .status-incomplete {
             background-color: #e53e3e;
             color: white;
+        }
+        
+        /* Ensure table visibility */
+        .equipment-table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: white;
+        }
+        .equipment-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .equipment-table th,
+        .equipment-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .equipment-table th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -627,7 +663,7 @@
             completed: false,
             timestamp: null,
             vehicleInspectionData: [],
-            equipmentInspectionData: equipmentInspectionData
+            equipmentInspectionData: JSON.parse(JSON.stringify(equipmentInspectionData))
         };
         
         let inspectionDetails2000 = {
@@ -639,7 +675,7 @@
             completed: false,
             timestamp: null,
             vehicleInspectionData: [],
-            equipmentInspectionData: equipmentInspectionData
+            equipmentInspectionData: JSON.parse(JSON.stringify(equipmentInspectionData))
         };
         
         // Determine active shift based on current time
@@ -934,9 +970,7 @@
                                 inspectionDetails0800.vehicleInspectionData = initializeVehicleInspectionData();
                             }
                             if (!inspectionDetails0800.equipmentInspectionData) {
-                                inspectionDetails0800.equipmentInspectionData = equipmentInspectionData;
-                            } else {
-                                equipmentInspectionData = inspectionDetails0800.equipmentInspectionData;
+                                inspectionDetails0800.equipmentInspectionData = JSON.parse(JSON.stringify(equipmentInspectionData));
                             }
                         }
                         
@@ -946,14 +980,14 @@
                                 inspectionDetails2000.vehicleInspectionData = initializeVehicleInspectionData();
                             }
                             if (!inspectionDetails2000.equipmentInspectionData) {
-                                inspectionDetails2000.equipmentInspectionData = equipmentInspectionData;
+                                inspectionDetails2000.equipmentInspectionData = JSON.parse(JSON.stringify(equipmentInspectionData));
                             }
                         }
                     } else {
                         console.log("📝 No existing daily data, initializing new");
                         inspectionDetails0800.vehicleInspectionData = initializeVehicleInspectionData();
                         inspectionDetails2000.vehicleInspectionData = initializeVehicleInspectionData();
-                        inspectionDetails0800.equipmentInspectionData = equipmentInspectionData;
+                        inspectionDetails0800.equipmentInspectionData = JSON.parse(JSON.stringify(equipmentInspectionData));
                         inspectionDetails2000.equipmentInspectionData = JSON.parse(JSON.stringify(equipmentInspectionData));
                     }
                     
@@ -1231,6 +1265,17 @@
         // ================ VEHICLE INSPECTION FUNCTIONS ================ //
 
         function populateVehicleInspectionTable() {
+            // Ensure vehicleInspectionData is an array and has items
+            if (!Array.isArray(vehicleInspectionData) || vehicleInspectionData.length === 0) {
+                console.warn("vehicleInspectionData is empty, reinitializing...");
+                // Reinitialize from active shift data
+                if (currentInspectionTime === '0800-2000') {
+                    vehicleInspectionData = inspectionDetails0800.vehicleInspectionData = initializeVehicleInspectionData();
+                } else {
+                    vehicleInspectionData = inspectionDetails2000.vehicleInspectionData = initializeVehicleInspectionData();
+                }
+            }
+
             const tableBody = document.getElementById('vehicleInspectionTableBody');
             
             let currentData = vehicleInspectionData;
@@ -1397,6 +1442,7 @@
                 const storedItem = categoryData && categoryData.items ? 
                     categoryData.items.find(i => i.id === item.id) : null;
                 const isInspected = storedItem ? storedItem.inspected : false;
+                const remarks = storedItem ? storedItem.remarks || '' : '';
                 
                 html += `
                     <div class="equipment-item ${isInspected ? 'inspected' : ''}" id="equipment-${item.id}">
@@ -1405,12 +1451,17 @@
                             <div class="equipment-description">${item.description} <strong>(${item.defaultQty})</strong></div>
                             <span class="equipment-code">${item.id}</span>
                         </div>
-                        <div class="equipment-checkbox-container">
+                        <div class="equipment-actions">
                             <input type="checkbox" 
                                    class="equipment-checkbox"
                                    id="checkbox-${item.id}"
                                    ${isInspected ? 'checked' : ''}
                                    onchange="updateEquipmentCheckbox('${item.id}', this.checked, ${item.defaultQty})">
+                            <textarea 
+                                class="equipment-remarks" 
+                                id="remarks-${item.id}"
+                                placeholder="Remarks (if any)"
+                                onchange="updateEquipmentRemarks('${item.id}', this.value)">${remarks}</textarea>
                         </div>
                     </div>
                 `;
@@ -1434,6 +1485,7 @@
                     id: itemId,
                     inspected: isChecked,
                     inspectedQty: isChecked ? defaultQty : 0,
+                    remarks: '',
                     timestamp: new Date().toISOString()
                 });
             } else {
@@ -1441,9 +1493,33 @@
                 equipmentInspectionData[currentCategory].items[itemIndex].inspected = isChecked;
                 equipmentInspectionData[currentCategory].items[itemIndex].inspectedQty = isChecked ? defaultQty : 0;
                 equipmentInspectionData[currentCategory].items[itemIndex].timestamp = new Date().toISOString();
+                // remarks remain unchanged
             }
             
             console.log(`📝 Updated equipment ${itemId} inspection status: ${isChecked} in category ${currentCategory}`);
+        }
+
+        function updateEquipmentRemarks(itemId, remarks) {
+            if (!equipmentInspectionData[currentCategory]) {
+                equipmentInspectionData[currentCategory] = { items: [], completed: false };
+            }
+            
+            let itemIndex = equipmentInspectionData[currentCategory].items.findIndex(i => i.id === itemId);
+            
+            if (itemIndex === -1) {
+                // Item not yet inspected, add with default unchecked
+                equipmentInspectionData[currentCategory].items.push({
+                    id: itemId,
+                    inspected: false,
+                    inspectedQty: 0,
+                    remarks: remarks,
+                    timestamp: new Date().toISOString()
+                });
+            } else {
+                equipmentInspectionData[currentCategory].items[itemIndex].remarks = remarks;
+            }
+            
+            console.log(`📝 Updated equipment ${itemId} remarks: ${remarks}`);
         }
 
         function saveEquipmentInspection() {
@@ -1518,319 +1594,343 @@
             }
         }
 
-        
-        // ================ PDF FUNCTION ================ //
+        // ================ UPDATED PDF FUNCTION (with combined equipment table) ================ //
+        function saveAsPDF() {
+            if (!window.jspdf) {
+                alert('PDF library not loaded. Please check internet connection.');
+                return;
+            }
 
-function saveAsPDF() {
-    if (!window.jspdf) {
-        alert('PDF library not loaded. Please check internet connection.');
-        return;
-    }
-    
-    try {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
-        
-        // Set margins
-        const marginLeft = 10;
-        const marginRight = 10;
-        const pageWidth = doc.internal.pageSize.width;
-        
-        // ========== HEADER SECTION ==========
-        doc.setFontSize(16);
-        doc.setFont("helvetica", "bold");
-        doc.text("CENTRAL EMERGENCY & FIRE SERVICES RESPONSE", pageWidth/2, 15, { align: "center" });
-        
-        doc.setFontSize(14);
-        doc.text("VEHICLES & EQUIPMENT CHECKLIST", pageWidth/2, 22, { align: "center" });
-        
-        // ========== VEHICLE INFORMATION ==========
-        let yPos = 35;
-        
-        // Line 1: RSV TYPE
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
-        doc.text("RSV TYPE : ", marginLeft, yPos);
-        doc.setFont("helvetica", "normal");
-        doc.text(rsvType, marginLeft + 35, yPos);
-        
-        // Line 2: DATE and VEHICLE NUMBER
-        yPos += 7;
-        
-        const now = new Date();
-        const monthYear = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
-        
-        doc.setFont("helvetica", "bold");
-        doc.text("DATE : ", marginLeft, yPos);
-        doc.setFont("helvetica", "normal");
-        doc.text(monthYear, marginLeft + 20, yPos);
-        
-        doc.setFont("helvetica", "bold");
-        doc.text("VEHICLE NUMBER : ", marginLeft + 60, yPos);
-        doc.setFont("helvetica", "normal");
-        const vehicleNumber = document.getElementById('vehicleNumber')?.textContent || 'N/A';
-        doc.text(vehicleNumber, marginLeft + 105, yPos);
-        
-        // Line 3: TIME, NAME, SHIFT
-        yPos += 7;
-        
-        doc.setFont("helvetica", "bold");
-        doc.text("TIME : ", marginLeft, yPos);
-        doc.setFont("helvetica", "normal");
-        doc.text("0800 - 2000", marginLeft + 18, yPos);
-        
-        doc.setFont("helvetica", "bold");
-        doc.text("NAME : ", marginLeft + 45, yPos);
-        doc.setFont("helvetica", "normal");
-        const inspectName = inspectionDetails0800?.inspectBy || inspectionDetails2000?.inspectBy || "N/A";
-        doc.text(inspectName, marginLeft + 62, yPos);
-        
-        doc.setFont("helvetica", "bold");
-        doc.text("SHIFT : ", marginLeft + 90, yPos);
-        doc.setFont("helvetica", "normal");
-        const shiftValue = inspectionDetails0800?.shift || inspectionDetails2000?.shift || "N/A";
-        doc.text(shiftValue, marginLeft + 105, yPos);
-        
-        yPos += 15;
-        
-        // ========== VEHICLE INSPECTION TABLE ==========
-        // Table Header
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "bold");
-        
-        // Column headers
-        doc.text("TIME", marginLeft, yPos);
-        doc.text("INSPECTION CHECKLIST", marginLeft + 15, yPos);
-        doc.text("0800-2000", marginLeft + 90, yPos);
-        doc.text("2000-0800", marginLeft + 115, yPos);
-        
-        // Draw header line
-        yPos += 3;
-        doc.setLineWidth(0.5);
-        doc.line(marginLeft, yPos, pageWidth - marginRight, yPos);
-        
-        yPos += 5;
-        
-        // Get inspection data
-        const vehicleData0800 = inspectionDetails0800.vehicleInspectionData;
-        const vehicleData2000 = inspectionDetails2000.vehicleInspectionData;
-        
-        // Vehicle Inspection Items
-        vehicleInspectionItems.forEach((item, index) => {
-            // Number
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(10);
-            doc.text(`${index + 1}.`, marginLeft, yPos);
-            
-            // Item name
-            const itemName = item.name.length > 25 ? item.name.substring(0, 25) + "..." : item.name;
-            doc.text(itemName, marginLeft + 10, yPos);
-            
-            // 0800-2000 value
-            const data0800 = vehicleData0800[index];
-            let value0800 = "BROKEN";
-            
-            if (data0800) {
-                if (item.type === "textfield") {
-                    if (item.name === "FUEL LEVEL") {
-                        value0800 = data0800.value ? `${data0800.value}%` : "BROKEN";
-                    } else if (item.name === "MILLAGE / ODOMETER") {
-                        value0800 = data0800.value ? data0800.value : "BROKEN";
-                    }
-                } else {
-                    value0800 = data0800.checked ? "OK" : "BROKEN";
-                }
-            }
-            doc.text(value0800, marginLeft + 95, yPos, { align: "center" });
-            
-            // 2000-0800 value
-            const data2000 = vehicleData2000[index];
-            let value2000 = "BROKEN";
-            
-            if (data2000) {
-                if (item.type === "textfield") {
-                    if (item.name === "FUEL LEVEL") {
-                        value2000 = data2000.value ? `${data2000.value}%` : "BROKEN";
-                    } else if (item.name === "MILLAGE / ODOMETER") {
-                        value2000 = data2000.value ? data2000.value : "BROKEN";
-                    }
-                } else {
-                    value2000 = data2000.checked ? "OK" : "BROKEN";
-                }
-            }
-            doc.text(value2000, marginLeft + 120, yPos, { align: "center" });
-            
-            yPos += 5;
-            
-            // Page break handling
-            if (yPos > 270 && index < vehicleInspectionItems.length - 1) {
-                doc.addPage();
-                yPos = 20;
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+
+                const marginLeft = 10;
+                const marginRight = 10;
+                const pageWidth = doc.internal.pageSize.width;
+
+                // ========== HEADER ==========
+                doc.setFontSize(16);
+                doc.setFont("helvetica", "bold");
+                doc.text("CENTRAL EMERGENCY & FIRE SERVICES RESPONSE", pageWidth / 2, 15, { align: "center" });
+
+                doc.setFontSize(14);
+                doc.text("RAPID SUPPORT VEHICLE (RSV) INSPECTION", pageWidth / 2, 22, { align: "center" });
+
+                // ========== VEHICLE INFORMATION ==========
+                let yPos = 35;
+
+                // Line 1: RSV TYPE
+                doc.setFontSize(12);
+                doc.setFont("helvetica", "bold");
+                doc.text("RSV TYPE : ", marginLeft, yPos);
+                doc.setFont("helvetica", "normal");
+                doc.text(rsvType, marginLeft + 35, yPos);
+
+                // Line 2: DATE and VEHICLE NUMBER
+                yPos += 7;
+                const now = new Date();
+                const fullDate = now.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+
+                doc.setFont("helvetica", "bold");
+                doc.text("DATE:", marginLeft, yPos);
+                doc.setFont("helvetica", "normal");
+                doc.text(fullDate, marginLeft + 15, yPos);
+
+                doc.setFont("helvetica", "bold");
+                doc.text("VEHICLE NUMBER", marginLeft + 70, yPos);
+                doc.setFont("helvetica", "normal");
+                const vehicleNumber = document.getElementById('vehicleNumber')?.textContent || 'N/A';
+                doc.text(vehicleNumber, marginLeft + 110, yPos);
+
+                // Line 3: TIME, NAME, SHIFT
+                yPos += 7;
+                doc.setFont("helvetica", "bold");
+                doc.text("TIME:", marginLeft, yPos);
+                doc.setFont("helvetica", "normal");
+                doc.text("0800 - 2000", marginLeft + 15, yPos);
+
+                doc.setFont("helvetica", "bold");
+                doc.text("NAME:", marginLeft + 50, yPos);
+                doc.setFont("helvetica", "normal");
+                const inspectName = inspectionDetails0800?.inspectBy || inspectionDetails2000?.inspectBy || "N/A";
+                doc.text(inspectName, marginLeft + 68, yPos);
+
+                doc.setFont("helvetica", "bold");
+                doc.text("SHIFT:", marginLeft + 110, yPos);
+                doc.setFont("helvetica", "normal");
+                const shiftValue = inspectionDetails0800?.shift || inspectionDetails2000?.shift || "N/A";
+                doc.text(shiftValue, marginLeft + 125, yPos);
+
+                yPos += 15;
+
+                // ========== VEHICLE INSPECTION TABLE HEADER ==========
                 doc.setFontSize(11);
                 doc.setFont("helvetica", "bold");
-                doc.text("NO", marginLeft, yPos);
-                doc.text("INSPECTION CHECKLIST", marginLeft + 15, yPos);
-                doc.text("0800-2000", marginLeft + 90, yPos);
-                doc.text("2000-0800", marginLeft + 115, yPos);
-                yPos += 8;
-            }
-        });
-        
-        // ========== EQUIPMENT INSPECTION SECTION ==========
-        yPos += 10;
-        
-        if (yPos > 250) {
-            doc.addPage();
-            yPos = 20;
-        }
-        
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "bold");
-        doc.text("EQUIPMENT INSPECTION SUMMARY", marginLeft, yPos);
-        
-        // Draw header line
-        yPos += 3;
-        doc.line(marginLeft, yPos, pageWidth - marginRight, yPos);
-        yPos += 5;
-        
-        // Equipment Categories
-        let categoryCounter = 1;
-        equipmentCategories.forEach((category) => {
-            if (yPos > 270) {
-                doc.addPage();
-                yPos = 20;
-            }
-            
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(10);
-            doc.text(`${categoryCounter}. ${category.name}`, marginLeft, yPos);
-            yPos += 5;
-            
-            const categoryData0800 = inspectionDetails0800.equipmentInspectionData[category.id];
-            const categoryData2000 = inspectionDetails2000.equipmentInspectionData[category.id];
-            
-            // Add sub-header for equipment list
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(9);
-            doc.text("Equipment", marginLeft + 5, yPos);
-            doc.text("Qty", marginLeft + 100, yPos);
-            doc.text("0800-2000", marginLeft + 115, yPos);
-            doc.text("2000-0800", marginLeft + 140, yPos);
-            yPos += 3;
-            
-            // Draw sub-header line
-            doc.line(marginLeft, yPos, pageWidth - marginRight, yPos);
-            yPos += 4;
-            
-            // Equipment items
-            category.items.forEach((item, itemIndex) => {
-                if (yPos > 270) {
-                    doc.addPage();
-                    yPos = 20;
+
+                // Tentukan kedudukan lajur (pastikan tidak bertindih)
+                const colChecklist = marginLeft;          // Nama item
+                const col0800Status = marginLeft + 55;    // Status 0800-2000
+                const col0800Remarks = marginLeft + 80;   // Remarks 0800-2000
+                const col2000Status = marginLeft + 115;   // Status 2000-0800
+                const col2000Remarks = marginLeft + 140;  // Remarks 2000-0800
+
+                doc.text("INSPECTION CHECKLIST", colChecklist, yPos);
+                doc.text("0800-2000", col0800Status, yPos);
+                doc.text("Remarks", col0800Remarks, yPos);
+                doc.text("2000-0800", col2000Status, yPos);
+                doc.text("Remarks", col2000Remarks, yPos);
+
+                yPos += 3;
+                doc.setLineWidth(0.5);
+                doc.line(marginLeft, yPos, pageWidth - marginRight, yPos);
+                yPos += 5;
+
+                // Data vehicle inspection
+                const vehicleData0800 = inspectionDetails0800.vehicleInspectionData;
+                const vehicleData2000 = inspectionDetails2000.vehicleInspectionData;
+
+                // Fungsi helper untuk mendapatkan status (ATTENTION / OK / nilai)
+                function getStatus(item, data) {
+                    if (!data) return ""; // data tidak wujud (shift tidak lengkap)
+                    if (item.type === "textfield") {
+                        // Untuk text field, jika ada nilai papar nilai, jika kosong "ATTENTION"
+                        if (item.name === "FUEL LEVEL") {
+                            return data.value ? `${data.value}%` : "ATTENTION";
+                        } else if (item.name === "MILLAGE / ODOMETER") {
+                            return data.value ? data.value : "ATTENTION";
+                        } else {
+                            return data.value ? data.value : "ATTENTION";
+                        }
+                    } else {
+                        // Checkbox: OK jika checked, jika tidak "ATTENTION"
+                        return data.checked ? "OK" : "ATTENTION";
+                    }
                 }
-                
-                // Get inspection status for both shifts
-                const item0800 = categoryData0800?.items?.find(i => i.id === item.id);
-                const item2000 = categoryData2000?.items?.find(i => i.id === item.id);
-                
-                const status0800 = item0800 ? (item0800.inspected ? "✓" : "✗") : "✗";
-                const status2000 = item2000 ? (item2000.inspected ? "✓" : "✗") : "✗";
-                const inspectedQty0800 = item0800 ? item0800.inspectedQty : 0;
-                const inspectedQty2000 = item2000 ? item2000.inspectedQty : 0;
-                
-                doc.setFont("helvetica", "normal");
-                doc.setFontSize(9);
-                doc.text(`   ${itemIndex + 1}. ${item.name}`, marginLeft + 5, yPos);
-                doc.text(`${item.defaultQty}`, marginLeft + 105, yPos, { align: "center" });
-                doc.text(`${inspectedQty0800}`, marginLeft + 120, yPos, { align: "center" });
-                doc.text(`${inspectedQty2000}`, marginLeft + 145, yPos, { align: "center" });
-                
-                yPos += 4;
-            });
-            
-            yPos += 5;
-            categoryCounter++;
-        });
-        
-        // ========== INSPECTION DETAILS TABLE ==========
-        yPos += 10;
-        
-        if (yPos > 250) {
-            doc.addPage();
-            yPos = 20;
-        }
-        
-        // Create inspection summary table
-        const inspectionSummaryData = [];
-        
-        // Header row
-        inspectionSummaryData.push([
-            { content: "", styles: { fontStyle: 'bold', fillColor: [220, 220, 220] } },
-            { content: "INSPECT BY", styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } },
-            { content: "", styles: { fontStyle: 'bold', fillColor: [220, 220, 220] } },
-            { content: "SWC/WC", styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } },
-            { content: "", styles: { fontStyle: 'bold', fillColor: [220, 220, 220] } }
-        ]);
-        
-        // Sub-header row
-        inspectionSummaryData.push([
-            { content: "", styles: { fontStyle: 'bold' } },
-            { content: "0800-2000", styles: { fontStyle: 'bold', halign: 'center' } },
-            { content: "2000-0800", styles: { fontStyle: 'bold', halign: 'center' } },
-            { content: "0800-2000", styles: { fontStyle: 'bold', halign: 'center' } },
-            { content: "2000-0800", styles: { fontStyle: 'bold', halign: 'center' } }
-        ]);
-        
-        // NAME row
-        inspectionSummaryData.push([
-            { content: "NAME", styles: { fontStyle: 'bold' } },
-            { content: inspectionDetails0800.completed ? inspectionDetails0800.inspectBy || "-" : "-", styles: { halign: 'center' } },
-            { content: inspectionDetails2000.completed ? inspectionDetails2000.inspectBy || "-" : "-", styles: { halign: 'center' } },
-            { content: inspectionDetails0800.completed ? inspectionDetails0800.swcwc || "-" : "-", styles: { halign: 'center' } },
-            { content: inspectionDetails2000.completed ? inspectionDetails2000.swcwc || "-" : "-", styles: { halign: 'center' } }
-        ]);
-        
-        // SIGNATURE row - Single line with empty cells (kotak kosong)
-        inspectionSummaryData.push([
-            { content: "SIGNATURE", styles: { fontStyle: 'bold' } },
-            { content: "", styles: { minCellHeight: 15 } },
-            { content: "", styles: { minCellHeight: 15 } },
-            { content: "", styles: { minCellHeight: 15 } },
-            { content: "", styles: { minCellHeight: 15 } }
-        ]);
-        
-        // Create table
-        doc.autoTable({
-            startY: yPos,
-            head: [],
-            body: inspectionSummaryData,
-            theme: 'grid',
-            tableWidth: pageWidth - marginLeft - marginRight,
-            margin: { left: marginLeft },
-            styles: { 
-                fontSize: 10, 
-                cellPadding: 3,
-                minCellHeight: 10  // Pastikan satu baris sahaja
-            },
-            columnStyles: {
-                0: { cellWidth: 30, fontStyle: 'bold' },  // Width cukup untuk "SIGNATURE"
-                1: { cellWidth: 35, halign: 'center' },
-                2: { cellWidth: 35, halign: 'center' },
-                3: { cellWidth: 35, halign: 'center' },
-                4: { cellWidth: 35, halign: 'center' }
+
+                // Loop setiap item vehicle inspection
+                vehicleInspectionItems.forEach((item, index) => {
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(10);
+
+                    // Nombor dan nama item (potong jika terlalu panjang)
+                    let itemText = `${index + 1}. ${item.name}`;
+                    if (doc.getTextWidth(itemText) > 50) {
+                        itemText = itemText.substring(0, 35) + "...";
+                    }
+                    doc.text(itemText, colChecklist, yPos);
+
+                    // 0800-2000 Status
+                    let status0800 = "";
+                    if (inspectionDetails0800.completed && vehicleData0800[index]) {
+                        status0800 = getStatus(item, vehicleData0800[index]);
+                    }
+                    doc.text(status0800, col0800Status, yPos);
+
+                    // 0800-2000 Remarks
+                    let remarks0800 = "";
+                    if (inspectionDetails0800.completed && vehicleData0800[index] && vehicleData0800[index].remarks) {
+                        remarks0800 = vehicleData0800[index].remarks;
+                    }
+                    doc.text(remarks0800, col0800Remarks, yPos);
+
+                    // 2000-0800 Status
+                    let status2000 = "";
+                    if (inspectionDetails2000.completed && vehicleData2000[index]) {
+                        status2000 = getStatus(item, vehicleData2000[index]);
+                    }
+                    doc.text(status2000, col2000Status, yPos);
+
+                    // 2000-0800 Remarks
+                    let remarks2000 = "";
+                    if (inspectionDetails2000.completed && vehicleData2000[index] && vehicleData2000[index].remarks) {
+                        remarks2000 = vehicleData2000[index].remarks;
+                    }
+                    doc.text(remarks2000, col2000Remarks, yPos);
+
+                    yPos += 5;
+
+                    // Jika hampir hujung halaman, tambah muka surat baru
+                    if (yPos > 270 && index < vehicleInspectionItems.length - 1) {
+                        doc.addPage();
+                        yPos = 20;
+
+                        // Ulang header jadual di halaman baru
+                        doc.setFontSize(11);
+                        doc.setFont("helvetica", "bold");
+                        doc.text("INSPECTION CHECKLIST", colChecklist, yPos);
+                        doc.text("0800-2000", col0800Status, yPos);
+                        doc.text("Remarks", col0800Remarks, yPos);
+                        doc.text("2000-0800", col2000Status, yPos);
+                        doc.text("Remarks", col2000Remarks, yPos);
+                        yPos += 8;
+                    }
+                });
+
+                // ========== EQUIPMENT INSPECTION TABLE (COMBINED) ==========
+                yPos += 15;
+
+                // Sediakan data untuk autoTable
+                const equipBody = [];
+
+                // Fungsi untuk mendapatkan status equipment bagi sesuatu shift
+                function getEquipStatus(shiftData, categoryId, item) {
+                    if (!shiftData || !shiftData[categoryId]) return "";
+                    const catData = shiftData[categoryId];
+                    const storedItem = catData.items ? catData.items.find(i => i.id === item.id) : null;
+                    if (!storedItem) return "NOT RECORDED";
+                    if (storedItem.inspected) {
+                        return `OK (${storedItem.inspectedQty || item.defaultQty})`;
+                    } else {
+                        return storedItem.remarks ? `ATTENTION (${storedItem.remarks})` : "ATTENTION";
+                    }
+                }
+
+                // Gelung setiap kategori
+                equipmentCategories.forEach((category) => {
+                    // Baris tajuk kategori (colSpan 5)
+                    equipBody.push([{ content: category.name, colSpan: 5, styles: { fillColor: [220, 220, 220], fontStyle: 'bold' } }]);
+
+                    // Baris untuk setiap item
+                    category.items.forEach((item) => {
+                        // Status dan remarks untuk 0800
+                        let status0800 = "", remarks0800 = "";
+                        if (inspectionDetails0800.completed) {
+                            const catData0800 = inspectionDetails0800.equipmentInspectionData[category.id];
+                            const stored0800 = catData0800?.items?.find(i => i.id === item.id);
+                            if (stored0800) {
+                                if (stored0800.inspected) {
+                                    status0800 = `OK (${stored0800.inspectedQty || item.defaultQty})`;
+                                } else {
+                                    status0800 = "ATTENTION";
+                                }
+                                remarks0800 = stored0800.remarks || "";
+                            } else {
+                                status0800 = "NOT RECORDED";
+                            }
+                        } else {
+                            status0800 = "";
+                            remarks0800 = "";
+                        }
+
+                        // Status dan remarks untuk 2000
+                        let status2000 = "", remarks2000 = "";
+                        if (inspectionDetails2000.completed) {
+                            const catData2000 = inspectionDetails2000.equipmentInspectionData[category.id];
+                            const stored2000 = catData2000?.items?.find(i => i.id === item.id);
+                            if (stored2000) {
+                                if (stored2000.inspected) {
+                                    status2000 = `OK (${stored2000.inspectedQty || item.defaultQty})`;
+                                } else {
+                                    status2000 = "ATTENTION";
+                                }
+                                remarks2000 = stored2000.remarks || "";
+                            } else {
+                                status2000 = "NOT RECORDED";
+                            }
+                        } else {
+                            status2000 = "";
+                            remarks2000 = "";
+                        }
+
+                        equipBody.push([
+                            { content: `   ${item.name}`, styles: { fontSize: 9 } },
+                            { content: status0800, styles: { fontSize: 9 } },
+                            { content: remarks0800, styles: { fontSize: 9 } },
+                            { content: status2000, styles: { fontSize: 9 } },
+                            { content: remarks2000, styles: { fontSize: 9 } }
+                        ]);
+                    });
+                });
+
+                // Jika ada data equipment, cetak dengan autoTable
+                if (equipBody.length > 0) {
+                    doc.autoTable({
+                        startY: yPos,
+                        head: [[
+                            { content: 'EQUIPMENT ITEM', styles: { fontStyle: 'bold', fillColor: [74, 108, 247], textColor: 255 } },
+                            { content: '0800-2000', styles: { fontStyle: 'bold', fillColor: [74, 108, 247], textColor: 255 } },
+                            { content: 'Remarks', styles: { fontStyle: 'bold', fillColor: [74, 108, 247], textColor: 255 } },
+                            { content: '2000-0800', styles: { fontStyle: 'bold', fillColor: [74, 108, 247], textColor: 255 } },
+                            { content: 'Remarks', styles: { fontStyle: 'bold', fillColor: [74, 108, 247], textColor: 255 } }
+                        ]],
+                        body: equipBody,
+                        theme: 'grid',
+                        margin: { left: marginLeft, right: marginRight },
+                        styles: { fontSize: 9, cellPadding: 2 },
+                        columnStyles: {
+                            0: { cellWidth: 70 },
+                            1: { cellWidth: 30, halign: 'center' },
+                            2: { cellWidth: 35 },
+                            3: { cellWidth: 30, halign: 'center' },
+                            4: { cellWidth: 35 }
+                        },
+                        didDrawPage: (data) => {
+                            // Kemaskini yPos selepas table
+                            yPos = data.cursor.y + 10;
+                        }
+                    });
+                } else {
+                    // Tiada data equipment, tulis mesej
+                    doc.setFontSize(10);
+                    doc.text("No equipment inspection data available.", marginLeft, yPos);
+                    yPos += 10;
+                }
+
+                // ========== INSPECTION DETAILS TABLE ==========
+                yPos += 10;
+
+                const inspectionSummaryData = [
+                    [{ content: "", styles: { fontStyle: 'bold', fillColor: [220, 220, 220] } },
+                     { content: "INSPECT BY", styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } },
+                     { content: "", styles: { fontStyle: 'bold', fillColor: [220, 220, 220] } },
+                     { content: "SWC/WC", styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } },
+                     { content: "", styles: { fontStyle: 'bold', fillColor: [220, 220, 220] } }],
+                    [{ content: "", styles: { fontStyle: 'bold' } },
+                     { content: "0800-2000", styles: { fontStyle: 'bold', halign: 'center' } },
+                     { content: "2000-0800", styles: { fontStyle: 'bold', halign: 'center' } },
+                     { content: "0800-2000", styles: { fontStyle: 'bold', halign: 'center' } },
+                     { content: "2000-0800", styles: { fontStyle: 'bold', halign: 'center' } }],
+                    [{ content: "NAME", styles: { fontStyle: 'bold' } },
+                     { content: inspectionDetails0800.completed ? inspectionDetails0800.inspectBy || "-" : "-", styles: { halign: 'center' } },
+                     { content: inspectionDetails2000.completed ? inspectionDetails2000.inspectBy || "-" : "-", styles: { halign: 'center' } },
+                     { content: inspectionDetails0800.completed ? inspectionDetails0800.swcwc || "-" : "-", styles: { halign: 'center' } },
+                     { content: inspectionDetails2000.completed ? inspectionDetails2000.swcwc || "-" : "-", styles: { halign: 'center' } }],
+                    [{ content: "SIGNATURE", styles: { fontStyle: 'bold' } },
+                     { content: "", styles: { minCellHeight: 15 } },
+                     { content: "", styles: { minCellHeight: 15 } },
+                     { content: "", styles: { minCellHeight: 15 } },
+                     { content: "", styles: { minCellHeight: 15 } }]
+                ];
+
+                doc.autoTable({
+                    startY: yPos,
+                    head: [],
+                    body: inspectionSummaryData,
+                    theme: 'grid',
+                    tableWidth: pageWidth - marginLeft - marginRight,
+                    margin: { left: marginLeft },
+                    styles: { fontSize: 10, cellPadding: 3 },
+                    columnStyles: {
+                        0: { cellWidth: 25, fontStyle: 'bold' },
+                        1: { cellWidth: 35, halign: 'center' },
+                        2: { cellWidth: 35, halign: 'center' },
+                        3: { cellWidth: 35, halign: 'center' },
+                        4: { cellWidth: 35, halign: 'center' }
+                    }
+                });
+
+                // ========== SIMPAN PDF ==========
+                const dateStr = fullDate.replace(/ /g, '_');
+                const fileName = `RSV_${rsvType}_Inspection_${vehicleNumber}_${dateStr}.pdf`;
+                doc.save(fileName);
+
+                console.log('✅ PDF generated successfully with combined equipment table');
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('Error generating PDF: ' + error.message);
             }
-        });
-        
-        // ========== SAVE PDF ==========
-        const fileName = `RSV_${rsvType}_Inspection_${vehicleNumber}_${monthYear.replace(' ', '_')}.pdf`;
-        doc.save(fileName);
-        
-        console.log('✅ PDF generated successfully for RSV');
-    } catch (error) {
-        console.error('Error generating PDF:', error);
-        alert('Error generating PDF: ' + error.message);
-    }
-}
+        }
 
         // ================ UTILITY FUNCTIONS ================ //
 
@@ -1869,4 +1969,3 @@ function saveAsPDF() {
     </script>
 </body>
 </html>
-
