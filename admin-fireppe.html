@@ -684,10 +684,58 @@
             box-shadow: 0 3px 10px rgba(0,0,0,0.1);
             margin-top: 15px;
             margin-bottom: 30px;
+            overflow-x: auto;
         }
 
         [data-theme="dark"] .ppe-table-container {
             background: #2d3748;
+        }
+
+        /* ========== FIXED HEADER STYLES FOR PPE STOCK TABLES ========== */
+        .ppe-table-container table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto; /* Let columns adjust based on content */
+        }
+
+        /* Aggressive override for table headers inside PPE stock tables */
+        .ppe-table-container table th {
+            white-space: nowrap !important;      /* Never wrap */
+            font-size: 11px !important;          /* Compact font */
+            padding: 4px 6px !important;         /* Minimal padding */
+            background-color: rgba(201, 48, 44, 0.08) !important; /* Light red background */
+            font-weight: 600 !important;
+            text-align: left !important;
+            border-bottom: 2px solid var(--primary-color) !important;
+            line-height: 1.2 !important;
+            letter-spacing: normal !important;
+            text-transform: none !important;
+        }
+
+        /* Table cells also compact */
+        .ppe-table-container table td {
+            padding: 6px 6px !important;
+            font-size: 11px !important;
+            white-space: nowrap;                  /* Keep data on one line (optional) */
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Action buttons even smaller */
+        .ppe-table-container .action-buttons {
+            display: flex;
+            gap: 2px !important;
+            flex-wrap: nowrap !important;
+        }
+
+        .ppe-table-container .btn-sm {
+            padding: 2px 4px !important;
+            font-size: 9px !important;
+            line-height: 1 !important;
+        }
+
+        /* Ensure the table container scrolls horizontally if needed */
+        .ppe-table-container {
+            overflow-x: auto;
         }
 
         @media (max-width: 768px) {
@@ -830,7 +878,7 @@
 
             <!-- FORM TABS -->
             <div class="form-tabs">
-                <div class="form-tab active" onclick="switchFormTab('form1', this)">Fire PPE Form</div>
+                <div class="form-tab active" onclick="switchFormTab('form1', this)">Fire Fighting Equipment Form</div>
                 <div class="form-tab" onclick="switchFormTab('form2', this)">Fire PPE Stock</div>
             </div>
 
@@ -2554,9 +2602,9 @@
             }, 500);
         };
 
-        // ========== NEW PDF FUNCTIONS (updated) ==========
+        // ========== UPDATED PDF FUNCTIONS ==========
 
-        // Generate PDF for Issuance Table
+        // Generate PDF for Issuance Table – grouped by PPE Type
         function generateIssuancePDF() {
             const tableBody = document.getElementById('ppeIssuanceTableBody');
             if (!tableBody || tableBody.rows.length === 0) {
@@ -2591,41 +2639,54 @@
                 doc.text(`Generated: ${formattedDate} at ${formattedTime}`, 14, 30);
                 doc.text(`Total Records: ${tableBody.rows.length}`, 14, 36);
 
-                const headers = [["Types of PPE", "Sizes", "Latest Issuance", "Issuance Date", "Remarks", "Date Added"]];
-                const data = [];
-
+                // Group rows by Types of PPE (first column)
+                const groupedData = {};
                 for (let row of tableBody.rows) {
                     const cells = row.cells;
-                    const rowData = [
-                        cells[0].textContent.trim(),
-                        cells[1].textContent.trim(),
-                        cells[2].textContent.trim(),
-                        cells[3].textContent.trim(),
-                        cells[4].textContent.trim(),
-                        cells[5].textContent.trim().replace(/\s+/g, ' ')
-                    ];
-                    data.push(rowData);
+                    const ppeType = cells[0].textContent.trim();
+                    if (!groupedData[ppeType]) groupedData[ppeType] = [];
+                    groupedData[ppeType].push([
+                        cells[1].textContent.trim(), // Sizes
+                        cells[2].textContent.trim(), // Latest Issuance
+                        cells[3].textContent.trim(), // Issuance Date
+                        cells[4].textContent.trim(), // Remarks
+                        cells[5].textContent.trim().replace(/\s+/g, ' ') // Date Added
+                    ]);
                 }
 
-                doc.autoTable({
-                    head: headers,
-                    body: data,
-                    startY: 45,
-                    theme: 'grid',
-                    headStyles: { fillColor: [201, 48, 44], textColor: 255, fontSize: 10, fontStyle: 'bold' },
-                    bodyStyles: { fontSize: 9 },
-                    alternateRowStyles: { fillColor: [245, 245, 245] },
-                    columnStyles: {
-                        0: { cellWidth: 35 },
-                        1: { cellWidth: 35 },
-                        2: { cellWidth: 30 },
-                        3: { cellWidth: 30 },
-                        4: { cellWidth: 40 },
-                        5: { cellWidth: 35 }
-                    },
-                    margin: { left: 14, right: 14 }
-                });
+                let yPos = 45;
+                const headers = [["Sizes", "Latest Issuance", "Issuance Date", "Remarks", "Date Added"]];
 
+                for (let [ppeType, rows] of Object.entries(groupedData)) {
+                    // Add type title
+                    doc.setFontSize(14);
+                    doc.setTextColor(201, 48, 44);
+                    doc.text(ppeType, 14, yPos);
+                    yPos += 5;
+
+                    // Add table for this type
+                    doc.autoTable({
+                        head: headers,
+                        body: rows,
+                        startY: yPos,
+                        theme: 'grid',
+                        headStyles: { fillColor: [201, 48, 44], textColor: 255, fontSize: 9, fontStyle: 'bold' },
+                        bodyStyles: { fontSize: 8 },
+                        alternateRowStyles: { fillColor: [245, 245, 245] },
+                        columnStyles: {
+                            0: { cellWidth: 35 }, // Sizes
+                            1: { cellWidth: 30 }, // Latest Issuance
+                            2: { cellWidth: 30 }, // Issuance Date
+                            3: { cellWidth: 40 }, // Remarks
+                            4: { cellWidth: 35 }  // Date Added
+                        },
+                        margin: { left: 14, right: 14 }
+                    });
+
+                    yPos = doc.lastAutoTable.finalY + 15;
+                }
+
+                // Footer
                 const pageCount = doc.internal.getNumberOfPages();
                 for (let i = 1; i <= pageCount; i++) {
                     doc.setPage(i);
@@ -2652,7 +2713,7 @@
             }
         }
 
-        // NEW: Generate PDF for Stock Inventory (all PPE types, one table per type)
+        // Generate PDF for Stock Inventory (all PPE types, one table per type)
         async function generateStockInventoryPDF() {
             if (!db) {
                 alert("Firebase not initialized.");
@@ -2794,5 +2855,3 @@
     </script>
 </body>
 </html>
-```
-
