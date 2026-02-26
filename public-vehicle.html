@@ -1320,6 +1320,7 @@
             loadInspectionDataForDate(today);
         }
 
+        // ========== FUNGSI UTAMA UNTUK LOAD DATA INSPECTION ==========
         function loadInspectionDataForDate(dateStr) {
             if (!db || !currentVehicleId) {
                 showNoInspectionData("Firebase not initialized");
@@ -1381,10 +1382,10 @@
                     console.log("- inspection0800 exists:", !!dailyData.inspection0800);
                     console.log("- inspection2000 exists:", !!dailyData.inspection2000);
                     
-                    const inspection0800 = dailyData.inspection0800;
-                    const inspection2000 = dailyData.inspection2000;
+                    const inspection0800 = dailyData.inspection0800 || null;
+                    const inspection2000 = dailyData.inspection2000 || null;
                     
-                    // FIX: Pastikan equipment inspection data ada
+                    // Pastikan equipment inspection data ada
                     if (inspection0800) {
                         inspection0800.equipmentInspectionData = inspection0800.equipmentInspectionData || [];
                     }
@@ -1392,11 +1393,7 @@
                         inspection2000.equipmentInspectionData = inspection2000.equipmentInspectionData || [];
                     }
                     
-                    if (!inspection0800 && !inspection2000) {
-                        showNoInspectionData(`No inspection data for selected date`);
-                        return;
-                    }
-                    
+                    // Hantar kedua-dua shift ke display (walaupun null)
                     displayInspectionDataTable(dateStr, inspection0800, inspection2000);
                     
                 }).catch((error) => {
@@ -1405,6 +1402,7 @@
                 });
         }
 
+        // ========== PAPAR DATA INSPECTION (KEDUA-DUA SHIFT) ==========
         function displayInspectionDataTable(dateStr, inspection0800, inspection2000) {
             const container = document.getElementById('inspectionDataTable');
             
@@ -1413,7 +1411,7 @@
                                  currentVehicleData.ambulanceType || 
                                  currentVehicleData.manufacturer || '';
             
-            // FIX: Dapatkan vehicle type yang spesifik
+            // Dapatkan vehicle type yang spesifik
             let specificVehicleType = '';
             if (currentVehicleData) {
                 if (currentVehicleData.fireTruckType) {
@@ -1459,41 +1457,47 @@
                 </div>
             `;
             
+            // Tab untuk kedua-dua shift
             html += `
                 <div class="time-slot-tabs">
-                    ${inspection0800 ? `
-                        <div class="time-tab active" id="tab0800" onclick="switchTimeTab('0800')">
-                            <i class="fas fa-sun"></i> 0800 – 2000
-                        </div>
-                    ` : ''}
-                    ${inspection2000 ? `
-                        <div class="time-tab ${!inspection0800 ? 'active' : ''}" id="tab2000" onclick="switchTimeTab('2000')">
-                            <i class="fas fa-moon"></i> 2000 – 0800
-                        </div>
-                    ` : ''}
+                    <div class="time-tab active" id="tab0800" onclick="switchTimeTab('0800')">
+                        <i class="fas fa-sun"></i> 0800 – 2000
+                    </div>
+                    <div class="time-tab" id="tab2000" onclick="switchTimeTab('2000')">
+                        <i class="fas fa-moon"></i> 2000 – 0800
+                    </div>
                 </div>
             `;
             
+            // Jadual untuk kedua-dua shift (guna data kosong jika null)
             html += `
                 <div class="inspection-tables">
-                    ${inspection0800 ? `
-                        <div class="time-table active" id="table0800">
-                            ${generateInspectionTable(dateStr, '0800', inspection0800, isAmbulance, isMPRV, isRSV, isFireTruck, isAB4, isAB1)}
-                        </div>
-                    ` : ''}
-                    ${inspection2000 ? `
-                        <div class="time-table ${!inspection0800 ? 'active' : ''}" id="table2000">
-                            ${generateInspectionTable(dateStr, '2000', inspection2000, isAmbulance, isMPRV, isRSV, isFireTruck, isAB4, isAB1)}
-                        </div>
-                    ` : ''}
+                    <div class="time-table active" id="table0800">
+                        ${generateInspectionTable(dateStr, '0800', inspection0800 || {}, isAmbulance, isMPRV, isRSV, isFireTruck, isAB4, isAB1)}
+                    </div>
+                    <div class="time-table" id="table2000">
+                        ${generateInspectionTable(dateStr, '2000', inspection2000 || {}, isAmbulance, isMPRV, isRSV, isFireTruck, isAB4, isAB1)}
+                    </div>
                 </div>
             `;
             
             container.innerHTML = html;
         }
 
-        // ============= GENERATE INSPECTION TABLE =============
+        // ========== GENERATE INSPECTION TABLE (DENGAN HANDLING DATA KOSONG) ==========
         function generateInspectionTable(dateStr, timeSlot, inspectionData, isAmbulance, isMPRV, isRSV, isFireTruck, isAB4, isAB1) {
+            // Jika inspectionData kosong (tiada data), pastikan semua field accessor selamat
+            const safeInspection = inspectionData || {};
+            const vehicleData = safeInspection.vehicleInspectionData || [];
+            const medicalData = safeInspection.medicalInspectionData || [];
+            const equipmentData = safeInspection.equipmentInspectionData || [];
+            const inspectBy = safeInspection.inspectBy || 'N/A';
+            const shift = safeInspection.shift || 'N/A';
+            const medic = safeInspection.medic;
+            const swcwc = safeInspection.swcwc;
+            const timestamp = safeInspection.timestamp;
+            const remarks = safeInspection.remarks;
+            
             const vehicleNumber = currentVehicleData.vehicleNumber || currentVehicleData.ambulanceNumber || '';
             const ambulanceType = VEHICLE_AMBULANCE_TYPES[vehicleNumber] || 
                                  currentVehicleData.ambulanceType || 
@@ -1504,8 +1508,8 @@
                     <h4><i class="fas ${timeSlot === '0800' ? 'fa-sun' : 'fa-moon'}"></i> ${timeSlot === '0800' ? 'Day Shift (0800-2000)' : 'Night Shift (2000-0800)'}</h4>
                     <div class="inspector-info-header">
                         <div class="inspector-shift-info">
-                            <span><i class="fas fa-user"></i> Inspector: ${inspectionData.inspectBy || 'N/A'}</span>
-                            <span><i class="fas fa-clock"></i> Shift: ${inspectionData.shift || 'N/A'}</span>
+                            <span><i class="fas fa-user"></i> Inspector: ${inspectBy}</span>
+                            <span><i class="fas fa-clock"></i> Shift: ${shift}</span>
                         </div>
                         <div class="export-actions">
                             <button class="mini-export-btn view-pdf-btn" onclick="viewPDF('${dateStr}', '${timeSlot}')">
@@ -1520,7 +1524,6 @@
             `;
             
             // ========== 1. VEHICLE INSPECTION TABLE ==========
-            const vehicleData = inspectionData.vehicleInspectionData || [];
             const vehicleItems = isFireTruck ? FIRE_TRUCK_VEHICLE_INSPECTION_ITEMS : 
                                 (isAmbulance || isMPRV || isRSV) ? VEHICLE_INSPECTION_ITEMS : [];
             
@@ -1551,14 +1554,14 @@
                     let statusClass = '';
                     
                     if (isTextField) {
-                        statusValue = itemData.value || 'NOT RECORDED';
+                        statusValue = itemData.value || 'N/A';
                         statusClass = itemData.value ? 'textfield-value' : 'textfield-empty';
                         
                         if (item.name === "FUEL LEVEL" && itemData.value && !itemData.value.includes("%")) {
                             statusValue = itemData.value + "%";
                         }
                     } else {
-                        statusValue = itemData.checked ? 'OK ✓' : 'NOT RECORDED ✗';
+                        statusValue = itemData.checked ? 'OK ✓' : 'N/A';
                         statusClass = itemData.checked ? 'status-ok' : 'status-not-recorded';
                     }
                     
@@ -1585,15 +1588,11 @@
             if (isAmbulance) {
                 const medicalItems = isAB4 ? MEDICAL_INSPECTION_ITEMS_AB4 : 
                                   isAB1 ? MEDICAL_INSPECTION_ITEMS_AB1 : [];
-                const medicalData = inspectionData.medicalInspectionData || [];
                 
-                if (medicalData && medicalData.length > 0) {
+                if (medicalItems.length > 0) {
                     html += `
                         <div class="inspection-table-section">
                             <h5><i class="fas fa-heartbeat"></i> Medical Response Inspection ${ambulanceType ? `(${ambulanceType})` : ''}</h5>
-                                <div class="medical-timestamp">
-                                </div>
-                            </div>
                             <div class="table-responsive">
                                 <table class="inspection-table">
                                     <thead>
@@ -1616,7 +1615,7 @@
                         
                         if (item.name.includes("MEDICAL OXYGEN")) {
                             const oxygenValue = parseInt(itemData.value) || 0;
-                            statusValue = itemData.value ? `${itemData.value}%` : 'NOT RECORDED';
+                            statusValue = itemData.value ? `${itemData.value}%` : 'N/A';
                             statusClass = itemData.value ? 'textfield-value' : 'textfield-empty';
                             
                             if (oxygenValue < 25 && oxygenValue > 0) {
@@ -1625,7 +1624,7 @@
                             }
                         } else {
                             const isChecked = itemData.checked || false;
-                            statusValue = isChecked ? 'OK ✓' : 'NOT RECORDED ✗';
+                            statusValue = isChecked ? 'OK ✓' : 'N/A';
                             statusClass = isChecked ? 'status-ok' : 'status-not-recorded';
                         }
                         
@@ -1660,8 +1659,6 @@
             
             // ========== 3. EQUIPMENT INSPECTION (RSV SAHAJA) ==========
             if (isRSV) {
-                const equipmentData = inspectionData.equipmentInspectionData || {};
-                
                 html += `
                     <div class="inspection-table-section">
                         <h5><i class="fas fa-folder-open"></i> Equipment Inspection Summary (RSV)</h5>
@@ -1707,7 +1704,6 @@
             // ========== 4. EQUIPMENT INSPECTION (FIRE TRUCK SAHAJA) ==========
             if (isFireTruck) {
                 const equipmentItems = FIRE_TRUCK_EQUIPMENT_INSPECTION_ITEMS;
-                const equipmentData = inspectionData.equipmentInspectionData || [];
                 
                 if (equipmentItems.length > 0) {
                     html += `
@@ -1729,7 +1725,7 @@
                     
                     equipmentItems.forEach((item, index) => {
                         const itemData = equipmentData[index] || {};
-                        const statusValue = itemData.checked ? 'OK ✓' : 'NOT RECORDED ✗';
+                        const statusValue = itemData.checked ? 'OK ✓' : 'N/A';
                         const statusClass = itemData.checked ? 'status-ok' : 'status-not-recorded';
                         
                         html += `
@@ -1753,42 +1749,40 @@
             }
             
             // ========== ADDITIONAL INFO SECTION ==========
-            html += `
+            const hasAdditionalInfo = medic || swcwc || timestamp || remarks;
+            if (hasAdditionalInfo) {
+                html += `
                 <div class="additional-info-section">
                     <div class="info-grid">
-            `;
-            
-            if (isAmbulance) {
-                html += `
-                        <div class="info-card">
-                            <div class="info-label"><i class="fas fa-user-md"></i> Medic</div>
-                            <div class="info-value">${inspectionData.medic || 'N/A'}</div>
-                        </div>
                 `;
-            }
-            
-            html += `
-                        <div class="info-card">
-                            <div class="info-label"><i class="fas fa-user-tie"></i> SWC/WC</div>
-                            <div class="info-value">${inspectionData.swcwc || 'N/A'}</div>
-                        </div>
-                        <div class="info-card">
-                            <div class="info-label"><i class="fas fa-clock"></i> Timestamp</div>
-                            <div class="info-value">${inspectionData.timestamp ? formatTimeDisplay(inspectionData.timestamp) : 'N/A'}</div>
-                        </div>
-                    </div>
-            `;
-            
-            if (inspectionData.remarks) {
+                if (isAmbulance) {
+                    html += `
+                    <div class="info-card">
+                        <div class="info-label"><i class="fas fa-user-md"></i> Medic</div>
+                        <div class="info-value">${medic || 'N/A'}</div>
+                    </div>`;
+                }
                 html += `
+                    <div class="info-card">
+                        <div class="info-label"><i class="fas fa-user-tie"></i> SWC/WC</div>
+                        <div class="info-value">${swcwc || 'N/A'}</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label"><i class="fas fa-clock"></i> Timestamp</div>
+                        <div class="info-value">${timestamp ? formatTimeDisplay(timestamp) : 'N/A'}</div>
+                    </div>
+                </div>
+                `;
+                if (remarks) {
+                    html += `
                     <div class="remarks-section">
                         <div class="info-label"><i class="fas fa-comment"></i> Remarks</div>
-                        <div class="remarks-content">${inspectionData.remarks}</div>
+                        <div class="remarks-content">${remarks}</div>
                     </div>
-                `;
+                    `;
+                }
+                html += `</div>`;
             }
-            
-            html += `</div>`;
             
             return html;
         }
