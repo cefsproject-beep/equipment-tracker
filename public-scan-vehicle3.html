@@ -597,220 +597,178 @@
             backToMainActions();
         }
 
-        // ==================== UPDATED PDF FUNCTION ====================
-        // Now includes full date (day month year) in the header
         function saveAsPDF() {
-            if (!window.jspdf) {
-                alert('PDF library not loaded.');
-                return;
-            }
-            
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF('p', 'mm', 'a4');
-                
-                const marginLeft = 10;
-                const marginRight = 10;
-                const pageWidth = doc.internal.pageSize.width;
-                
-                // Header
-                doc.setFontSize(16);
-                doc.setFont("helvetica", "bold");
-                doc.text("CENTRAL EMERGENCY & FIRE SERVICES RESPONSE", pageWidth/2, 15, { align: "center" });
-                doc.setFontSize(14);
-                doc.text("VEHICLES & EQUIPMENT CHECKLIST", pageWidth/2, 22, { align: "center" });
-                
-                // Vehicle Info
-                let yPos = 35;
-                doc.setFontSize(12);
-                doc.setFont("helvetica", "bold");
-                doc.text("MPRV TYPE : ", marginLeft, yPos);
-                doc.setFont("helvetica", "normal");
-                doc.text('S3', marginLeft + 35, yPos);
-                
-                yPos += 7;
-                const now = new Date();
-                // Use full date: day month year (e.g., "26 FEBRUARY 2026")
-                const fullDate = now.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
-                doc.setFont("helvetica", "bold");
-                doc.text("DATE:", marginLeft, yPos);
-                doc.setFont("helvetica", "normal");
-                doc.text(fullDate, marginLeft + 15, yPos);
-                
-                doc.setFont("helvetica", "bold");
-                doc.text("VEHICLE NUMBER", marginLeft + 90, yPos);
-                doc.setFont("helvetica", "normal");
-                const vehicleNumber = document.getElementById('vehicleNumber')?.textContent || 'N/A';
-                doc.text(vehicleNumber, marginLeft + 130, yPos);
-                
-                yPos += 7;
-                doc.setFont("helvetica", "bold");
-                doc.text("TIME:", marginLeft, yPos);
-                doc.setFont("helvetica", "normal");
-                doc.text("0800 - 2000", marginLeft + 15, yPos);
-                doc.setFont("helvetica", "bold");
-                doc.text("NAME:", marginLeft + 45, yPos);
-                doc.setFont("helvetica", "normal");
-                const inspectName = inspectionDetails0800?.inspectBy || inspectionDetails2000?.inspectBy || "N/A";
-                doc.text(inspectName, marginLeft + 60, yPos);
-                doc.setFont("helvetica", "bold");
-                doc.text("SHIFT:", marginLeft + 90, yPos);
-                doc.setFont("helvetica", "normal");
-                const shiftValue = inspectionDetails0800?.shift || inspectionDetails2000?.shift || "N/A";
-                doc.text(shiftValue, marginLeft + 105, yPos);
-                
-                yPos += 15;
-                
-                // Table Header (5 columns)
-                doc.setFontSize(11);
-                doc.setFont("helvetica", "bold");
-                
-                // Define column positions (adjusted to prevent overlap)
-                const colChecklist = marginLeft;       // Item name
-                const col0800Status = marginLeft + 55;  // 0800-2000 status
-                const col0800Remarks = marginLeft + 80; // 0800-2000 remarks
-                const col2000Status = marginLeft + 115; // 2000-0800 status
-                const col2000Remarks = marginLeft + 140; // 2000-0800 remarks
-                
-                doc.text("INSPECTION CHECKLIST", colChecklist, yPos);
-                doc.text("0800-2000", col0800Status, yPos);
-                doc.text("Remarks", col0800Remarks, yPos);
-                doc.text("2000-0800", col2000Status, yPos);
-                doc.text("Remarks", col2000Remarks, yPos);
-                
-                yPos += 3;
-                doc.setLineWidth(0.5);
-                doc.line(marginLeft, yPos, pageWidth - marginRight, yPos);
-                yPos += 5;
-                
-                const vehicleData0800 = inspectionDetails0800.vehicleInspectionData;
-                const vehicleData2000 = inspectionDetails2000.vehicleInspectionData;
-                
-                // Helper: get status string for an item
-                function getStatus(item, data) {
-                    if (!data) return "";
-                    if (item.type === "textfield") {
-                        if (item.name === "FUEL LEVEL") {
-                            return data.value ? `${data.value}%` : "ATTENTION";
-                        } else if (item.name === "MILLAGE / ODOMETER") {
-                            return data.value ? data.value : "ATTENTION";
-                        } else {
-                            return data.value ? data.value : "ATTENTION";
-                        }
-                    } else {
-                        return data.checked ? "OK" : "ATTENTION";
-                    }
-                }
-                
-                // Loop through items
-                vehicleInspectionItems.forEach((item, index) => {
-                    doc.setFont("helvetica", "normal");
-                    doc.setFontSize(10);
-                    
-                    // Item number and name (truncate if too long)
-                    let itemText = `${index + 1}. ${item.name}`;
-                    if (doc.getTextWidth(itemText) > 50) {
-                        itemText = itemText.substring(0, 35) + "...";
-                    }
-                    doc.text(itemText, colChecklist, yPos);
-                    
-                    // 0800-2000 Status
-                    let status0800 = "";
-                    if (inspectionDetails0800.completed) {
-                        status0800 = getStatus(item, vehicleData0800[index]);
-                    }
-                    doc.text(status0800, col0800Status, yPos);
-                    
-                    // 0800-2000 Remarks
-                    let remarks0800 = "";
-                    if (inspectionDetails0800.completed && vehicleData0800[index]) {
-                        remarks0800 = vehicleData0800[index].remarks || "";
-                    }
-                    doc.text(remarks0800, col0800Remarks, yPos);
-                    
-                    // 2000-0800 Status
-                    let status2000 = "";
-                    if (inspectionDetails2000.completed) {
-                        status2000 = getStatus(item, vehicleData2000[index]);
-                    }
-                    doc.text(status2000, col2000Status, yPos);
-                    
-                    // 2000-0800 Remarks
-                    let remarks2000 = "";
-                    if (inspectionDetails2000.completed && vehicleData2000[index]) {
-                        remarks2000 = vehicleData2000[index].remarks || "";
-                    }
-                    doc.text(remarks2000, col2000Remarks, yPos);
-                    
-                    yPos += 5;
-                    
-                    // Page break handling
-                    if (yPos > 270 && index < vehicleInspectionItems.length - 1) {
-                        doc.addPage();
-                        yPos = 20;
-                        doc.setFontSize(11);
-                        doc.setFont("helvetica", "bold");
-                        doc.text("INSPECTION CHECKLIST", colChecklist, yPos);
-                        doc.text("0800-2000", col0800Status, yPos);
-                        doc.text("Remarks", col0800Remarks, yPos);
-                        doc.text("2000-0800", col2000Status, yPos);
-                        doc.text("Remarks", col2000Remarks, yPos);
-                        yPos += 8;
-                    }
-                });
-                
-                // ========== INSPECTION DETAILS TABLE ==========
-                yPos += 15;
-                
-                // Create inspection summary table (unchanged)
-                const inspectionSummaryData = [
-                    [{ content: "", styles: { fontStyle: 'bold', fillColor: [220,220,220] } },
-                     { content: "INSPECT BY", styles: { fontStyle: 'bold', fillColor: [220,220,220], halign: 'center' } },
-                     { content: "", styles: { fontStyle: 'bold', fillColor: [220,220,220] } },
-                     { content: "SWC/WC", styles: { fontStyle: 'bold', fillColor: [220,220,220], halign: 'center' } },
-                     { content: "", styles: { fontStyle: 'bold', fillColor: [220,220,220] } }],
-                    [{ content: "", styles: { fontStyle: 'bold' } },
-                     { content: "0800-2000", styles: { fontStyle: 'bold', halign: 'center' } },
-                     { content: "2000-0800", styles: { fontStyle: 'bold', halign: 'center' } },
-                     { content: "0800-2000", styles: { fontStyle: 'bold', halign: 'center' } },
-                     { content: "2000-0800", styles: { fontStyle: 'bold', halign: 'center' } }],
-                    [{ content: "NAME", styles: { fontStyle: 'bold' } },
-                     { content: inspectionDetails0800.completed ? inspectionDetails0800.inspectBy || "-" : "-", styles: { halign: 'center' } },
-                     { content: inspectionDetails2000.completed ? inspectionDetails2000.inspectBy || "-" : "-", styles: { halign: 'center' } },
-                     { content: inspectionDetails0800.completed ? inspectionDetails0800.swcwc || "-" : "-", styles: { halign: 'center' } },
-                     { content: inspectionDetails2000.completed ? inspectionDetails2000.swcwc || "-" : "-", styles: { halign: 'center' } }],
-                    [{ content: "SIGNATURE", styles: { fontStyle: 'bold' } },
-                     { content: "", styles: { minCellHeight: 15 } },
-                     { content: "", styles: { minCellHeight: 15 } },
-                     { content: "", styles: { minCellHeight: 15 } },
-                     { content: "", styles: { minCellHeight: 15 } }]
-                ];
-                
-                doc.autoTable({
-                    startY: yPos,
-                    head: [],
-                    body: inspectionSummaryData,
-                    theme: 'grid',
-                    tableWidth: pageWidth - marginLeft - marginRight,
-                    margin: { left: marginLeft },
-                    styles: { fontSize: 10, cellPadding: 3 },
-                    columnStyles: {
-                        0: { cellWidth: 25, fontStyle: 'bold' },
-                        1: { cellWidth: 35, halign: 'center' },
-                        2: { cellWidth: 35, halign: 'center' },
-                        3: { cellWidth: 35, halign: 'center' },
-                        4: { cellWidth: 35, halign: 'center' }
-                    }
-                });
-                
-                const fileName = `MPRV_S3_Inspection_${vehicleNumber}_${fullDate.replace(/ /g, '_')}.pdf`;
-                doc.save(fileName);
-                console.log('✅ PDF generated with full date, remarks, and ATTENTION');
-            } catch (error) {
-                console.error('Error generating PDF:', error);
-                alert('Error generating PDF: ' + error.message);
+    if (!window.jspdf) {
+        alert('PDF library not loaded. Please check internet connection.');
+        return;
+    }
+    
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4'); // potrait A4
+        
+        const marginLeft = 10;
+        const marginRight = 10;
+        const pageWidth = doc.internal.pageSize.width;
+        
+        // ---------- HEADER ----------
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.text("CENTRAL EMERGENCY & FIRE SERVICES RESPONSE", pageWidth/2, 15, { align: "center" });
+        doc.setFontSize(14);
+        doc.text("VEHICLES & EQUIPMENT CHECKLIST", pageWidth/2, 22, { align: "center" });
+        
+        // ---------- VEHICLE INFORMATION ----------
+        let yPos = 35;
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("MPRV TYPE :", marginLeft, yPos);
+        doc.setFont("helvetica", "normal");
+        doc.text('S3', marginLeft + 35, yPos);
+        
+        yPos += 7;
+        
+        // Full date: e.g., "26 FEBRUARY 2026"
+        const now = new Date();
+        const fullDate = now.toLocaleDateString('en-US', { 
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric' 
+        }).toUpperCase();
+        
+        doc.setFont("helvetica", "bold");
+        doc.text("DATE:", marginLeft, yPos);
+        doc.setFont("helvetica", "normal");
+        doc.text(fullDate, marginLeft + 15, yPos);
+        
+        doc.setFont("helvetica", "bold");
+        doc.text("VEHICLE NUMBER:", marginLeft + 90, yPos);
+        doc.setFont("helvetica", "normal");
+        const vehicleNumber = document.getElementById('vehicleNumber')?.textContent || 'N/A';
+        doc.text(vehicleNumber, marginLeft + 130, yPos);
+        
+        yPos += 7;
+        doc.setFont("helvetica", "bold");
+        doc.text("TIME:", marginLeft, yPos);
+        doc.setFont("helvetica", "normal");
+        doc.text("0800 - 2000", marginLeft + 15, yPos);
+        
+        doc.setFont("helvetica", "bold");
+        doc.text("NAME:", marginLeft + 45, yPos);
+        doc.setFont("helvetica", "normal");
+        const inspectName = inspectionDetails0800?.inspectBy || inspectionDetails2000?.inspectBy || "N/A";
+        doc.text(inspectName, marginLeft + 60, yPos);
+        
+        doc.setFont("helvetica", "bold");
+        doc.text("SHIFT:", marginLeft + 90, yPos);
+        doc.setFont("helvetica", "normal");
+        const shiftValue = inspectionDetails0800?.shift || inspectionDetails2000?.shift || "N/A";
+        doc.text(shiftValue, marginLeft + 105, yPos);
+        
+        yPos += 15;
+        
+        // ---------- VEHICLE INSPECTION TABLE (autoTable) ----------
+        const vehicleHead = [["NO.", "INSPECTION ITEM", "0800-2000", "REMARKS", "2000-0800", "REMARKS"]];
+        const vehicleBody = [];
+        
+        const vehicleData0800 = inspectionDetails0800.vehicleInspectionData;
+        const vehicleData2000 = inspectionDetails2000.vehicleInspectionData;
+        
+        // Helper to get status for vehicle item
+        function getVehicleStatus(item, data) {
+            if (!data) return ""; // shift not completed → blank
+            if (item.type === "textfield") {
+                return data.value || ""; // show value if present, else blank
+            } else {
+                return data.checked ? "OK" : "ATTENTION";
             }
         }
+        
+        vehicleInspectionItems.forEach((item, index) => {
+            // 0800-2000 status & remarks
+            let status0800 = inspectionDetails0800.completed ? getVehicleStatus(item, vehicleData0800[index]) : "";
+            let remarks0800 = (inspectionDetails0800.completed && vehicleData0800[index]?.remarks) ? vehicleData0800[index].remarks : "";
+            
+            // 2000-0800 status & remarks
+            let status2000 = inspectionDetails2000.completed ? getVehicleStatus(item, vehicleData2000[index]) : "";
+            let remarks2000 = (inspectionDetails2000.completed && vehicleData2000[index]?.remarks) ? vehicleData2000[index].remarks : "";
+            
+            vehicleBody.push([
+                (index + 1).toString(),
+                item.name,
+                status0800,
+                remarks0800,
+                status2000,
+                remarks2000
+            ]);
+        });
+        
+        doc.autoTable({
+            startY: yPos,
+            head: vehicleHead,
+            body: vehicleBody,
+            theme: 'grid',
+            headStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: 'bold', halign: 'center' },
+            styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
+            columnStyles: {
+                0: { cellWidth: 10, halign: 'center' },      // No.
+                1: { cellWidth: 60 },                         // Inspection Item
+                2: { cellWidth: 18, halign: 'center' },       // 0800-2000 status
+                3: { cellWidth: 30 },                          // Remarks 0800
+                4: { cellWidth: 18, halign: 'center' },       // 2000-0800 status
+                5: { cellWidth: 30 }                           // Remarks 2000
+            },
+            margin: { left: marginLeft, right: marginRight },
+            tableWidth: pageWidth - marginLeft - marginRight
+        });
+        
+        // Get last Y after vehicle table
+        yPos = doc.lastAutoTable.finalY + 15;
+        
+        // ---------- INSPECTION DETAILS SUMMARY TABLE ----------
+        const summaryHead = [["", "INSPECT BY", "", "SWC/WC", ""]];
+        const summarySubHead = [["", "0800-2000", "2000-0800", "0800-2000", "2000-0800"]];
+        const summaryBody = [
+            [
+                "NAME",
+                inspectionDetails0800.completed ? inspectionDetails0800.inspectBy || "-" : "-",
+                inspectionDetails2000.completed ? inspectionDetails2000.inspectBy || "-" : "-",
+                inspectionDetails0800.completed ? inspectionDetails0800.swcwc || "-" : "-",
+                inspectionDetails2000.completed ? inspectionDetails2000.swcwc || "-" : "-"
+            ],
+            [
+                "SIGNATURE",
+                "", "", "", ""
+            ]
+        ];
+        
+        doc.autoTable({
+            startY: yPos,
+            head: [summaryHead[0], summarySubHead[0]],
+            body: summaryBody,
+            theme: 'grid',
+            headStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: 'bold', halign: 'center' },
+            styles: { fontSize: 9, cellPadding: 3, halign: 'center' },
+            columnStyles: {
+                0: { cellWidth: 25, fontStyle: 'bold', halign: 'left' },
+                1: { cellWidth: 35 },
+                2: { cellWidth: 35 },
+                3: { cellWidth: 35 },
+                4: { cellWidth: 35 }
+            },
+            margin: { left: marginLeft, right: marginRight }
+        });
+        
+        // ---------- SAVE PDF ----------
+        const fileName = `MPRV_S3_Inspection_${vehicleNumber}_${fullDate.replace(/ /g, '_')}.pdf`;
+        doc.save(fileName);
+        
+        console.log('✅ PDF generated successfully');
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        alert('Error generating PDF: ' + error.message);
+    }
+}
 
         function showLoading(show) {
             document.getElementById('loadingMessage').style.display = show ? 'block' : 'none';
