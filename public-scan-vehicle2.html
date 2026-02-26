@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="scanner.css">
     <link rel="stylesheet" href="vehiclescan.css">
-    <link rel="stylesheet" href="scan2.css"> <!-- NEW CSS FILE -->
+    <link rel="stylesheet" href="scan2.css">
     <!-- jsPDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -42,14 +42,10 @@
                 </div>
             </div>
             
-            <!-- FIXED: Hanya show shift yang aktif berdasarkan masa sekarang -->
             <div class="form-group">
                 <label>Inspection Time:</label>
                 <div id="timeSelector">
-                    <!-- Hanya satu shift akan ditunjukkan berdasarkan current time -->
-                    <div class="time-option active" id="activeTimeOption">
-                        <!-- Akan diisi oleh JavaScript -->
-                    </div>
+                    <div class="time-option active" id="activeTimeOption"></div>
                 </div>
                 <input type="hidden" id="modalTime" value="">
             </div>
@@ -119,7 +115,6 @@
         </div>
 
         <div id="vehicleInfoContent" style="display: none;">
-            <!-- Info header dengan layout teratur -->
             <div class="info-header-container" id="dailyInfoBanner">
                 <div class="info-grid">
                     <div class="info-item">
@@ -141,7 +136,6 @@
                 </div>
             </div>
 
-            <!-- VEHICLE INFO -->
             <div class="radio-info-grid" id="basicInfo">
                 <div class="radio-info-item">
                     <div class="radio-info-label">Vehicle Number</div>
@@ -157,7 +151,6 @@
                 </div>
             </div>
 
-            <!-- MAIN ACTION BUTTONS -->
             <div class="main-actions" id="mainActions">
                 <button class="main-action-btn inspection" onclick="showInspectionSection()" id="vehicleInspectionBtn" disabled>
                     <i class="fas fa-clipboard-check"></i> Vehicle Inspection
@@ -167,7 +160,6 @@
                 </button>
             </div>
 
-            <!-- VEHICLE INSPECTION SECTION -->
             <div class="inspection-section" id="vehicleInspectionSection">
                 <button class="section-back-btn" onclick="backToMainActions()">
                     <i class="fas fa-arrow-left"></i> Back
@@ -187,14 +179,11 @@
                                 <th style="width: 30%">REMARKS</th>
                             </tr>
                         </thead>
-                        <tbody id="vehicleInspectionTableBody">
-                            <!-- Vehicle inspection items akan dipopulate oleh JavaScript -->
-                        </tbody>
+                        <tbody id="vehicleInspectionTableBody"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- MEDICAL RESPONSE INSPECTION SECTION -->
             <div class="inspection-section" id="medicalInspectionSection">
                 <button class="section-back-btn" onclick="backToMainActions()">
                     <i class="fas fa-arrow-left"></i> Back
@@ -214,14 +203,11 @@
                                 <th style="width: 30%">REMARKS</th>
                             </tr>
                         </thead>
-                        <tbody id="medicalInspectionTableBody">
-                            <!-- Medical inspection items akan dipopulate oleh JavaScript -->
-                        </tbody>
+                        <tbody id="medicalInspectionTableBody"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- SAVE BUTTON -->
             <div class="save-section" id="saveSection" style="display: none;">
                 <button class="save-btn" onclick="saveAllData()"><i class="fas fa-save"></i> SAVE INSPECTION DATA</button>
             </div>
@@ -253,7 +239,6 @@
         let vehicleInspectionData = [];
         let medicalInspectionData = [];
 
-        // FIXED: Simpan data untuk kedua-dua shift
         let inspectionDetails0800 = {
             inspectBy: '',
             medic: '',
@@ -280,12 +265,10 @@
             medicalInspectionData: []
         };
         
-        // FIXED: Determine active shift based on current time
         let currentInspectionTime = '';
         let currentActiveShift = '';
         let currentDate = new Date().toISOString().split('T')[0];
 
-        // VEHICLE INSPECTION ITEMS
         const vehicleInspectionItems = [
             { name: "FUEL LEVEL", type: "textfield" },
             { name: "RADIATOR WATER LEVEL", type: "checkbox" },
@@ -305,7 +288,6 @@
             { name: "MILLAGE / ODOMETER", type: "textfield" }
         ];
 
-        // MEDICAL INSPECTION ITEMS - AB1
         const medicalInspectionItemsAB1 = [
             { name: "STRETCHER (FOLDABLE)", qty: "1", type: "checkbox" },
             { name: "STRETCHER (WHEEL / TROLLEY)", qty: "1", type: "checkbox" },
@@ -331,7 +313,6 @@
             { name: "TYVEX", qty: "5", type: "checkbox" }
         ];
 
-        // ADDITIONAL ITEMS FOR AB4
         const medicalInspectionItemsAB4 = [
             { name: "STRETCHER (FOLDABLE)", qty: "1", type: "checkbox" },
             { name: "STRETCHER (WHEEL / TROLLEY)", qty: "1", type: "checkbox" },
@@ -372,104 +353,56 @@
                     firebase.initializeApp(firebaseConfig);
                 }
                 db = firebase.firestore();
-                console.log("✅ Firebase initialized for Ambulance Inspection");
+                console.log("✅ Firebase initialized");
             } catch (error) {
                 showError('Failed to initialize database.');
             }
         }
 
-        // ================ SHIFT LOGIC FUNCTIONS ================ //
-
-        // FIXED: Function to determine current active shift based on time
         function determineCurrentShift() {
             const now = new Date();
             const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
-            const currentTime = currentHour * 100 + currentMinute;
-            
-            // Shift A: 0800–2000 (8 AM to 8 PM)
-            // Shift B: 2000–0800 (8 PM to 8 AM)
-            
+            const currentTime = currentHour * 100 + now.getMinutes();
             if (currentTime >= 800 && currentTime < 2000) {
-                // Between 08:00 and 20:00
                 currentActiveShift = '0800-2000';
                 currentInspectionTime = '0800-2000';
             } else {
-                // Between 20:00 and 08:00 (next day)
                 currentActiveShift = '2000-0800';
                 currentInspectionTime = '2000-0800';
             }
-            
-            console.log(`🕐 Current shift determined: ${currentActiveShift}`);
             return currentActiveShift;
         }
 
-        // FIXED: Function to get current time display
         function getCurrentTimeDisplay() {
-            const now = new Date();
-            return now.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: false 
-            });
+            return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
         }
 
-        // FIXED: Function to check and set current date dengan format yang betul
         function updateCurrentDate() {
             const today = new Date();
             currentDate = today.toISOString().split('T')[0];
-            
-            // Format day dan date mengikut requirement
             const day = today.toLocaleDateString('en-US', { weekday: 'long' });
-            const date = today.toLocaleDateString('en-US', { 
-                day: 'numeric', 
-                month: 'short', 
-                year: 'numeric' 
-            }).toUpperCase();
-            
-            // Update displays
+            const date = today.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase();
             document.getElementById('currentDayDisplay').textContent = day;
             document.getElementById('currentDateDisplay').textContent = date;
             document.getElementById('modalDayDisplay').textContent = day;
             document.getElementById('modalDateDisplay').textContent = date;
-            
-            console.log(`📅 Current date: ${currentDate}`);
         }
 
-        // FIXED: Update current time and shift displays
         function updateCurrentTimeAndShift() {
             const activeShift = determineCurrentShift();
             const currentTime = getCurrentTimeDisplay();
-            
-            // Update main display
             document.getElementById('currentShiftDisplay').textContent = activeShift;
             document.getElementById('currentTimeDisplay').textContent = currentTime;
-            
-            // Update modal display
             document.getElementById('modalCurrentShift').textContent = activeShift;
             document.getElementById('modalCurrentTime').textContent = currentTime;
-            
-            // Update time option in modal
-            const timeOption = document.getElementById('activeTimeOption');
-            timeOption.textContent = activeShift;
-            timeOption.className = 'time-option active';
-            
-            // Set hidden field value
+            document.getElementById('activeTimeOption').textContent = activeShift;
             document.getElementById('modalTime').value = activeShift;
-            
-            console.log(`⏰ Display updated - Shift: ${activeShift}, Time: ${currentTime}`);
         }
 
-        // FIXED: Function to update shift status display
         function updateShiftStatusDisplay() {
             const is0800Completed = inspectionDetails0800.completed;
             const is2000Completed = inspectionDetails2000.completed;
-            
-            // FIXED: Show status for BOTH shifts in the header
             const currentShiftDisplay = document.getElementById('currentShiftDisplay');
-            const currentTimeDisplay = document.getElementById('currentTimeDisplay');
-            
-            // Update shift display with completion status
             if (currentActiveShift === '0800-2000') {
                 if (is0800Completed) {
                     currentShiftDisplay.innerHTML = `0800-2000 ✓`;
@@ -487,11 +420,8 @@
                     currentShiftDisplay.className = 'info-value status-pending';
                 }
             }
-            
-            console.log(`📊 Shift status: 0800-2000: ${is0800Completed ? 'Completed' : 'Pending'}, 2000-0800: ${is2000Completed ? 'Completed' : 'Pending'}`);
         }
 
-        // FIXED: Clear modal form
         function clearModalForm() {
             document.getElementById('modalInspectBy').value = '';
             document.getElementById('modalMedic').value = '';
@@ -500,25 +430,6 @@
             document.getElementById('modalRemarks').value = '';
         }
 
-        // FIXED: Update modal instruction text based on active shift
-        function updateModalInstructionText() {
-            const instructionText = document.getElementById('modalInstructionText');
-            let isShiftCompleted = false;
-            
-            if (currentActiveShift === '0800-2000') {
-                isShiftCompleted = inspectionDetails0800.completed;
-            } else {
-                isShiftCompleted = inspectionDetails2000.completed;
-            }
-            
-            if (isShiftCompleted) {
-                instructionText.textContent = `Edit inspection details for ${currentActiveShift} shift`;
-            } else {
-                instructionText.textContent = `Fill in inspection details for ${currentActiveShift} shift`;
-            }
-        }
-
-        // FIXED: Populate modal form with existing data for active shift
         function populateModalForm() {
             if (currentActiveShift === '0800-2000') {
                 if (inspectionDetails0800.completed) {
@@ -527,9 +438,7 @@
                     document.getElementById('modalSWCWC').value = inspectionDetails0800.swcwc || '';
                     document.getElementById('modalShift').value = inspectionDetails0800.shift || '';
                     document.getElementById('modalRemarks').value = inspectionDetails0800.remarks || '';
-                } else {
-                    clearModalForm();
-                }
+                } else clearModalForm();
             } else {
                 if (inspectionDetails2000.completed) {
                     document.getElementById('modalInspectBy').value = inspectionDetails2000.inspectBy || '';
@@ -537,12 +446,12 @@
                     document.getElementById('modalSWCWC').value = inspectionDetails2000.swcwc || '';
                     document.getElementById('modalShift').value = inspectionDetails2000.shift || '';
                     document.getElementById('modalRemarks').value = inspectionDetails2000.remarks || '';
-                } else {
-                    clearModalForm();
-                }
+                } else clearModalForm();
             }
-            
-            updateModalInstructionText();
+            document.getElementById('modalInstructionText').textContent = 
+                (currentActiveShift === '0800-2000' ? inspectionDetails0800.completed : inspectionDetails2000.completed) 
+                ? `Edit inspection details for ${currentActiveShift} shift` 
+                : `Fill in inspection details for ${currentActiveShift} shift`;
         }
 
         function closeInspectionModal() {
@@ -552,91 +461,57 @@
         function loadVehicleDataFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
             let identifier = urlParams.get('vehicle');
-            
-            if (!identifier) {
-                showError('No ambulance identifier provided.');
-                return;
-            }
-
+            if (!identifier) { showError('No ambulance identifier provided.'); return; }
             identifier = decodeURIComponent(identifier);
             currentVehicleId = identifier;
             fetchVehicleDataById(identifier);
         }
 
         function fetchVehicleDataById(vehicleNumber) {
-            if (!db) {
-                showError('Database not initialized.');
-                return;
-            }
-
+            if (!db) { showError('Database not initialized.'); return; }
             showLoading(true);
-
-            db.collection('vehicles')
-                .where('vehicleNumber', '==', vehicleNumber)
-                .get()
+            db.collection('vehicles').where('vehicleNumber', '==', vehicleNumber).get()
                 .then((querySnapshot) => {
                     showLoading(false);
-                    
                     if (querySnapshot.empty) {
                         showError('Ambulance not found. Please scan a valid Ambulance QR code.');
                         return;
                     }
-
                     const doc = querySnapshot.docs[0];
                     const data = doc.data();
-                    
                     const vehicleType = data.vehicleType || '';
-                    const normalizedType = vehicleType.toLowerCase().trim();
-                    if (normalizedType !== 'ambulance' && normalizedType !== 'annbulance') {
+                    if (vehicleType.toLowerCase().trim() !== 'ambulance' && vehicleType.toLowerCase().trim() !== 'annbulance') {
                         showError(`This page is for Ambulances only. This vehicle is: ${vehicleType}. Please scan an Ambulance QR code.`);
                         return;
                     }
-                    
                     currentVehicleData = data;
                     currentDocumentId = doc.id;
-                    
                     ambulanceType = determineAmbulanceType(vehicleNumber);
-                    
                     updateCurrentDate();
-                    
-                    // FIXED: Determine current active shift FIRST
                     determineCurrentShift();
                     updateCurrentTimeAndShift();
                     
                     const dailyInspectionKey = `daily_${currentDate}`;
                     const hasDailyData = data[dailyInspectionKey];
-                    
                     if (hasDailyData) {
                         const dailyData = data[dailyInspectionKey];
-                        
                         if (dailyData.inspection0800) {
                             inspectionDetails0800 = dailyData.inspection0800;
-                            if (!inspectionDetails0800.vehicleInspectionData || inspectionDetails0800.vehicleInspectionData.length === 0) {
-                                inspectionDetails0800.vehicleInspectionData = initializeVehicleInspectionData();
-                            }
-                            if (!inspectionDetails0800.medicalInspectionData || inspectionDetails0800.medicalInspectionData.length === 0) {
-                                inspectionDetails0800.medicalInspectionData = initializeMedicalInspectionData();
-                            }
+                            if (!inspectionDetails0800.vehicleInspectionData) inspectionDetails0800.vehicleInspectionData = initializeVehicleInspectionData();
+                            if (!inspectionDetails0800.medicalInspectionData) inspectionDetails0800.medicalInspectionData = initializeMedicalInspectionData();
                         }
-                        
                         if (dailyData.inspection2000) {
                             inspectionDetails2000 = dailyData.inspection2000;
-                            if (!inspectionDetails2000.vehicleInspectionData || inspectionDetails2000.vehicleInspectionData.length === 0) {
-                                inspectionDetails2000.vehicleInspectionData = initializeVehicleInspectionData();
-                            }
-                            if (!inspectionDetails2000.medicalInspectionData || inspectionDetails2000.medicalInspectionData.length === 0) {
-                                inspectionDetails2000.medicalInspectionData = initializeMedicalInspectionData();
-                            }
+                            if (!inspectionDetails2000.vehicleInspectionData) inspectionDetails2000.vehicleInspectionData = initializeVehicleInspectionData();
+                            if (!inspectionDetails2000.medicalInspectionData) inspectionDetails2000.medicalInspectionData = initializeMedicalInspectionData();
                         }
                     } else {
                         inspectionDetails0800.vehicleInspectionData = initializeVehicleInspectionData();
                         inspectionDetails0800.medicalInspectionData = initializeMedicalInspectionData();
-                        
                         inspectionDetails2000.vehicleInspectionData = initializeVehicleInspectionData();
                         inspectionDetails2000.medicalInspectionData = initializeMedicalInspectionData();
                     }
                     
-                    // FIXED: Set current data based on active shift
                     if (currentActiveShift === '0800-2000') {
                         vehicleInspectionData = inspectionDetails0800.vehicleInspectionData;
                         medicalInspectionData = inspectionDetails0800.medicalInspectionData;
@@ -646,128 +521,51 @@
                     }
                     
                     document.getElementById('ambulanceType').textContent = ambulanceType;
-                    
                     populateVehicleInfo(data);
-                    
                     updateShiftStatusDisplay();
-                    
-                    // FIXED: Check and show modal for ACTIVE SHIFT only
-                    setTimeout(() => {
-                        checkAndShowInspectionModal();
-                    }, 500);
+                    setTimeout(() => checkAndShowInspectionModal(), 500);
                 })
                 .catch((error) => {
                     showLoading(false);
                     showError(`Database error: ${error.message}`);
-                    console.error("❌ Error fetching Ambulance data:", error);
                 });
         }
 
-        // Initialize vehicle inspection data array
         function initializeVehicleInspectionData() {
             return vehicleInspectionItems.map(item => {
                 if (item.type === "textfield") {
-                    return {
-                        name: item.name,
-                        type: "textfield",
-                        value: "",
-                        checked: false,
-                        remarks: ""
-                    };
+                    return { name: item.name, type: "textfield", value: "", checked: false, remarks: "" };
                 } else {
-                    return {
-                        name: item.name,
-                        type: "checkbox",
-                        checked: false,
-                        remarks: ""
-                    };
+                    return { name: item.name, type: "checkbox", checked: false, remarks: "" };
                 }
             });
         }
 
-        // Initialize medical inspection data array
         function initializeMedicalInspectionData() {
-            const medicalItems = (ambulanceType === 'AB4') ? 
-                medicalInspectionItemsAB4 : medicalInspectionItemsAB1;
-            
+            const medicalItems = (ambulanceType === 'AB4') ? medicalInspectionItemsAB4 : medicalInspectionItemsAB1;
             return medicalItems.map(item => {
                 if (item.type === "textfield") {
-                    return {
-                        name: item.name,
-                        qty: item.qty,
-                        type: "textfield",
-                        value: "",
-                        checked: false,
-                        remarks: ""
-                    };
+                    return { name: item.name, qty: item.qty, type: "textfield", value: "", checked: false, remarks: "" };
                 } else {
-                    return {
-                        name: item.name,
-                        qty: item.qty,
-                        type: "checkbox",
-                        checked: false,
-                        remarks: ""
-                    };
+                    return { name: item.name, qty: item.qty, type: "checkbox", checked: false, remarks: "" };
                 }
             });
         }
 
-        
-        // Tentukan ambulance type
         function determineAmbulanceType(vehicleNumber) {
             const normalized = vehicleNumber.toUpperCase().trim();
-            
-            console.log(`🔍 Checking ambulance type for: ${normalized}`);
-            
-            // Map vehicle number ke ambulance type
-            const ambulanceMapping = {
-                'CCF6941': 'AB1',
-                'TDC5994': 'AB4'
-                // Tambahkan mapping lain di sini jika perlu
-            };
-            
-            // Jika vehicle number ada dalam mapping, gunakan value tersebut
-            if (ambulanceMapping[normalized]) {
-                console.log(`✅ Vehicle ${normalized} mapped to: ${ambulanceMapping[normalized]}`);
-                return ambulanceMapping[normalized];
-            }
-            
-            // Fallback ke logic lama jika vehicle tidak dalam mapping
-            console.log(`ℹ️ Vehicle ${normalized} not in mapping, using fallback logic`);
-            
-            // Logic lama
-            if (normalized.includes('AB4') || normalized.includes('4')) {
-                return 'AB4';
-            } else {
-                return 'AB1';
-            }
+            const ambulanceMapping = { 'CCF6941': 'AB1', 'TDC5994': 'AB4' };
+            if (ambulanceMapping[normalized]) return ambulanceMapping[normalized];
+            return normalized.includes('AB4') || normalized.includes('4') ? 'AB4' : 'AB1';
         }
 
-        // FIXED: Check if inspection details are needed for ACTIVE SHIFT only
         function checkAndShowInspectionModal() {
-            let isActiveShiftCompleted = false;
-            
-            // Check completion status for ACTIVE shift only
-            if (currentActiveShift === '0800-2000') {
-                isActiveShiftCompleted = inspectionDetails0800.completed;
-            } else {
-                isActiveShiftCompleted = inspectionDetails2000.completed;
-            }
-            
-            // FIXED: Always show modal for active shift (for filling or editing)
             document.getElementById('inspectionDetailsModal').style.display = 'flex';
-            
-            // Populate form with existing data if available
             populateModalForm();
-            
-            // Disable main buttons until modal is completed
             document.getElementById('vehicleInspectionBtn').disabled = true;
             document.getElementById('medicalInspectionBtn').disabled = true;
-            
-            console.log(`🔄 Modal shown for ${currentActiveShift} shift (Completed: ${isActiveShiftCompleted})`);
         }
 
-        // FIXED: Save inspection details for ACTIVE shift only
         function saveInspectionDetails() {
             const inspectBy = document.getElementById('modalInspectBy').value.trim();
             const medic = document.getElementById('modalMedic').value.trim();
@@ -775,70 +573,32 @@
             const shift = document.getElementById('modalShift').value;
             const remarks = document.getElementById('modalRemarks').value.trim();
             const time = document.getElementById('modalTime').value;
-            
             if (!inspectBy || !medic || !swcwc || !shift || !time) {
                 alert('Please fill in all required fields');
                 return;
             }
-            
             const now = new Date().toISOString();
-            
-            // FIXED: Save data for active shift only
             if (time === '0800-2000') {
-                inspectionDetails0800 = {
-                    ...inspectionDetails0800,
-                    inspectBy: inspectBy,
-                    medic: medic,
-                    swcwc: swcwc,
-                    shift: shift,
-                    remarks: remarks,
-                    time: time,
-                    completed: true,
-                    timestamp: now
-                };
+                inspectionDetails0800 = { ...inspectionDetails0800, inspectBy, medic, swcwc, shift, remarks, time, completed: true, timestamp: now };
                 vehicleInspectionData = inspectionDetails0800.vehicleInspectionData;
                 medicalInspectionData = inspectionDetails0800.medicalInspectionData;
             } else {
-                inspectionDetails2000 = {
-                    ...inspectionDetails2000,
-                    inspectBy: inspectBy,
-                    medic: medic,
-                    swcwc: swcwc,
-                    shift: shift,
-                    remarks: remarks,
-                    time: time,
-                    completed: true,
-                    timestamp: now
-                };
+                inspectionDetails2000 = { ...inspectionDetails2000, inspectBy, medic, swcwc, shift, remarks, time, completed: true, timestamp: now };
                 vehicleInspectionData = inspectionDetails2000.vehicleInspectionData;
                 medicalInspectionData = inspectionDetails2000.medicalInspectionData;
             }
-            
             currentInspectionTime = time;
-            
             document.getElementById('inspectionDetailsModal').style.display = 'none';
-            
-            // Enable buttons after saving
             document.getElementById('vehicleInspectionBtn').disabled = false;
             document.getElementById('medicalInspectionBtn').disabled = false;
-            
             updateShiftStatusDisplay();
             updateTimeIndicator();
-            
             saveDailyInspectionToDB();
-            
-            console.log(`💾 Inspection details saved for ${time} shift`);
         }
 
-        // Function to save daily inspection to database
         function saveDailyInspectionToDB() {
-            if (!db || !currentDocumentId) {
-                console.warn('Database not ready for auto-save');
-                return;
-            }
-            
+            if (!db || !currentDocumentId) return;
             const dailyInspectionKey = `daily_${currentDate}`;
-            
             const dailyData = {
                 [dailyInspectionKey]: {
                     date: currentDate,
@@ -849,23 +609,14 @@
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                 }
             };
-            
-            db.collection('vehicles')
-                .doc(currentDocumentId)
-                .update(dailyData)
-                .then(() => {
-                    console.log(`✅ Daily inspection details saved for ${currentDate}`);
-                })
-                .catch((error) => {
-                    console.error('Error saving daily inspection:', error);
-                });
+            db.collection('vehicles').doc(currentDocumentId).update(dailyData)
+                .then(() => console.log(`✅ Daily inspection saved`))
+                .catch(err => console.error('Error saving daily inspection:', err));
         }
 
-        // Update time indicator
         function updateTimeIndicator() {
             const timeIndicator = document.getElementById('currentTimeIndicator');
             const medicalIndicator = document.getElementById('medicalTimeIndicator');
-            
             if (currentInspectionTime === '0800-2000') {
                 timeIndicator.textContent = '0800-2000';
                 medicalIndicator.textContent = '0800-2000';
@@ -882,291 +633,105 @@
             document.getElementById('loadingMessage').style.display = 'none';
             document.getElementById('errorMessage').style.display = 'none';
             document.getElementById('vehicleInfoContent').style.display = 'block';
-
             document.getElementById('vehicleNumber').textContent = data.vehicleNumber || currentVehicleId || '-';
             document.getElementById('vehicleType').textContent = data.vehicleType || '-';
         }
 
-        // Populate Vehicle Inspection Table - UBAH: TIME jadi NO.
         function populateVehicleInspectionTable() {
             const tableBody = document.getElementById('vehicleInspectionTableBody');
-            
-            let currentData = [];
-            if (currentInspectionTime === '0800-2000') {
-                currentData = inspectionDetails0800.vehicleInspectionData;
-            } else if (currentInspectionTime === '2000-0800') {
-                currentData = inspectionDetails2000.vehicleInspectionData;
-            } else {
-                currentData = vehicleInspectionData;
-            }
-            
+            let currentData = (currentInspectionTime === '0800-2000') ? inspectionDetails0800.vehicleInspectionData : inspectionDetails2000.vehicleInspectionData;
             let html = '';
-            
             currentData.forEach((item, index) => {
                 const isTextField = item.type === "textfield";
-                const isFuelLevel = item.name === "FUEL LEVEL";
-                const isMillage = item.name === "MILLAGE / ODOMETER";
-                
-                html += `
-                    <tr class="${isTextField ? 'textfield-item' : ''}">
-                        <td style="text-align: center; vertical-align: middle;">
-                            <strong>${index + 1}</strong>
-                        </td>
-                        <td><strong>${item.name}</strong></td>
-                        <td style="text-align: center; vertical-align: middle;">
-                `;
-                
+                html += `<tr class="${isTextField ? 'textfield-item' : ''}">
+                    <td style="text-align: center;"><strong>${index + 1}</strong></td>
+                    <td><strong>${item.name}</strong></td>
+                    <td style="text-align: center;">`;
                 if (isTextField) {
-                    html += `
-                            <input type="text" 
-                                   class="vehicle-text-field"
-                                   id="vehicle-field-${index}"
-                                   data-index="${index}"
-                                   value="${item.value || ''}"
-                                   placeholder="${isFuelLevel ? 'e.g., 75%, FULL' : 'e.g., 12345 km'}"
-                                   onchange="updateVehicleTextField(${index}, this.value)"
-                                   style="width: 150px; padding: 5px;">
-                    `;
+                    html += `<input type="text" class="vehicle-text-field" id="vehicle-field-${index}" data-index="${index}" value="${item.value || ''}" placeholder="${item.name === 'FUEL LEVEL' ? 'e.g., 75%, FULL' : 'e.g., 12345 km'}" onchange="updateVehicleTextField(${index}, this.value)" style="width:150px; padding:5px;">`;
                 } else {
-                    html += `
-                            <input type="checkbox" 
-                                   class="inspection-checkbox"
-                                   id="vehicle-checkbox-${index}"
-                                   data-index="${index}"
-                                   ${item.checked ? 'checked' : ''}
-                                   onchange="updateVehicleCheckbox(${index}, this.checked)">
-                    `;
+                    html += `<input type="checkbox" class="inspection-checkbox" id="vehicle-checkbox-${index}" data-index="${index}" ${item.checked ? 'checked' : ''} onchange="updateVehicleCheckbox(${index}, this.checked)">`;
                 }
-                
-                html += `
-                        </td>
-                        <td>
-                            <textarea 
-                                class="remarks-input"
-                                id="vehicle-remarks-${index}"
-                                data-index="${index}"
-                                onchange="updateVehicleRemarks(${index}, this.value)"
-                                placeholder="Enter remarks..."
-                                rows="1"
-                                style="width: 100%; min-height: 40px; padding: 5px; box-sizing: border-box;">${item.remarks || ''}</textarea>
-                        </td>
-                    </tr>
-                `;
+                html += `</td><td><textarea class="remarks-input" id="vehicle-remarks-${index}" data-index="${index}" onchange="updateVehicleRemarks(${index}, this.value)" placeholder="Enter remarks..." rows="1" style="width:100%; min-height:40px; padding:5px;">${item.remarks || ''}</textarea></td></tr>`;
             });
-            
             tableBody.innerHTML = html;
         }
 
-        // Populate Medical Inspection Table - UBAH: TIME jadi NO.
         function populateMedicalInspectionTable() {
             const tableBody = document.getElementById('medicalInspectionTableBody');
-            
-            const medicalItems = (ambulanceType === 'AB4') ? 
-                medicalInspectionItemsAB4 : medicalInspectionItemsAB1;
-            
-            let currentData = [];
-            if (currentInspectionTime === '0800-2000') {
-                currentData = inspectionDetails0800.medicalInspectionData;
-            } else if (currentInspectionTime === '2000-0800') {
-                currentData = inspectionDetails2000.medicalInspectionData;
-            } else {
-                currentData = medicalInspectionData;
-            }
-            
+            const medicalItems = (ambulanceType === 'AB4') ? medicalInspectionItemsAB4 : medicalInspectionItemsAB1;
+            let currentData = (currentInspectionTime === '0800-2000') ? inspectionDetails0800.medicalInspectionData : inspectionDetails2000.medicalInspectionData;
             let html = '';
-            
             currentData.forEach((item, index) => {
                 const isTextField = item.type === "textfield";
-                
-                html += `
-                    <tr class="${isTextField ? 'oxygen-item' : ''}">
-                        <td style="text-align: center; vertical-align: middle;">
-                            <strong>${index + 1}</strong>
-                        </td>
-                        <td><strong>${item.name}</strong> <span style="color: #666; font-size: 0.9em;">(Qty: ${item.qty})</span></td>
-                        <td style="text-align: center; vertical-align: middle;">
-                `;
-                
+                html += `<tr class="${isTextField ? 'oxygen-item' : ''}">
+                    <td style="text-align: center;"><strong>${index + 1}</strong></td>
+                    <td><strong>${item.name}</strong> <span style="color:#666; font-size:0.9em;">(Qty: ${item.qty})</span></td>
+                    <td style="text-align: center;">`;
                 if (isTextField) {
-                    html += `
-                            <input type="text" 
-                                   class="medical-oxygen-field"
-                                   id="medical-field-${index}"
-                                   data-index="${index}"
-                                   value="${item.value || ''}"
-                                   placeholder="e.g., 75%"
-                                   onchange="updateMedicalTextField(${index}, this.value)"
-                                   style="width: 120px; padding: 5px;">
-                            <div style="font-size: 11px; color: #666; margin-top: 3px;">
-                                MIN 25% required
-                            </div>
-                    `;
+                    html += `<input type="text" class="medical-oxygen-field" id="medical-field-${index}" data-index="${index}" value="${item.value || ''}" placeholder="e.g., 75%" onchange="updateMedicalTextField(${index}, this.value)" style="width:120px; padding:5px;"><div style="font-size:11px; color:#666;">MIN 25% required</div>`;
                 } else {
-                    html += `
-                            <input type="checkbox" 
-                                   class="inspection-checkbox"
-                                   id="medical-checkbox-${index}"
-                                   data-index="${index}"
-                                   ${item.checked ? 'checked' : ''}
-                                   onchange="updateMedicalCheckbox(${index}, this.checked)">
-                    `;
+                    html += `<input type="checkbox" class="inspection-checkbox" id="medical-checkbox-${index}" data-index="${index}" ${item.checked ? 'checked' : ''} onchange="updateMedicalCheckbox(${index}, this.checked)">`;
                 }
-                
-                html += `
-                        </td>
-                        <td>
-                            <textarea 
-                                class="remarks-input"
-                                id="medical-remarks-${index}"
-                                data-index="${index}"
-                                onchange="updateMedicalRemarks(${index}, this.value)"
-                                placeholder="Enter remarks..."
-                                rows="1"
-                                style="width: 100%; min-height: 40px; padding: 5px; box-sizing: border-box;">${item.remarks || ''}</textarea>
-                        </td>
-                    </tr>
-                `;
+                html += `</td><td><textarea class="remarks-input" id="medical-remarks-${index}" data-index="${index}" onchange="updateMedicalRemarks(${index}, this.value)" placeholder="Enter remarks..." rows="1" style="width:100%; min-height:40px; padding:5px;">${item.remarks || ''}</textarea></td></tr>`;
             });
-            
             tableBody.innerHTML = html;
         }
 
-        // Update functions untuk checkbox dan textfield
         function updateVehicleCheckbox(index, isChecked) {
-            if (!currentInspectionTime) {
-                alert('Please select inspection time first');
-                return;
-            }
-            
-            let currentData = currentInspectionTime === '0800-2000' ? 
-                inspectionDetails0800.vehicleInspectionData : 
-                inspectionDetails2000.vehicleInspectionData;
-            
-            if (currentData[index]) {
-                currentData[index].checked = isChecked;
-            }
+            if (!currentInspectionTime) return;
+            let currentData = currentInspectionTime === '0800-2000' ? inspectionDetails0800.vehicleInspectionData : inspectionDetails2000.vehicleInspectionData;
+            if (currentData[index]) currentData[index].checked = isChecked;
         }
-
         function updateVehicleTextField(index, value) {
-            if (!currentInspectionTime) {
-                alert('Please select inspection time first');
-                return;
-            }
-            
-            let currentData = currentInspectionTime === '0800-2000' ? 
-                inspectionDetails0800.vehicleInspectionData : 
-                inspectionDetails2000.vehicleInspectionData;
-            
-            if (currentData[index]) {
-                currentData[index].value = value;
-            }
+            if (!currentInspectionTime) return;
+            let currentData = currentInspectionTime === '0800-2000' ? inspectionDetails0800.vehicleInspectionData : inspectionDetails2000.vehicleInspectionData;
+            if (currentData[index]) currentData[index].value = value;
         }
-
         function updateVehicleRemarks(index, value) {
-            if (!currentInspectionTime) {
-                alert('Please select inspection time first');
-                return;
-            }
-            
-            let currentData = currentInspectionTime === '0800-2000' ? 
-                inspectionDetails0800.vehicleInspectionData : 
-                inspectionDetails2000.vehicleInspectionData;
-            
-            if (currentData[index]) {
-                currentData[index].remarks = value;
-            }
+            if (!currentInspectionTime) return;
+            let currentData = currentInspectionTime === '0800-2000' ? inspectionDetails0800.vehicleInspectionData : inspectionDetails2000.vehicleInspectionData;
+            if (currentData[index]) currentData[index].remarks = value;
         }
-
         function updateMedicalCheckbox(index, isChecked) {
-            if (!currentInspectionTime) {
-                alert('Please select inspection time first');
-                return;
-            }
-            
-            let currentData = currentInspectionTime === '0800-2000' ? 
-                inspectionDetails0800.medicalInspectionData : 
-                inspectionDetails2000.medicalInspectionData;
-            
-            if (currentData[index]) {
-                currentData[index].checked = isChecked;
-            }
+            if (!currentInspectionTime) return;
+            let currentData = currentInspectionTime === '0800-2000' ? inspectionDetails0800.medicalInspectionData : inspectionDetails2000.medicalInspectionData;
+            if (currentData[index]) currentData[index].checked = isChecked;
         }
-
         function updateMedicalTextField(index, value) {
-            if (!currentInspectionTime) {
-                alert('Please select inspection time first');
-                return;
-            }
-            
-            let currentData = currentInspectionTime === '0800-2000' ? 
-                inspectionDetails0800.medicalInspectionData : 
-                inspectionDetails2000.medicalInspectionData;
-            
-            if (currentData[index]) {
-                currentData[index].value = value;
-            }
+            if (!currentInspectionTime) return;
+            let currentData = currentInspectionTime === '0800-2000' ? inspectionDetails0800.medicalInspectionData : inspectionDetails2000.medicalInspectionData;
+            if (currentData[index]) currentData[index].value = value;
         }
-
         function updateMedicalRemarks(index, value) {
-            if (!currentInspectionTime) {
-                alert('Please select inspection time first');
-                return;
-            }
-            
-            let currentData = currentInspectionTime === '0800-2000' ? 
-                inspectionDetails0800.medicalInspectionData : 
-                inspectionDetails2000.medicalInspectionData;
-            
-            if (currentData[index]) {
-                currentData[index].remarks = value;
-            }
+            if (!currentInspectionTime) return;
+            let currentData = currentInspectionTime === '0800-2000' ? inspectionDetails0800.medicalInspectionData : inspectionDetails2000.medicalInspectionData;
+            if (currentData[index]) currentData[index].remarks = value;
         }
 
         function showInspectionSection() {
-            if (!currentInspectionTime) {
+            if (!currentInspectionTime || (currentInspectionTime === '0800-2000' ? !inspectionDetails0800.completed : !inspectionDetails2000.completed)) {
                 alert('Please complete inspection details first');
                 document.getElementById('inspectionDetailsModal').style.display = 'flex';
                 return;
             }
-            
-            const isCompleted = currentInspectionTime === '0800-2000' ? 
-                inspectionDetails0800.completed : inspectionDetails2000.completed;
-            
-            if (!isCompleted) {
-                alert('Please save inspection details first');
-                document.getElementById('inspectionDetailsModal').style.display = 'flex';
-                return;
-            }
-            
             document.getElementById('basicInfo').style.display = 'none';
             document.getElementById('mainActions').style.display = 'none';
             document.getElementById('vehicleInspectionSection').style.display = 'block';
             document.getElementById('saveSection').style.display = 'block';
-            
             populateVehicleInspectionTable();
         }
 
         function showMedicalInspectionSection() {
-            if (!currentInspectionTime) {
+            if (!currentInspectionTime || (currentInspectionTime === '0800-2000' ? !inspectionDetails0800.completed : !inspectionDetails2000.completed)) {
                 alert('Please complete inspection details first');
                 document.getElementById('inspectionDetailsModal').style.display = 'flex';
                 return;
             }
-            
-            const isCompleted = currentInspectionTime === '0800-2000' ? 
-                inspectionDetails0800.completed : inspectionDetails2000.completed;
-            
-            if (!isCompleted) {
-                alert('Please save inspection details first');
-                document.getElementById('inspectionDetailsModal').style.display = 'flex';
-                return;
-            }
-            
             document.getElementById('basicInfo').style.display = 'none';
             document.getElementById('mainActions').style.display = 'none';
             document.getElementById('medicalInspectionSection').style.display = 'block';
             document.getElementById('saveSection').style.display = 'block';
-            
             populateMedicalInspectionTable();
         }
 
@@ -1178,26 +743,15 @@
             document.getElementById('mainActions').style.display = 'flex';
         }
 
-        // Save All Data
         function saveAllData() {
-            if (!db || !currentDocumentId) {
-                alert('Database not initialized or no document selected.');
-                return;
-            }
-
-            if (!currentInspectionTime) {
-                alert('Please select inspection time first.');
-                return;
-            }
-
+            if (!db || !currentDocumentId) { alert('Database not initialized.'); return; }
+            if (!currentInspectionTime) { alert('Please select inspection time first.'); return; }
             saveDailyInspectionToDB();
-            
             alert('Inspection data saved successfully!');
-            
             backToMainActions();
         }
 
-        // PDF function dengan semua pembetulan
+        // ================== MODIFIED PDF FUNCTION (A4 PORTRAIT, REMARKS ASING) ==================
         function saveAsPDF() {
             if (!window.jspdf) {
                 alert('PDF library not loaded. Please check internet connection.');
@@ -1206,55 +760,45 @@
             
             try {
                 const { jsPDF } = window.jspdf;
-                const doc = new jsPDF('p', 'mm', 'a4');
+                const doc = new jsPDF('p', 'mm', 'a4'); // potrait A4
                 
-                // Set margins
                 const marginLeft = 10;
                 const marginRight = 10;
                 const pageWidth = doc.internal.pageSize.width;
                 
-                // ========== HEADER SECTION ==========
+                // ---------- HEADER ----------
                 doc.setFontSize(16);
                 doc.setFont("helvetica", "bold");
                 doc.text("CENTRAL EMERGENCY & FIRE SERVICES RESPONSE", pageWidth/2, 15, { align: "center" });
-                
                 doc.setFontSize(14);
                 doc.text("VEHICLES & EQUIPMENT CHECKLIST", pageWidth/2, 22, { align: "center" });
                 
-                // ========== VEHICLE INFORMATION ==========
+                // ---------- VEHICLE INFORMATION ----------
                 let yPos = 35;
+                doc.setFontSize(12);
+                doc.setFont("helvetica", "bold");
+                doc.text("AMBULANCE TYPE:", marginLeft, yPos);
+                doc.setFont("helvetica", "normal");
+                doc.text(ambulanceType === 'AB4' ? 'AB4' : 'AB1', marginLeft + 55, yPos);
                 
-                
-                // Line 1: AMBULANCE TYPE
-doc.setFontSize(12);
-doc.setFont("helvetica", "bold");
-doc.text("AMBULANCE TYPE:", marginLeft, yPos);
-doc.setFont("helvetica", "normal");
-// Move ambulance type value further to the right
-doc.text(ambulanceType === 'AB4' ? 'AB4' : 'AB1', marginLeft + 55, yPos);
-
-// Line 2: DATE and VEHICLE NUMBER
-yPos += 7;
-
-const now = new Date();
-const monthYear = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
-
-// DATE - Left side
-doc.setFont("helvetica", "bold");
-doc.text("DATE:", marginLeft, yPos);
-doc.setFont("helvetica", "normal");
-doc.text(monthYear, marginLeft + 18, yPos);
-
-// VEHICLE NUMBER - Right side (aligned with ambulance type)
-doc.setFont("helvetica", "bold");
-doc.text("VEHICLE NUMBER:", marginLeft + 100, yPos); // Moved further right
-doc.setFont("helvetica", "normal");
-const vehicleNumber = document.getElementById('vehicleNumber')?.textContent || 'CCF6941';
-doc.text(vehicleNumber, marginLeft + 140, yPos); // Moved further right
-                
-                // Line 3: TIME, NAME, SHIFT
                 yPos += 7;
+                const dateParts = currentDate.split('-');
+                const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+                const month = monthNames[parseInt(dateParts[1]) - 1];
+                const formattedDate = `${parseInt(dateParts[2])} ${month} ${dateParts[0]}`; // e.g., "26 MAY 2025"
                 
+                doc.setFont("helvetica", "bold");
+                doc.text("DATE:", marginLeft, yPos);
+                doc.setFont("helvetica", "normal");
+                doc.text(formattedDate, marginLeft + 18, yPos);
+                
+                doc.setFont("helvetica", "bold");
+                doc.text("VEHICLE NUMBER:", marginLeft + 100, yPos);
+                doc.setFont("helvetica", "normal");
+                const vehicleNumber = document.getElementById('vehicleNumber')?.textContent || 'CCF6941';
+                doc.text(vehicleNumber, marginLeft + 140, yPos);
+                
+                yPos += 7;
                 doc.setFont("helvetica", "bold");
                 doc.text("TIME:", marginLeft, yPos);
                 doc.setFont("helvetica", "normal");
@@ -1274,240 +818,174 @@ doc.text(vehicleNumber, marginLeft + 140, yPos); // Moved further right
                 
                 yPos += 15;
                 
-                // ========== VEHICLE INSPECTION TABLE ==========
-                // Table Header - UBAH: TIME jadi NO.
-                doc.setFontSize(11);
-                doc.setFont("helvetica", "bold");
+                // ---------- VEHICLE INSPECTION TABLE (autoTable) ----------
+                const vehicleHead = [["NO.", "INSPECTION ITEM", "0800-2000", "REMARKS", "2000-0800", "REMARKS"]];
+                const vehicleBody = [];
                 
-                // Column headers - UBAH: TIME jadi NO.
-                doc.text("NO.", marginLeft, yPos);
-                doc.text("INSPECTION ITEM", marginLeft + 10, yPos); // UBAH: Tajuk lebih pendek
-                doc.text("0800-2000", marginLeft + 90, yPos);
-                doc.text("2000-0800", marginLeft + 115, yPos);
-                
-                // Draw header line
-                yPos += 3;
-                doc.setLineWidth(0.5);
-                doc.line(marginLeft, yPos, pageWidth - marginRight, yPos);
-                
-                yPos += 5;
-                
-                // Get inspection data
                 const vehicleData0800 = inspectionDetails0800.vehicleInspectionData;
                 const vehicleData2000 = inspectionDetails2000.vehicleInspectionData;
                 
-                // Vehicle Inspection Items - UBAH: Paparkan NO. bukan TIME
                 vehicleInspectionItems.forEach((item, index) => {
-                    // Number - UBAH: Paparkan nombor
-                    doc.setFont("helvetica", "normal");
-                    doc.setFontSize(10);
-                    doc.text(`${index + 1}.`, marginLeft, yPos);
-                    
-                    // Item name
-                    const itemName = item.name.length > 25 ? item.name.substring(0, 25) + "..." : item.name;
-                    doc.text(itemName, marginLeft + 10, yPos);
-                    
-                    // 0800-2000 value
-                    const data0800 = vehicleData0800[index];
-                    let value0800 = "BROKEN";
-                    
-                    if (data0800) {
+                    // 0800-2000 status & remarks
+                    let status0800 = "", remarks0800 = "";
+                    if (inspectionDetails0800.completed && vehicleData0800 && vehicleData0800[index]) {
+                        const data = vehicleData0800[index];
                         if (item.type === "textfield") {
-                            if (item.name === "FUEL LEVEL") {
-                                value0800 = data0800.value ? `${data0800.value}%` : "BROKEN";
-                            } else if (item.name === "MILLAGE / ODOMETER") {
-                                value0800 = data0800.value ? data0800.value : "BROKEN";
-                            }
+                            status0800 = data.value || "";
                         } else {
-                            value0800 = data0800.checked ? "OK" : "BROKEN";
+                            status0800 = data.checked ? "OK" : "ATTENTION";
                         }
+                        remarks0800 = data.remarks || "";
                     }
-                    doc.text(value0800, marginLeft + 95, yPos, { align: "center" });
                     
-                    // 2000-0800 value
-                    const data2000 = vehicleData2000[index];
-                    let value2000 = "BROKEN";
-                    
-                    if (data2000) {
+                    // 2000-0800 status & remarks
+                    let status2000 = "", remarks2000 = "";
+                    if (inspectionDetails2000.completed && vehicleData2000 && vehicleData2000[index]) {
+                        const data = vehicleData2000[index];
                         if (item.type === "textfield") {
-                            if (item.name === "FUEL LEVEL") {
-                                value2000 = data2000.value ? `${data2000.value}%` : "BROKEN";
-                            } else if (item.name === "MILLAGE / ODOMETER") {
-                                value2000 = data2000.value ? data2000.value : "BROKEN";
-                            }
+                            status2000 = data.value || "";
                         } else {
-                            value2000 = data2000.checked ? "OK" : "BROKEN";
+                            status2000 = data.checked ? "OK" : "ATTENTION";
                         }
+                        remarks2000 = data.remarks || "";
                     }
-                    doc.text(value2000, marginLeft + 120, yPos, { align: "center" });
                     
-                    yPos += 5;
-                    
-                    // Page break handling
-                    if (yPos > 270 && index < vehicleInspectionItems.length - 1) {
-                        doc.addPage();
-                        yPos = 20;
-                        doc.setFontSize(11);
-                        doc.setFont("helvetica", "bold");
-                        doc.text("NO.", marginLeft, yPos);
-                        doc.text("INSPECTION ITEM", marginLeft + 10, yPos);
-                        doc.text("0800-2000", marginLeft + 90, yPos);
-                        doc.text("2000-0800", marginLeft + 115, yPos);
-                        yPos += 8;
-                    }
+                    vehicleBody.push([
+                        (index + 1).toString(),
+                        item.name,
+                        status0800,
+                        remarks0800,
+                        status2000,
+                        remarks2000
+                    ]);
                 });
                 
-                // ========== MEDICAL RESPONSE INSPECTION TABLE ==========
-                yPos += 10;
+                doc.autoTable({
+                    startY: yPos,
+                    head: vehicleHead,
+                    body: vehicleBody,
+                    theme: 'grid',
+                    headStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: 'bold', halign: 'center' },
+                    styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
+                    columnStyles: {
+                        0: { cellWidth: 10, halign: 'center' },      // No.
+                        1: { cellWidth: 60 },                         // Inspection Item
+                        2: { cellWidth: 18, halign: 'center' },       // 0800-2000 status
+                        3: { cellWidth: 30 },                          // Remarks 0800
+                        4: { cellWidth: 18, halign: 'center' },       // 2000-0800 status
+                        5: { cellWidth: 30 }                           // Remarks 2000
+                    },
+                    margin: { left: marginLeft, right: marginRight },
+                    tableWidth: pageWidth - marginLeft - marginRight
+                });
                 
-                // Medical Response Header - UBAH: Tajuk lebih pendek
-                doc.setFontSize(11);
-                doc.setFont("helvetica", "bold");
-                doc.text("MEDICAL RESPONSE INSPECTION", marginLeft, yPos);
-                doc.text("QTY", marginLeft + 85, yPos);
-                doc.text("0800-2000", marginLeft + 100, yPos);
-                doc.text("2000-0800", marginLeft + 125, yPos);
+                // Get the last Y position after vehicle table
+                yPos = doc.lastAutoTable.finalY + 10;
                 
-                yPos += 3;
-                doc.line(marginLeft, yPos, pageWidth - marginRight, yPos);
-                yPos += 5;
+                // ---------- MEDICAL RESPONSE INSPECTION TABLE ----------
+                const medicalHead = [["NO.", "MEDICAL ITEM", "QTY", "0800-2000", "REMARKS", "2000-0800", "REMARKS"]];
+                const medicalBody = [];
                 
-                // Medical Inspection Items - UBAH: Paparkan NO. bukan TIME
                 const medicalItems = ambulanceType === 'AB4' ? medicalInspectionItemsAB4 : medicalInspectionItemsAB1;
                 const medicalData0800 = inspectionDetails0800.medicalInspectionData;
                 const medicalData2000 = inspectionDetails2000.medicalInspectionData;
                 
                 medicalItems.forEach((item, index) => {
-                    // Number - UBAH: Paparkan nombor
-                    doc.setFont("helvetica", "normal");
-                    doc.setFontSize(10);
-                    doc.text(`${index + 1}.`, marginLeft, yPos);
-                    
-                    // Item name
-                    const maxNameLength = 22;
-                    let itemName = item.name;
-                    if (itemName.length > maxNameLength) {
-                        itemName = itemName.substring(0, maxNameLength) + "...";
-                    }
-                    doc.text(itemName, marginLeft + 10, yPos);
-                    
-                    // Quantity
-                    doc.text(item.qty, marginLeft + 90, yPos, { align: "center" });
-                    
-                    // 0800-2000 value
-                    const data0800 = medicalData0800[index];
-                    let value0800 = "BROKEN";
-                    
-                    if (data0800) {
+                    let status0800 = "", remarks0800 = "";
+                    if (inspectionDetails0800.completed && medicalData0800 && medicalData0800[index]) {
+                        const data = medicalData0800[index];
                         if (item.type === "textfield") {
-                            value0800 = data0800.value ? `${data0800.value}%` : "BROKEN";
+                            status0800 = data.value ? data.value + "%" : "";
                         } else {
-                            value0800 = data0800.checked ? "OK" : "BROKEN";
+                            status0800 = data.checked ? "OK" : "ATTENTION";
                         }
+                        remarks0800 = data.remarks || "";
                     }
-                    doc.text(value0800, marginLeft + 105, yPos, { align: "center" });
                     
-                    // 2000-0800 value
-                    const data2000 = medicalData2000[index];
-                    let value2000 = "BROKEN";
-                    
-                    if (data2000) {
+                    let status2000 = "", remarks2000 = "";
+                    if (inspectionDetails2000.completed && medicalData2000 && medicalData2000[index]) {
+                        const data = medicalData2000[index];
                         if (item.type === "textfield") {
-                            value2000 = data2000.value ? `${data2000.value}%` : "BROKEN";
+                            status2000 = data.value ? data.value + "%" : "";
                         } else {
-                            value2000 = data2000.checked ? "OK" : "BROKEN";
+                            status2000 = data.checked ? "OK" : "ATTENTION";
                         }
+                        remarks2000 = data.remarks || "";
                     }
-                    doc.text(value2000, marginLeft + 130, yPos, { align: "center" });
                     
-                    yPos += 5;
-                    
-                    // Page break handling
-                    if (yPos > 270 && index < medicalItems.length - 1) {
-                        doc.addPage();
-                        yPos = 20;
-                        doc.setFontSize(11);
-                        doc.setFont("helvetica", "bold");
-                        doc.text("MEDICAL RESPONSE INSPECTION", marginLeft, yPos);
-                        doc.text("QTY", marginLeft + 85, yPos);
-                        doc.text("0800-2000", marginLeft + 100, yPos);
-                        doc.text("2000-0800", marginLeft + 125, yPos);
-                        yPos += 8;
-                    }
+                    medicalBody.push([
+                        (index + 1).toString(),
+                        item.name,
+                        item.qty,
+                        status0800,
+                        remarks0800,
+                        status2000,
+                        remarks2000
+                    ]);
                 });
                 
-                // ========== INSPECTION DETAILS TABLE ==========
-                yPos += 15;
-                
-                // Create inspection summary table
-                const inspectionSummaryData = [];
-                
-                // Header row
-                inspectionSummaryData.push([
-                    { content: "", styles: { fontStyle: 'bold', fillColor: [220, 220, 220] } },
-                    { content: "INSPECT BY", styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } },
-                    { content: "", styles: { fontStyle: 'bold', fillColor: [220, 220, 220] } },
-                    { content: "SWC/WC", styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } },
-                    { content: "", styles: { fontStyle: 'bold', fillColor: [220, 220, 220] } },
-                    { content: "MEDIC", styles: { fontStyle: 'bold', fillColor: [220, 220, 220], halign: 'center' } },
-                    { content: "", styles: { fontStyle: 'bold', fillColor: [220, 220, 220] } }
-                ]);
-                
-                // Sub-header row
-                inspectionSummaryData.push([
-                    { content: "", styles: { fontStyle: 'bold' } },
-                    { content: "0800-2000", styles: { fontStyle: 'bold', halign: 'center' } },
-                    { content: "2000-0800", styles: { fontStyle: 'bold', halign: 'center' } },
-                    { content: "0800-2000", styles: { fontStyle: 'bold', halign: 'center' } },
-                    { content: "2000-0800", styles: { fontStyle: 'bold', halign: 'center' } },
-                    { content: "0800-2000", styles: { fontStyle: 'bold', halign: 'center' } },
-                    { content: "2000-0800", styles: { fontStyle: 'bold', halign: 'center' } }
-                ]);
-                
-                // NAME row
-                inspectionSummaryData.push([
-                    { content: "NAME", styles: { fontStyle: 'bold' } },
-                    { content: inspectionDetails0800.completed ? inspectionDetails0800.inspectBy || "-" : "-", styles: { halign: 'center' } },
-                    { content: inspectionDetails2000.completed ? inspectionDetails2000.inspectBy || "-" : "-", styles: { halign: 'center' } },
-                    { content: inspectionDetails0800.completed ? inspectionDetails0800.swcwc || "-" : "-", styles: { halign: 'center' } },
-                    { content: inspectionDetails2000.completed ? inspectionDetails2000.swcwc || "-" : "-", styles: { halign: 'center' } },
-                    { content: inspectionDetails0800.completed ? inspectionDetails0800.medic || "-" : "-", styles: { halign: 'center' } },
-                    { content: inspectionDetails2000.completed ? inspectionDetails2000.medic || "-" : "-", styles: { halign: 'center' } }
-                ]);
-                
-                // SIGNATURE row - UBAH: Hanya "SIGNATURE" tanpa asterisk, satu baris sahaja
-                inspectionSummaryData.push([
-                    { content: "SIGNATURE", styles: { fontStyle: 'bold' } },
-                    { content: "", styles: { minCellHeight: 15 } },
-                    { content: "", styles: { minCellHeight: 15 } },
-                    { content: "", styles: { minCellHeight: 15 } },
-                    { content: "", styles: { minCellHeight: 15 } },
-                    { content: "", styles: { minCellHeight: 15 } },
-                    { content: "", styles: { minCellHeight: 15 } }
-                ]);
-                
-                // Create table
                 doc.autoTable({
                     startY: yPos,
-                    head: [],
-                    body: inspectionSummaryData,
+                    head: medicalHead,
+                    body: medicalBody,
                     theme: 'grid',
-                    tableWidth: pageWidth - marginLeft - marginRight,
-                    margin: { left: marginLeft },
-                    styles: { fontSize: 10, cellPadding: 3 },
+                    headStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: 'bold', halign: 'center' },
+                    styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
                     columnStyles: {
-                        0: { cellWidth: 25, fontStyle: 'bold' },
-                        1: { cellWidth: 25, halign: 'center' },
-                        2: { cellWidth: 25, halign: 'center' },
-                        3: { cellWidth: 25, halign: 'center' },
-                        4: { cellWidth: 25, halign: 'center' },
-                        5: { cellWidth: 25, halign: 'center' },
-                        6: { cellWidth: 25, halign: 'center' }
-                    }
+                        0: { cellWidth: 10, halign: 'center' },      // No.
+                        1: { cellWidth: 50 },                         // Medical Item
+                        2: { cellWidth: 12, halign: 'center' },       // QTY
+                        3: { cellWidth: 18, halign: 'center' },       // 0800-2000 status
+                        4: { cellWidth: 28 },                          // Remarks 0800
+                        5: { cellWidth: 18, halign: 'center' },       // 2000-0800 status
+                        6: { cellWidth: 28 }                           // Remarks 2000
+                    },
+                    margin: { left: marginLeft, right: marginRight },
+                    tableWidth: pageWidth - marginLeft - marginRight
                 });
                 
-                // ========== SAVE PDF ==========
-                const fileName = `Ambulance_Inspection_${vehicleNumber}_${monthYear.replace(' ', '_')}.pdf`;
+                yPos = doc.lastAutoTable.finalY + 15;
+                
+                // ---------- INSPECTION DETAILS TABLE (summary) ----------
+                const summaryHead = [["", "INSPECT BY", "", "SWC/WC", "", "MEDIC", ""]];
+                const summarySubHead = [["", "0800-2000", "2000-0800", "0800-2000", "2000-0800", "0800-2000", "2000-0800"]];
+                const summaryBody = [
+                    [
+                        "NAME",
+                        inspectionDetails0800.completed ? inspectionDetails0800.inspectBy || "-" : "-",
+                        inspectionDetails2000.completed ? inspectionDetails2000.inspectBy || "-" : "-",
+                        inspectionDetails0800.completed ? inspectionDetails0800.swcwc || "-" : "-",
+                        inspectionDetails2000.completed ? inspectionDetails2000.swcwc || "-" : "-",
+                        inspectionDetails0800.completed ? inspectionDetails0800.medic || "-" : "-",
+                        inspectionDetails2000.completed ? inspectionDetails2000.medic || "-" : "-"
+                    ],
+                    [
+                        "SIGNATURE",
+                        "", "", "", "", "", ""
+                    ]
+                ];
+                
+                doc.autoTable({
+                    startY: yPos,
+                    head: [summaryHead[0], summarySubHead[0]],
+                    body: summaryBody,
+                    theme: 'grid',
+                    headStyles: { fillColor: [220, 220, 220], textColor: 0, fontStyle: 'bold', halign: 'center' },
+                    styles: { fontSize: 9, cellPadding: 3, halign: 'center' },
+                    columnStyles: {
+                        0: { cellWidth: 25, fontStyle: 'bold', halign: 'left' },
+                        1: { cellWidth: 25 },
+                        2: { cellWidth: 25 },
+                        3: { cellWidth: 25 },
+                        4: { cellWidth: 25 },
+                        5: { cellWidth: 25 },
+                        6: { cellWidth: 25 }
+                    },
+                    margin: { left: marginLeft, right: marginRight }
+                });
+                
+                // ---------- SAVE PDF ----------
+                const fileName = `Ambulance_Inspection_${vehicleNumber}_${formattedDate.replace(/ /g, '_')}.pdf`;
                 doc.save(fileName);
                 
                 console.log('✅ PDF generated successfully');
@@ -1533,7 +1011,6 @@ doc.text(vehicleNumber, marginLeft + 140, yPos); // Moved further right
         function retryLoading() {
             const urlParams = new URLSearchParams(window.location.search);
             let vehicleId = urlParams.get('vehicle');
-            
             if (vehicleId) {
                 vehicleId = decodeURIComponent(vehicleId);
                 fetchVehicleDataById(vehicleId);
